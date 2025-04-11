@@ -46,7 +46,7 @@ export function CartPage() {
           to="/menu"
           className="inline-flex items-center px-6 py-3 border border-transparent
                      text-base font-medium rounded-md text-white
-                     bg-[#c1902f] hover:bg-[#d4a43f]"
+                     bg-[#0078d4] hover:bg-[#50a3d9]"
         >
           Browse Menu
         </Link>
@@ -111,7 +111,7 @@ export function CartPage() {
                     {/* NEW: Per-item notes text area */}
                     <textarea
                       className="mt-2 w-full border border-gray-300 rounded-md p-2 text-sm
-                               focus:ring-[#c1902f] focus:border-[#c1902f]"
+                               focus:ring-[#0078d4] focus:border-[#0078d4]"
                       placeholder="Any notes for this item? (e.g. 'No onions', 'Extra sauce')"
                       value={item.notes || ''}
                       onChange={(e) => setCartItemNotes(itemKey, e.target.value)}
@@ -139,7 +139,7 @@ export function CartPage() {
                         {/* "Customize Again" button - only show for items that can be customized */}
                         {item.customizations && Object.keys(item.customizations).length > 0 && (
                           <button
-                            className="mr-2 px-3 py-1.5 text-sm text-[#c1902f] border border-[#c1902f] rounded-md hover:bg-[#c1902f]/10 flex items-center"
+                            className="mr-2 px-3 py-1.5 text-sm text-[#0078d4] border border-[#0078d4] rounded-md hover:bg-[#0078d4]/10 flex items-center"
                             onClick={() => {
                               // Find the original menu item to get its option groups
                               const originalItem = menuItems.find(mi => mi.id === item.id);
@@ -190,7 +190,7 @@ export function CartPage() {
                 <button
                   className="w-full flex items-center justify-center px-6 py-3 border
                            border-transparent text-base font-medium rounded-md text-white
-                           bg-[#c1902f] hover:bg-[#d4a43f]"
+                           bg-[#0078d4] hover:bg-[#50a3d9]"
                   onClick={() => navigate('/checkout')}
                 >
                   Proceed to Checkout
@@ -201,7 +201,7 @@ export function CartPage() {
           </div>
         </div>
       </div>
-      
+
       {/* Customization Modal */}
       {itemToCustomize && (
         <CustomizationModal

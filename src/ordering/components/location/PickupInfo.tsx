@@ -19,7 +19,7 @@ export function PickupInfo() {
       
       <div className="space-y-4">
         <div className="flex items-start">
-          <MapPin className="h-5 w-5 text-[#c1902f] mt-1 mr-3" />
+          <MapPin className="h-5 w-5 text-[#0078d4] mt-1 mr-3" />
           <div>
             <p className="font-medium">{hasCustomLocation ? 'Special Pickup Location' : 'Location'}</p>
             <p className="text-gray-600">{address}</p>
@@ -32,7 +32,7 @@ export function PickupInfo() {
               href={googleMapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#c1902f] hover:text-[#d4a43f] text-sm mt-1 inline-block"
+              className="text-[#0078d4] hover:text-[#50a3d9] text-sm mt-1 inline-block"
             >
               View on Google Maps
             </a>
@@ -40,7 +40,7 @@ export function PickupInfo() {
         </div>
 
         <div className="flex items-start">
-          <Clock className="h-5 w-5 text-[#c1902f] mt-1 mr-3" />
+          <Clock className="h-5 w-5 text-[#0078d4] mt-1 mr-3" />
           <div>
             <p className="font-medium">Hours</p>
             <p className="text-gray-600">Open Daily: 11AM - 9PM</p>
@@ -51,7 +51,7 @@ export function PickupInfo() {
         </div>
 
         <div className="flex items-start">
-          <Phone className="h-5 w-5 text-[#c1902f] mt-1 mr-3" />
+          <Phone className="h-5 w-5 text-[#0078d4] mt-1 mr-3" />
           <div>
             <p className="font-medium">Contact</p>
             <p className="text-gray-600">{phoneNumber}</p>

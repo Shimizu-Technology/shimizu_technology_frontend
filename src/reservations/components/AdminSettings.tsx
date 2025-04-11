@@ -1,5 +1,5 @@
 // src/components/AdminSettings.tsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import toastUtils from '../../shared/utils/toastUtils';
 
 import DatePicker from 'react-datepicker';
@@ -273,8 +273,8 @@ export default function AdminSettings() {
 
   return (
     <div className="bg-white shadow rounded-md">
-      {/* gold-tinted header */}
-      <div className="border-b border-gray-200 bg-hafaloha-gold/5 rounded-t-md px-4 py-3">
+      {/* blue-tinted header */}
+      <div className="border-b border-gray-200 bg-shimizu-blue/5 rounded-t-md px-4 py-3">
         <h2 className="text-xl font-bold text-gray-900">Admin Settings</h2>
       </div>
 
@@ -355,7 +355,7 @@ export default function AdminSettings() {
               <button
                 onClick={handleAddEvent}
                 type="button"
-                className="px-3 py-1 bg-hafaloha-gold text-white text-sm rounded hover:bg-hafaloha-coral"
+                className="px-3 py-1 bg-shimizu-blue text-white text-sm rounded hover:bg-shimizu-light-blue"
               >
                 + Add Event
               </button>
@@ -561,7 +561,7 @@ export default function AdminSettings() {
             <button
               type="button"
               onClick={handleSaveAll}
-              className="px-6 py-2 bg-hafaloha-gold text-white rounded font-semibold hover:bg-hafaloha-coral"
+              className="px-6 py-2 bg-shimizu-blue text-white rounded font-semibold hover:bg-shimizu-light-blue"
             >
               Save Settings
             </button>

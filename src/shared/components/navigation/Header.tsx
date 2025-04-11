@@ -350,7 +350,7 @@ export function Header() {
                 </Link>
                 <Link
                   to="/signup"
-                  className="bg-[#c1902f] text-white px-3 py-1.5 rounded-md hover:bg-[#d4a43f] 
+                  className="bg-[#0078d4] text-white px-3 py-1.5 rounded-md hover:bg-[#50a3d9] 
                            transition-colors duration-200 text-sm font-medium"
                 >
                   Sign Up
@@ -372,7 +372,7 @@ export function Header() {
               {cartCount > 0 && (
                 <span
                   className="absolute -top-1 -right-1 
-                           bg-[#c1902f] text-white text-xs font-bold
+                           bg-[#0078d4] text-white text-xs font-bold
                            rounded-full h-5 w-5 flex items-center justify-center
                            shadow-sm animate-fadeIn"
                 >
@@ -397,7 +397,7 @@ export function Header() {
             className="text-xl font-bold text-[#0078d4]"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            håfaloha!
+            Shimizu Tech
           </Link>
           <button
             className="p-2 rounded-md text-gray-700 hover:text-[#0078d4] hover:bg-gray-100 
@@ -557,8 +557,8 @@ export function Header() {
                 </Link>
                 <Link
                   to="/signup"
-                  className="block px-3 py-2 rounded-md bg-[#c1902f] text-white
-                           hover:bg-[#d4a43f] transition-colors duration-150"
+                  className="block px-3 py-2 rounded-md bg-[#0078d4] text-white
+                           hover:bg-[#50a3d9] transition-colors duration-150"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Sign Up

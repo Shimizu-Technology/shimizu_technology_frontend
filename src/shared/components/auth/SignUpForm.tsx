@@ -93,7 +93,7 @@ export function SignUpForm() {
               {/* First Name */}
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-                  <User className="inline-block w-4 h-4 mr-1 text-[#c1902f]" />
+                  <User className="inline-block w-4 h-4 mr-1 text-[#0078d4]" />
                   First Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -105,7 +105,7 @@ export function SignUpForm() {
                   onChange={handleChange}
                   className="
                     block w-full px-4 py-2 mt-1 text-base border border-gray-300 rounded-md
-                    focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:border-transparent
+                    focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:border-transparent
                     placeholder-gray-400
                   "
                   required
@@ -115,7 +115,7 @@ export function SignUpForm() {
               {/* Last Name */}
               <div>
                 <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-                  <User className="inline-block w-4 h-4 mr-1 text-[#c1902f]" />
+                  <User className="inline-block w-4 h-4 mr-1 text-[#0078d4]" />
                   Last Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -127,7 +127,7 @@ export function SignUpForm() {
                   onChange={handleChange}
                   className="
                     block w-full px-4 py-2 mt-1 text-base border border-gray-300 rounded-md
-                    focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:border-transparent
+                    focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:border-transparent
                     placeholder-gray-400
                   "
                   required
@@ -137,7 +137,7 @@ export function SignUpForm() {
               {/* Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  <Mail className="inline-block w-4 h-4 mr-1 text-[#c1902f]" />
+                  <Mail className="inline-block w-4 h-4 mr-1 text-[#0078d4]" />
                   Email <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -149,7 +149,7 @@ export function SignUpForm() {
                   onChange={handleChange}
                   className="
                     block w-full px-4 py-2 mt-1 text-base border border-gray-300 rounded-md
-                    focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:border-transparent
+                    focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:border-transparent
                     placeholder-gray-400
                   "
                   required
@@ -159,7 +159,7 @@ export function SignUpForm() {
               {/* Phone */}
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                  <Phone className="inline-block w-4 h-4 mr-1 text-[#c1902f]" />
+                  <Phone className="inline-block w-4 h-4 mr-1 text-[#0078d4]" />
                   Phone <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -171,7 +171,7 @@ export function SignUpForm() {
                   onChange={handleChange}
                   className="
                     block w-full px-4 py-2 mt-1 text-base border border-gray-300 rounded-md
-                    focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:border-transparent
+                    focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:border-transparent
                     placeholder-gray-400
                   "
                   required
@@ -181,7 +181,7 @@ export function SignUpForm() {
               {/* Password */}
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  <Lock className="inline-block w-4 h-4 mr-1 text-[#c1902f]" />
+                  <Lock className="inline-block w-4 h-4 mr-1 text-[#0078d4]" />
                   Password <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -193,7 +193,7 @@ export function SignUpForm() {
                   onChange={handleChange}
                   className="
                     block w-full px-4 py-2 mt-1 text-base border border-gray-300 rounded-md
-                    focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:border-transparent
+                    focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:border-transparent
                     placeholder-gray-400
                   "
                   required
@@ -203,7 +203,7 @@ export function SignUpForm() {
               {/* Confirm Password */}
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                  <Lock className="inline-block w-4 h-4 mr-1 text-[#c1902f]" />
+                  <Lock className="inline-block w-4 h-4 mr-1 text-[#0078d4]" />
                   Confirm Password <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -215,7 +215,7 @@ export function SignUpForm() {
                   onChange={handleChange}
                   className="
                     block w-full px-4 py-2 mt-1 text-base border border-gray-300 rounded-md
-                    focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:border-transparent
+                    focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:border-transparent
                     placeholder-gray-400
                   "
                   required
@@ -228,8 +228,8 @@ export function SignUpForm() {
                 disabled={loading}
                 className="
                   inline-flex items-center justify-center w-full px-4 py-3 mt-4 text-base font-medium
-                  text-white bg-[#c1902f] border border-transparent rounded-md
-                  hover:bg-[#d4a43f] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#c1902f]
+                  text-white bg-[#0078d4] border border-transparent rounded-md
+                  hover:bg-[#50a3d9] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0078d4]
                   transition-colors duration-200 disabled:opacity-50
                 "
               >
