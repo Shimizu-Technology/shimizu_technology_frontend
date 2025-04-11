@@ -30,11 +30,11 @@ export function MobileSelect({
   const customStyles: StylesConfig = {
     control: (provided, state) => ({
       ...provided,
-      borderColor: state.isFocused ? '#c1902f' : '#e5e7eb',
+      borderColor: state.isFocused ? '#0078d4' : '#e5e7eb',
       borderWidth: '1px',
-      boxShadow: state.isFocused ? '0 0 0 2px rgba(193, 144, 47, 0.2)' : 'none',
+      boxShadow: state.isFocused ? '0 0 0 2px rgba(0, 120, 212, 0.2)' : 'none',
       '&:hover': {
-        borderColor: state.isFocused ? '#c1902f' : '#d1d5db',
+        borderColor: state.isFocused ? '#0078d4' : '#d1d5db',
       },
       padding: '4px 8px',
       fontSize: '16px', // Prevent iOS zoom
@@ -66,7 +66,7 @@ export function MobileSelect({
     }),
     option: (provided, state) => ({
       ...provided,
-      backgroundColor: state.isSelected ? '#c1902f' : state.isFocused ? 'rgba(193, 144, 47, 0.1)' : 'white',
+      backgroundColor: state.isSelected ? '#0078d4' : state.isFocused ? 'rgba(0, 120, 212, 0.1)' : 'white',
       color: state.isSelected ? 'white' : '#111827',
       padding: '12px 16px',
       cursor: 'pointer',
@@ -74,7 +74,7 @@ export function MobileSelect({
       fontWeight: state.isSelected ? '500' : '400',
       transition: 'background-color 0.15s ease',
       '&:active': {
-        backgroundColor: state.isSelected ? '#c1902f' : 'rgba(193, 144, 47, 0.2)',
+        backgroundColor: state.isSelected ? '#0078d4' : 'rgba(0, 120, 212, 0.2)',
       },
       borderBottom: '1px solid #f3f4f6',
       '&:last-child': {
@@ -100,12 +100,12 @@ export function MobileSelect({
     }),
     dropdownIndicator: (provided, state) => ({
       ...provided,
-      color: state.isFocused ? '#c1902f' : '#9ca3af',
+      color: state.isFocused ? '#0078d4' : '#9ca3af',
       padding: '0 8px',
       transition: 'transform 0.2s ease, color 0.2s ease',
       transform: state.selectProps.menuIsOpen ? 'rotate(180deg)' : 'rotate(0)',
       '&:hover': {
-        color: '#c1902f',
+        color: '#0078d4',
       },
     }),
     valueContainer: (provided) => ({
