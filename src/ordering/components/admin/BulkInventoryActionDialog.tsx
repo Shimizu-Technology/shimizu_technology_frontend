@@ -339,7 +339,7 @@ export function BulkInventoryActionDialog({
       <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 animate-fadeIn">
           <div className="flex justify-center items-center h-32">
-            <svg className="animate-spin h-8 w-8 text-[#c1902f]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg className="animate-spin h-8 w-8 text-[#0078d4]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -644,7 +644,7 @@ export function BulkInventoryActionDialog({
                               value={action.reason || ''}
                               onChange={(e) => handleReasonChange(uniqueItemId, e.target.value)}
                               placeholder="Why is this item damaged?"
-                              className="border border-gray-300 rounded-md px-3 py-2 w-full text-sm focus:ring-[#c1902f] focus:border-[#c1902f]"
+                              className="border border-gray-300 rounded-md px-3 py-2 w-full text-sm focus:ring-[#0078d4] focus:border-[#0078d4]"
                             />
                           </div>
                         )}
@@ -667,7 +667,7 @@ export function BulkInventoryActionDialog({
           </button>
           <button
             onClick={handleConfirm}
-            className="px-4 py-2 bg-[#c1902f] text-white rounded-lg text-sm font-medium hover:bg-[#d4a43f] transition-colors shadow-sm"
+            className="px-4 py-2 bg-[#0078d4] text-white rounded-lg text-sm font-medium hover:bg-[#50a3d9] transition-colors shadow-sm"
           >
             Confirm & Continue
           </button>

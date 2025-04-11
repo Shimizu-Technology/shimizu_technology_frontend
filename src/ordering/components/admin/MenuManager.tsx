@@ -771,12 +771,12 @@ export function MenuManager({
                 onClick={() => setMenuSelectorOpen(!menuSelectorOpen)}
                 className="w-full flex items-center justify-between bg-white text-gray-800 hover:bg-gray-50
                            px-3 py-2 rounded-md border border-gray-200 shadow-sm transition-all duration-150
-                           focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:ring-opacity-50"
+                           focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:ring-opacity-50"
                 aria-expanded={menuSelectorOpen}
                 aria-controls="menu-selector-dropdown"
               >
                 <div className="flex items-center">
-                  <BookOpen className="h-4 w-4 mr-2 text-[#c1902f]" />
+                  <BookOpen className="h-4 w-4 mr-2 text-[#0078d4]" />
                   <span className="text-sm font-medium truncate max-w-[120px]">
                     {selectedMenuId
                       ? menus.find((m) => m.id === selectedMenuId)?.name || 'Select Menu'
@@ -821,14 +821,14 @@ export function MenuManager({
                         w-full text-left px-3 py-2 text-sm flex items-center justify-between
                         transition-colors duration-150
                         ${selectedMenuId === menu.id
-                          ? 'bg-[#c1902f] bg-opacity-10 text-[#c1902f]'
+                          ? 'bg-[#0078d4] bg-opacity-10 text-[#0078d4]'
                           : 'text-gray-700 hover:bg-gray-50'}
                       `}
                     >
                       <div className="flex items-center">
                         <BookOpen
                           className={`h-4 w-4 mr-2 flex-shrink-0 ${
-                            selectedMenuId === menu.id ? 'text-[#c1902f]' : 'text-gray-400'
+                            selectedMenuId === menu.id ? 'text-[#0078d4]' : 'text-gray-400'
                           }`}
                         />
                         <span className="truncate">{menu.name}</span>
@@ -863,7 +863,7 @@ export function MenuManager({
             {/* Add Item Button */}
             <button
               onClick={handleAdd}
-              className="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-[#c1902f] text-white rounded-md hover:bg-[#d4a43f]"
+              className="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-[#0078d4] text-white rounded-md hover:bg-[#50a3d9]"
               disabled={!selectedMenuId}
             >
               <Plus className="h-5 w-5 mr-2" />
@@ -882,7 +882,7 @@ export function MenuManager({
           <button
             className={
               !selectedCategory
-                ? 'whitespace-nowrap px-4 py-2 rounded-md bg-[#c1902f] text-white'
+                ? 'whitespace-nowrap px-4 py-2 rounded-md bg-[#0078d4] text-white'
                 : 'whitespace-nowrap px-4 py-2 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200'
             }
             onClick={() => setSelectedCategory(null)}
@@ -897,7 +897,7 @@ export function MenuManager({
                 key={cat.id}
                 className={
                   selectedCategory === cat.id
-                    ? 'whitespace-nowrap px-4 py-2 rounded-md bg-[#c1902f] text-white'
+                    ? 'whitespace-nowrap px-4 py-2 rounded-md bg-[#0078d4] text-white'
                     : 'whitespace-nowrap px-4 py-2 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }
                 onClick={() => setSelectedCategory(cat.id)}
@@ -913,7 +913,7 @@ export function MenuManager({
       {selectedCategory && (
         <div className="animate-fadeIn transition-all duration-300 mb-4">
           {categories.find(cat => cat.id === selectedCategory)?.description && (
-            <div className="bg-white/80 backdrop-blur-sm border-l-2 border-[#c1902f]/70 rounded-lg px-4 py-3 sm:p-4 shadow-sm mb-4">
+            <div className="bg-white/80 backdrop-blur-sm border-l-2 border-[#0078d4]/70 rounded-lg px-4 py-3 sm:p-4 shadow-sm mb-4">
               <p className="text-gray-600 font-normal leading-relaxed text-sm sm:text-base">
                 {categories.find(cat => cat.id === selectedCategory)?.description}
               </p>
@@ -1077,7 +1077,7 @@ export function MenuManager({
                       {/* Edit Item */}
                       <button
                         onClick={() => handleEdit(item)}
-                        className="p-2 text-gray-600 hover:text-[#c1902f]"
+                        className="p-2 text-gray-600 hover:text-[#0078d4]"
                         title="Edit Item"
                       >
                         <Edit2 className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -1165,7 +1165,7 @@ export function MenuManager({
           )}
           <button
             onClick={handleAdd}
-            className="mt-6 inline-flex items-center justify-center px-4 py-2 bg-[#c1902f] text-white rounded-md hover:bg-[#d4a43f]"
+            className="mt-6 inline-flex items-center justify-center px-4 py-2 bg-[#0078d4] text-white rounded-md hover:bg-[#50a3d9]"
           >
             <Plus className="h-5 w-5 mr-2" />
             Add Your First Item
@@ -1879,7 +1879,7 @@ export function MenuManager({
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex items-center px-4 py-2 bg-[#c1902f] text-white rounded-md hover:bg-[#d4a43f]"
+                  className="inline-flex items-center px-4 py-2 bg-[#0078d4] text-white rounded-md hover:bg-[#50a3d9]"
                 >
                   <Save className="h-5 w-5 mr-2" />
                   Save

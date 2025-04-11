@@ -103,7 +103,7 @@ export function PromoManager({ restaurantId }: PromoManagerProps) {
       <div className="flex justify-end mb-6">
         <button
           onClick={handleAdd}
-          className="flex items-center px-4 py-2 bg-[#c1902f] text-white rounded-md hover:bg-[#d4a43f]"
+          className="flex items-center px-4 py-2 bg-[#0078d4] text-white rounded-md hover:bg-[#50a3d9]"
         >
           <Plus className="h-5 w-5 mr-2" />
           Add Promo Code
@@ -227,7 +227,7 @@ export function PromoManager({ restaurantId }: PromoManagerProps) {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#c1902f] text-white rounded-md hover:bg-[#d4a43f]"
+                  className="px-4 py-2 bg-[#0078d4] text-white rounded-md hover:bg-[#50a3d9]"
                 >
                   <Save className="h-5 w-5 mr-2 inline-block" />
                   Save
@@ -246,14 +246,14 @@ export function PromoManager({ restaurantId }: PromoManagerProps) {
             <div className="flex justify-between items-start mb-4">
               <div>
                 <div className="flex items-center space-x-2">
-                  <Tag className="h-5 w-5 text-[#c1902f]" />
+                  <Tag className="h-5 w-5 text-[#0078d4]" />
                   <h3 className="text-lg font-semibold">{promo.code}</h3>
                 </div>
                 {promo.description && (
                   <p className="text-sm text-gray-600 mt-1">{promo.description}</p>
                 )}
               </div>
-              <span className="text-lg font-semibold text-[#c1902f]">
+              <span className="text-lg font-semibold text-[#0078d4]">
                 {promo.discountPercent}% OFF
               </span>
             </div>
@@ -279,7 +279,7 @@ export function PromoManager({ restaurantId }: PromoManagerProps) {
             <div className="flex justify-end space-x-2 mt-4">
               <button
                 onClick={() => handleEdit(promo)}
-                className="p-2 text-gray-600 hover:text-[#c1902f]"
+                className="p-2 text-gray-600 hover:text-[#0078d4]"
               >
                 <Edit2 className="h-5 w-5" />
               </button>

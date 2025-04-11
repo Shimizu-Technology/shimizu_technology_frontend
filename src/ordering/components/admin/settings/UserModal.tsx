@@ -212,7 +212,7 @@ export function UserModal({ user, isCreateMode, onClose, restaurantId }: UserMod
               onChange={(e) => setEmail(e.target.value)}
               required
               className="mt-1 block w-full border border-gray-300 rounded-md
-                         focus:ring-[#c1902f] focus:border-[#c1902f] p-2
+                         focus:ring-[#0078d4] focus:border-[#0078d4] p-2
                          transition-colors duration-200"
             />
           </div>
@@ -228,7 +228,7 @@ export function UserModal({ user, isCreateMode, onClose, restaurantId }: UserMod
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 className="mt-1 w-full border border-gray-300 rounded-md
-                           focus:ring-[#c1902f] focus:border-[#c1902f] p-2
+                           focus:ring-[#0078d4] focus:border-[#0078d4] p-2
                            transition-colors duration-200"
               />
             </div>
@@ -241,7 +241,7 @@ export function UserModal({ user, isCreateMode, onClose, restaurantId }: UserMod
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 className="mt-1 w-full border border-gray-300 rounded-md
-                           focus:ring-[#c1902f] focus:border-[#c1902f] p-2
+                           focus:ring-[#0078d4] focus:border-[#0078d4] p-2
                            transition-colors duration-200"
               />
             </div>
@@ -260,7 +260,7 @@ export function UserModal({ user, isCreateMode, onClose, restaurantId }: UserMod
               placeholder="+1671"
               required
               className="mt-1 w-full border border-gray-300 rounded-md
-                         focus:ring-[#c1902f] focus:border-[#c1902f] p-2
+                         focus:ring-[#0078d4] focus:border-[#0078d4] p-2
                          transition-colors duration-200"
             />
             {phone && (
@@ -280,7 +280,7 @@ export function UserModal({ user, isCreateMode, onClose, restaurantId }: UserMod
               onChange={(e) => setRole(e.target.value)}
               required
               className="mt-1 block w-full border border-gray-300 rounded-md
-                         focus:ring-[#c1902f] focus:border-[#c1902f] 
+                         focus:ring-[#0078d4] focus:border-[#0078d4] 
                          p-2 text-base transition-colors duration-200"
             >
               <option value="customer">Customer</option>
@@ -394,7 +394,7 @@ export function UserModal({ user, isCreateMode, onClose, restaurantId }: UserMod
                           }
                         }}
                         className={`w-full p-2 border ${passwordError ? 'border-red-300' : 'border-gray-300'} 
-                                  rounded-md focus:ring-[#c1902f] focus:border-[#c1902f] transition-colors`}
+                                  rounded-md focus:ring-[#0078d4] focus:border-[#0078d4] transition-colors`}
                         placeholder="Enter new password"
                       />
                       {passwordError && (
@@ -415,8 +415,8 @@ export function UserModal({ user, isCreateMode, onClose, restaurantId }: UserMod
                         type="button"
                         onClick={handleAdminResetPassword}
                         disabled={loading}
-                        className="px-4 py-2 text-sm font-medium text-white bg-[#c1902f] border border-transparent 
-                                rounded-md shadow-sm hover:bg-[#d4a43f] focus:outline-none transition-colors
+                        className="px-4 py-2 text-sm font-medium text-white bg-[#0078d4] border border-transparent 
+                                rounded-md shadow-sm hover:bg-[#50a3d9] focus:outline-none transition-colors
                                 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {loading ? 'Resetting...' : 'Reset Password'}
@@ -501,8 +501,8 @@ export function UserModal({ user, isCreateMode, onClose, restaurantId }: UserMod
                 type="button"
                 disabled={loading}
                 onClick={handleSave}
-                className="px-5 py-2.5 text-sm font-medium text-white bg-[#c1902f]
-                        rounded-md shadow-sm hover:bg-[#d4a43f] transition-all duration-200
+                className="px-5 py-2.5 text-sm font-medium text-white bg-[#0078d4]
+                        rounded-md shadow-sm hover:bg-[#50a3d9] transition-all duration-200
                         transform hover:scale-[1.02] active:scale-[0.98]
                         disabled:opacity-50 disabled:cursor-not-allowed"
               >

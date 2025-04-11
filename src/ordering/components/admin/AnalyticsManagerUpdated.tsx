@@ -372,7 +372,7 @@ export function AnalyticsManager({ restaurantId }: AnalyticsManagerProps) {
         {/* "Load Analytics" button */}
         <button
           onClick={loadAnalytics}
-          className="px-4 py-2 bg-[#c1902f] text-white rounded hover:bg-[#b2872c]"
+          className="px-4 py-2 bg-[#0078d4] text-white rounded hover:bg-[#005a9e]"
         >
           Load Analytics
         </button>

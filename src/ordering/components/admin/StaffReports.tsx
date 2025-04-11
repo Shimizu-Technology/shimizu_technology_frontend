@@ -247,7 +247,7 @@ export function StaffReports() {
         <h1 className="text-2xl font-bold text-gray-800">Staff Reports</h1>
         <button
           onClick={handleExportCSV}
-          className="px-4 py-2 bg-[#c1902f] text-white rounded-md hover:bg-[#a67b28] transition-colors"
+          className="px-4 py-2 bg-[#0078d4] text-white rounded-md hover:bg-[#a67b28] transition-colors"
         >
           Export CSV
         </button>
@@ -260,7 +260,7 @@ export function StaffReports() {
             onClick={() => setActiveReport('orders')}
             className={`py-2 px-4 font-medium ${
               activeReport === 'orders'
-                ? 'text-[#c1902f] border-b-2 border-[#c1902f]'
+                ? 'text-[#0078d4] border-b-2 border-[#0078d4]'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -270,7 +270,7 @@ export function StaffReports() {
             onClick={() => setActiveReport('balances')}
             className={`py-2 px-4 font-medium ${
               activeReport === 'balances'
-                ? 'text-[#c1902f] border-b-2 border-[#c1902f]'
+                ? 'text-[#0078d4] border-b-2 border-[#0078d4]'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -280,7 +280,7 @@ export function StaffReports() {
             onClick={() => setActiveReport('discounts')}
             className={`py-2 px-4 font-medium ${
               activeReport === 'discounts'
-                ? 'text-[#c1902f] border-b-2 border-[#c1902f]'
+                ? 'text-[#0078d4] border-b-2 border-[#0078d4]'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -301,7 +301,7 @@ export function StaffReports() {
               name="from"
               value={dateRange.from}
               onChange={handleDateChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#c1902f]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#0078d4]"
             />
           </div>
           <div>
@@ -313,7 +313,7 @@ export function StaffReports() {
               name="to"
               value={dateRange.to}
               onChange={handleDateChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#c1902f]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#0078d4]"
             />
           </div>
           <div>
@@ -323,7 +323,7 @@ export function StaffReports() {
             <select
               value={selectedStaffId === 'all' ? 'all' : selectedStaffId}
               onChange={(e) => setSelectedStaffId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#c1902f]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#0078d4]"
             >
               <option value="all">All Staff Members</option>
               {staffMembers.map((staff) => (
@@ -346,7 +346,7 @@ export function StaffReports() {
       {/* Report Content */}
       {loading ? (
         <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#c1902f]"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#0078d4]"></div>
         </div>
       ) : (
         <>
@@ -557,7 +557,7 @@ export function StaffReports() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <div className="text-2xl font-bold text-[#c1902f]">
+                    <div className="text-2xl font-bold text-[#0078d4]">
                       ${(discountSummary.total_discount_amount || 0).toFixed(2)}
                     </div>
                     <div className="opacity-0 group-hover:opacity-100 transition duration-300 absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 px-3 py-2 bg-gray-800 text-white text-xs rounded w-64 mb-2 shadow-lg">
@@ -633,7 +633,7 @@ export function StaffReports() {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-[#c1902f]">
+                              <div className="text-sm font-medium text-[#0078d4]">
                                 ${(staff.total_discount || 0).toFixed(2)}
                               </div>
                             </td>

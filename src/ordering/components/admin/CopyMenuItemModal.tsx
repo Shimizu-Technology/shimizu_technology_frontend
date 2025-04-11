@@ -170,7 +170,7 @@ export function CopyMenuItemModal({
           <button
             type="button"
             onClick={handleCopy}
-            className="inline-flex items-center px-4 py-2 bg-[#c1902f] text-white rounded-md hover:bg-[#d4a43f] transition-colors duration-200"
+            className="inline-flex items-center px-4 py-2 bg-[#0078d4] text-white rounded-md hover:bg-[#50a3d9] transition-colors duration-200"
             disabled={loading || !selectedMenuId || selectedCategories.length === 0}
           >
             <Save className="h-5 w-5 mr-2" />

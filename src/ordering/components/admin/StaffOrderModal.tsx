@@ -132,14 +132,14 @@ function MenuItemsPanel({
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-md
-                     focus:outline-none focus:ring-2 focus:ring-[#c1902f]"
+                     focus:outline-none focus:ring-2 focus:ring-[#0078d4]"
         />
         <div className="flex items-center mt-3 gap-3 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setSelectedCategory('all')}
             className={`whitespace-nowrap px-4 py-3 rounded-md text-sm font-medium
             ${selectedCategory === 'all'
-              ? 'bg-[#c1902f] text-white shadow'
+              ? 'bg-[#0078d4] text-white shadow'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -151,7 +151,7 @@ function MenuItemsPanel({
               onClick={() => setSelectedCategory(catId)}
               className={`whitespace-nowrap px-4 py-3 rounded-md text-sm font-medium
               ${selectedCategory === catId
-                ? 'bg-[#c1902f] text-white shadow'
+                ? 'bg-[#0078d4] text-white shadow'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -165,7 +165,7 @@ function MenuItemsPanel({
       <div className="mt-4">
         {menuLoading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#c1902f]" />
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0078d4]" />
           </div>
         ) : filteredMenuItems.length === 0 ? (
           <div className="text-center py-8 text-gray-500">No menu items found.</div>
@@ -187,7 +187,7 @@ function MenuItemsPanel({
                       key={item.id}
                       className={`border rounded-lg hover:shadow-md transition-shadow p-1
                         ${isInCart
-                          ? 'border-[#c1902f] bg-yellow-50 shadow'
+                          ? 'border-[#0078d4] bg-yellow-50 shadow'
                           : 'border-gray-200'
                         }`}
                     >
@@ -210,7 +210,7 @@ function MenuItemsPanel({
                             <h4 className="font-medium text-gray-900 text-sm sm:text-base leading-tight line-clamp-2">
                               {item.name}
                             </h4>
-                            <p className="text-[#c1902f] font-semibold text-sm sm:text-base mt-1">
+                            <p className="text-[#0078d4] font-semibold text-sm sm:text-base mt-1">
                               ${item.price.toFixed(2)}
                             </p>
                           </div>
@@ -272,7 +272,7 @@ function MenuItemsPanel({
                                       removeFromCart(itemKey);
                                     }
                                   }}
-                                  className="text-gray-600 hover:text-[#c1902f] p-2.5"
+                                  className="text-gray-600 hover:text-[#0078d4] p-2.5"
                                 >
                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor">
                                     <path
@@ -292,7 +292,7 @@ function MenuItemsPanel({
                                     const itemKey = getItemKey(item);
                                     setCartQuantity(itemKey, cartItem.quantity + 1);
                                   }}
-                                  className="text-gray-600 hover:text-[#c1902f] p-2.5"
+                                  className="text-gray-600 hover:text-[#0078d4] p-2.5"
                                 >
                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor">
                                     <path
@@ -311,14 +311,14 @@ function MenuItemsPanel({
                             ) : hasOptions ? (
                               <button
                                 onClick={() => setCustomizingItem(item)}
-                                className="bg-[#c1902f] text-white px-2 py-2.5 rounded text-base font-medium hover:bg-[#a97c28]"
+                                className="bg-[#0078d4] text-white px-2 py-2.5 rounded text-base font-medium hover:bg-[#005a9e]"
                               >
                                 {isInCart ? 'Add Another' : 'Customize'}
                               </button>
                             ) : (
                               <button
                                 onClick={() => handleAddItem(item)}
-                                className="text-[#c1902f] hover:bg-[#c1902f] hover:text-white px-4 py-2.5 rounded text-base font-medium"
+                                className="text-[#0078d4] hover:bg-[#0078d4] hover:text-white px-4 py-2.5 rounded text-base font-medium"
                               >
                                 Add
                               </button>
@@ -519,7 +519,7 @@ function OrderPanel({
                           }
                           return (
                             <div key={idx} className="flex items-center">
-                              <span className="inline-block w-2 h-2 bg-[#c1902f] rounded-full mr-1.5"></span>
+                              <span className="inline-block w-2 h-2 bg-[#0078d4] rounded-full mr-1.5"></span>
                               <span className="font-medium">{optionGroupName}:</span> {optionName}
                             </div>
                           );
@@ -528,7 +528,7 @@ function OrderPanel({
                         // Object-based customizations
                         Object.entries(item.customizations).map(([groupName, options], idx: number) => (
                           <div key={idx} className="flex items-center">
-                            <span className="inline-block w-2 h-2 bg-[#c1902f] rounded-full mr-1.5"></span>
+                            <span className="inline-block w-2 h-2 bg-[#0078d4] rounded-full mr-1.5"></span>
                             <span className="font-medium">{groupName}:</span>{' '}
                             {Array.isArray(options) ? options.join(', ') : String(options)}
                           </div>
@@ -549,7 +549,7 @@ function OrderPanel({
                             removeFromCart(itemKey);
                           }
                         }}
-                        className="text-gray-600 hover:text-[#c1902f] p-2.5 rounded-l"
+                        className="text-gray-600 hover:text-[#0078d4] p-2.5 rounded-l"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor">
                           <path
@@ -578,7 +578,7 @@ function OrderPanel({
                           }
                           return false;
                         })()}
-                        className="text-gray-600 hover:text-[#c1902f] p-2.5 rounded-r"
+                        className="text-gray-600 hover:text-[#0078d4] p-2.5 rounded-r"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor">
                           <path
@@ -623,8 +623,8 @@ function OrderPanel({
                           }
                           return false;
                         })()}
-                        className="mt-1 sm:mt-0 text-[#c1902f] border border-[#c1902f]
-                                   hover:bg-[#c1902f] hover:text-white px-4 py-2
+                        className="mt-1 sm:mt-0 text-[#0078d4] border border-[#0078d4]
+                                   hover:bg-[#0078d4] hover:text-white px-4 py-2
                                    rounded text-sm font-medium transition-colors"
                       >
                         Add Another
@@ -656,7 +656,7 @@ function OrderPanel({
         )}
         <div className="flex justify-between items-center mb-4">
           <span className="font-semibold text-gray-700 text-lg">Total:</span>
-          <span className="font-bold text-xl text-[#c1902f]">
+          <span className="font-bold text-xl text-[#0078d4]">
             ${orderTotal.toFixed(2)}
           </span>
         </div>
@@ -672,8 +672,8 @@ function OrderPanel({
           <button
             onClick={handleSubmitOrder}
             disabled={!cartItems.length || orderLoading}
-            className="py-3 bg-[#c1902f] text-white rounded-md font-medium hover:bg-[#a97c28]
-              focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:ring-opacity-50
+            className="py-3 bg-[#0078d4] text-white rounded-md font-medium hover:bg-[#005a9e]
+              focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:ring-opacity-50
               disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-colors"
           >
             {orderLoading ? (
@@ -760,7 +760,7 @@ function CustomerInfoPanel({
               value={contactName}
               onChange={e => setContactName(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none
-                         focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f] text-sm shadow-sm"
+                         focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4] text-sm shadow-sm"
               placeholder="Customer name"
             />
           </div>
@@ -773,7 +773,7 @@ function CustomerInfoPanel({
               value={contactPhone}
               onChange={e => setContactPhone(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none
-                         focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f] text-sm shadow-sm"
+                         focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4] text-sm shadow-sm"
               placeholder="+1671"
             />
           </div>
@@ -786,7 +786,7 @@ function CustomerInfoPanel({
               value={contactEmail}
               onChange={e => setContactEmail(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none
-                         focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f] text-sm shadow-sm"
+                         focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4] text-sm shadow-sm"
               placeholder="Email address"
             />
           </div>
@@ -800,7 +800,7 @@ function CustomerInfoPanel({
               value={specialInstructions}
               onChange={e => setSpecialInstructions(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none
-                         focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f] text-sm shadow-sm"
+                         focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4] text-sm shadow-sm"
               placeholder="Special instructions or notes"
               rows={4}
             />
@@ -1060,7 +1060,7 @@ function PaymentPanel({
               type="button"
               className={`px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
                 paymentMethod === 'credit_card'
-                  ? 'bg-[#c1902f] text-white border-[#c1902f]'
+                  ? 'bg-[#0078d4] text-white border-[#0078d4]'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
               }`}
               onClick={() => setPaymentMethod('credit_card')}
@@ -1071,7 +1071,7 @@ function PaymentPanel({
               type="button"
               className={`px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
                 paymentMethod === 'stripe_reader'
-                  ? 'bg-[#c1902f] text-white border-[#c1902f]'
+                  ? 'bg-[#0078d4] text-white border-[#0078d4]'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
               }`}
               onClick={() => setPaymentMethod('stripe_reader')}
@@ -1082,7 +1082,7 @@ function PaymentPanel({
               type="button"
               className={`px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
                 paymentMethod === 'cash'
-                  ? 'bg-[#c1902f] text-white border-[#c1902f]'
+                  ? 'bg-[#0078d4] text-white border-[#0078d4]'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
               }`}
               onClick={() => setPaymentMethod('cash')}
@@ -1093,7 +1093,7 @@ function PaymentPanel({
               type="button"
               className={`px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
                 paymentMethod === 'payment_link'
-                  ? 'bg-[#c1902f] text-white border-[#c1902f]'
+                  ? 'bg-[#0078d4] text-white border-[#0078d4]'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
               }`}
               onClick={() => setPaymentMethod('payment_link')}
@@ -1104,7 +1104,7 @@ function PaymentPanel({
               type="button"
               className={`px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
                 paymentMethod === 'clover'
-                  ? 'bg-[#c1902f] text-white border-[#c1902f]'
+                  ? 'bg-[#0078d4] text-white border-[#0078d4]'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
               }`}
               onClick={() => setPaymentMethod('clover')}
@@ -1115,7 +1115,7 @@ function PaymentPanel({
               type="button"
               className={`px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
                 paymentMethod === 'revel'
-                  ? 'bg-[#c1902f] text-white border-[#c1902f]'
+                  ? 'bg-[#0078d4] text-white border-[#0078d4]'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
               }`}
               onClick={() => setPaymentMethod('revel')}
@@ -1126,7 +1126,7 @@ function PaymentPanel({
               type="button"
               className={`px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
                 paymentMethod === 'other'
-                  ? 'bg-[#c1902f] text-white border-[#c1902f]'
+                  ? 'bg-[#0078d4] text-white border-[#0078d4]'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
               }`}
               onClick={() => setPaymentMethod('other')}
@@ -1178,7 +1178,7 @@ function PaymentPanel({
               {/* Order Total Display */}
               <div className="flex justify-between items-center font-medium bg-gray-50 p-3 rounded-md">
                 <span>Order Total:</span>
-                <span className="text-lg text-[#c1902f]">${orderTotal.toFixed(2)}</span>
+                <span className="text-lg text-[#0078d4]">${orderTotal.toFixed(2)}</span>
               </div>
               
               {/* Cash Received Input */}
@@ -1196,7 +1196,7 @@ function PaymentPanel({
                       onClick={() => setCashReceived(amount.toString())}
                       className={`px-3 py-2 border rounded-md text-sm font-medium transition-colors
                         ${cashReceived === amount.toString()
-                          ? 'bg-[#c1902f] text-white border-[#c1902f]'
+                          ? 'bg-[#0078d4] text-white border-[#0078d4]'
                           : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                         }`}
                     >
@@ -1208,7 +1208,7 @@ function PaymentPanel({
                     onClick={() => setCashReceived(Math.ceil(orderTotal).toString())}
                     className={`px-3 py-2 border rounded-md text-sm font-medium transition-colors
                       ${cashReceived === Math.ceil(orderTotal).toString()
-                        ? 'bg-[#c1902f] text-white border-[#c1902f]'
+                        ? 'bg-[#0078d4] text-white border-[#0078d4]'
                         : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                       }`}
                   >
@@ -1219,7 +1219,7 @@ function PaymentPanel({
                     onClick={() => setCashReceived(orderTotal.toString())}
                     className={`px-3 py-2 border rounded-md text-sm font-medium transition-colors
                       ${cashReceived === orderTotal.toString()
-                        ? 'bg-[#c1902f] text-white border-[#c1902f]'
+                        ? 'bg-[#0078d4] text-white border-[#0078d4]'
                         : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                       }`}
                   >
@@ -1243,7 +1243,7 @@ function PaymentPanel({
                       // Select all text when focused to make it easier to replace
                       e.target.select();
                     }}
-                    className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#c1902f] focus:border-[#c1902f]"
+                    className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#0078d4] focus:border-[#0078d4]"
                     placeholder="Other amount"
                   />
                 </div>
@@ -1282,7 +1282,7 @@ function PaymentPanel({
         </label>
         <input
           type="text"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#c1902f] focus:border-[#c1902f]"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#0078d4] focus:border-[#0078d4]"
           value={transactionId}
           onChange={e => setTransactionId(e.target.value)}
           placeholder="Enter transaction ID or reference number"
@@ -1294,7 +1294,7 @@ function PaymentPanel({
         </label>
         <input
           type="date"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#c1902f] focus:border-[#c1902f]"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#0078d4] focus:border-[#0078d4]"
           value={paymentDate}
           onChange={e => setPaymentDate(e.target.value)}
         />
@@ -1304,7 +1304,7 @@ function PaymentPanel({
           Notes (optional)
         </label>
         <textarea
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#c1902f] focus:border-[#c1902f]"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#0078d4] focus:border-[#0078d4]"
           value={paymentNotes}
           onChange={e => setPaymentNotes(e.target.value)}
           placeholder="Enter any additional payment notes"
@@ -1324,7 +1324,7 @@ function PaymentPanel({
               </label>
               <input
                 type="email"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#c1902f] focus:border-[#c1902f]"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#0078d4] focus:border-[#0078d4]"
                 value={customerEmail}
                 onChange={e => setCustomerEmail(e.target.value)}
                 placeholder="customer@example.com"
@@ -1336,7 +1336,7 @@ function PaymentPanel({
               </label>
               <input
                 type="tel"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#c1902f] focus:border-[#c1902f]"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#0078d4] focus:border-[#0078d4]"
                 value={customerPhone}
                 onChange={e => setCustomerPhone(e.target.value)}
                 placeholder="+1234567890"
@@ -1440,8 +1440,8 @@ function PaymentPanel({
                 (paymentMethod === 'payment_link' && !customerEmail && !customerPhone) ||
                 (paymentMethod === 'cash' && (parseFloat(cashReceived || '0') < orderTotal))
               }
-              className="py-3 bg-[#c1902f] text-white rounded-md font-medium hover:bg-[#a97c28]
-                        focus:outline-none focus:ring-2 focus:ring-[#c1902f]
+              className="py-3 bg-[#0078d4] text-white rounded-md font-medium hover:bg-[#005a9e]
+                        focus:outline-none focus:ring-2 focus:ring-[#0078d4]
                         focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed
                         shadow-sm transition-colors"
             >
@@ -1499,8 +1499,8 @@ function PaymentPanel({
                   payment_details: paymentDetails
                 });
               }}
-              className="py-3 bg-[#c1902f] text-white rounded-md font-medium hover:bg-[#a97c28]
-                        focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:ring-opacity-50"
+              className="py-3 bg-[#0078d4] text-white rounded-md font-medium hover:bg-[#005a9e]
+                        focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:ring-opacity-50"
             >
               Mark as Paid &amp; Close
             </button>
@@ -2062,7 +2062,7 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
             onClick={() => setActiveTab('menu')}
             className={`flex-1 py-3 text-sm font-medium text-center ${
               activeTab === 'menu'
-                ? 'text-[#c1902f] border-b-2 border-[#c1902f]'
+                ? 'text-[#0078d4] border-b-2 border-[#0078d4]'
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
@@ -2072,13 +2072,13 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
             onClick={() => setActiveTab('order')}
             className={`flex-1 py-3 text-sm font-medium text-center relative ${
               activeTab === 'order'
-                ? 'text-[#c1902f] border-b-2 border-[#c1902f]'
+                ? 'text-[#0078d4] border-b-2 border-[#0078d4]'
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
             Current Order
             {cartItems.length > 0 && (
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 bg-[#c1902f] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 bg-[#0078d4] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 {cartItems.length}
               </span>
             )}
@@ -2087,7 +2087,7 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
             onClick={() => setActiveTab('customer')}
             className={`flex-1 py-3 text-sm font-medium text-center ${
               activeTab === 'customer'
-                ? 'text-[#c1902f] border-b-2 border-[#c1902f]'
+                ? 'text-[#0078d4] border-b-2 border-[#0078d4]'
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
@@ -2097,7 +2097,7 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
             onClick={() => setActiveTab('payment')}
             className={`flex-1 py-3 text-sm font-medium text-center ${
               activeTab === 'payment'
-                ? 'text-[#c1902f] border-b-2 border-[#c1902f]'
+                ? 'text-[#0078d4] border-b-2 border-[#0078d4]'
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
@@ -2360,7 +2360,7 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
                           value={contactName}
                           onChange={e => setContactName(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none
-                                  focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f] text-sm shadow-sm"
+                                  focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4] text-sm shadow-sm"
                           placeholder="Customer name"
                         />
                       </div>
@@ -2373,7 +2373,7 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
                           value={contactPhone}
                           onChange={e => setContactPhone(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none
-                                  focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f] text-sm shadow-sm"
+                                  focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4] text-sm shadow-sm"
                           placeholder="+1671"
                         />
                       </div>
@@ -2386,7 +2386,7 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
                           value={contactEmail}
                           onChange={e => setContactEmail(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none
-                                  focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f] text-sm shadow-sm"
+                                  focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4] text-sm shadow-sm"
                           placeholder="Email address"
                         />
                       </div>
@@ -2400,7 +2400,7 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
                           value={specialInstructions}
                           onChange={e => setSpecialInstructions(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none
-                                  focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f] text-sm shadow-sm"
+                                  focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4] text-sm shadow-sm"
                           placeholder="Special instructions or notes"
                           rows={4}
                         />

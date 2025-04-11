@@ -156,7 +156,7 @@ export function CategoryManagementModal({
       <div className="bg-white rounded-lg max-w-3xl w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out animate-slideUp shadow-xl">
         <div className="flex justify-between items-center mb-6 pb-3 border-b">
           <div className="flex items-center">
-            <Layers className="h-5 w-5 text-[#c1902f] mr-2" />
+            <Layers className="h-5 w-5 text-[#0078d4] mr-2" />
             <h3 className="text-xl font-semibold text-gray-800">
               Categories for {menu.name}
             </h3>
@@ -180,7 +180,7 @@ export function CategoryManagementModal({
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-[#c1902f] border-r-2 border-b-2 border-gray-200"></div>
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-[#0078d4] border-r-2 border-b-2 border-gray-200"></div>
                 <p className="mt-3 text-sm text-gray-500">Loading categories...</p>
               </div>
             </div>
@@ -198,7 +198,7 @@ export function CategoryManagementModal({
                     type="text"
                     value={newCategoryName}
                     onChange={(e) => setNewCategoryName(e.target.value)}
-                    className="border border-gray-300 p-2 rounded-md w-full focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f] focus:outline-none transition-colors"
+                    className="border border-gray-300 p-2 rounded-md w-full focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4] focus:outline-none transition-colors"
                     placeholder="e.g. Beverages"
                     required
                   />
@@ -211,7 +211,7 @@ export function CategoryManagementModal({
                   <textarea
                     value={newCategoryDescription}
                     onChange={(e) => setNewCategoryDescription(e.target.value)}
-                    className="border border-gray-300 p-2 rounded-md w-full focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f] focus:outline-none transition-colors"
+                    className="border border-gray-300 p-2 rounded-md w-full focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4] focus:outline-none transition-colors"
                     placeholder="Brief description of this category"
                     rows={3}
                   />
@@ -220,7 +220,7 @@ export function CategoryManagementModal({
                 <div className="flex justify-end pt-2">
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-[#c1902f] text-white rounded-md hover:bg-[#d4a43f] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:ring-opacity-50"
+                    className="px-4 py-2 bg-[#0078d4] text-white rounded-md hover:bg-[#50a3d9] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:ring-opacity-50"
                   >
                     Add Category
                   </button>
@@ -262,7 +262,7 @@ export function CategoryManagementModal({
                                     name: e.target.value,
                                   })
                                 }
-                                className="border border-gray-300 p-2 rounded-md w-full mb-2 focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f] focus:outline-none transition-colors"
+                                className="border border-gray-300 p-2 rounded-md w-full mb-2 focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4] focus:outline-none transition-colors"
                                 autoFocus
                                 required
                               />
@@ -278,7 +278,7 @@ export function CategoryManagementModal({
                                     description: e.target.value,
                                   })
                                 }
-                                className="border border-gray-300 p-2 rounded-md w-full focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f] focus:outline-none transition-colors"
+                                className="border border-gray-300 p-2 rounded-md w-full focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4] focus:outline-none transition-colors"
                                 placeholder="Category description"
                                 rows={3}
                               />
@@ -316,7 +316,7 @@ export function CategoryManagementModal({
                             <td className="px-4 py-3 text-right whitespace-nowrap">
                               <button
                                 onClick={() => setEditingCategory(cat)}
-                                className="px-3 py-1.5 border border-gray-300 rounded-md text-sm hover:bg-gray-100 mr-2 transition-colors focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f]"
+                                className="px-3 py-1.5 border border-gray-300 rounded-md text-sm hover:bg-gray-100 mr-2 transition-colors focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4]"
                               >
                                 <Edit2 className="h-3.5 w-3.5 inline mr-1" />
                                 Edit

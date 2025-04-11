@@ -35,7 +35,7 @@ export const VipModeToggle: React.FC<VipModeToggleProps> = ({ className = '' }) 
       <div className="p-4">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center">
-            <Lock className="h-6 w-6 text-[#c1902f] mr-2" />
+            <Lock className="h-6 w-6 text-[#0078d4] mr-2" />
             <h2 className="text-xl font-semibold text-gray-900">VIP-Only Mode</h2>
           </div>
           

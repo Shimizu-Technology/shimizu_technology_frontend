@@ -407,7 +407,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
           <div className="bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md">
             <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
               <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#c1902f]" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#0078d4]" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12z" clipRule="evenodd" />
                 </svg>
                 Basic Information
@@ -508,7 +508,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
                   value={restaurant.phone_number || ''}
                   onChange={(e) => setRestaurant({...restaurant, phone_number: e.target.value})}
                   placeholder="Enter restaurant phone number"
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#c1902f] focus:border-[#c1902f] sm:text-sm transition-all duration-200"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#0078d4] focus:border-[#0078d4] sm:text-sm transition-all duration-200"
                 />
                 {restaurant.phone_number && (
                   <p className="mt-1 text-sm text-gray-500 flex items-center">
@@ -526,7 +526,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
           <div className="bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md">
             <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
               <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#c1902f]" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#0078d4]" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
                 </svg>
                 Notification Settings
@@ -550,7 +550,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
                     }
                   })}
                   placeholder="Enter WhatsApp group ID (e.g., 123456789@g.us)"
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#c1902f] focus:border-[#c1902f] sm:text-sm transition-all duration-200"
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#0078d4] focus:border-[#0078d4] sm:text-sm transition-all duration-200"
                 />
                 <p className="mt-2 text-sm text-gray-500 flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
@@ -568,7 +568,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                   <input
                     type="color"
-                    value={restaurant.admin_settings?.email_header_color || '#c1902f'}
+                    value={restaurant.admin_settings?.email_header_color || '#0078d4'}
                     onChange={(e) => setRestaurant({
                       ...restaurant, 
                       admin_settings: {
@@ -580,7 +580,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
                   />
                   <input
                     type="text"
-                    value={restaurant.admin_settings?.email_header_color || '#c1902f'}
+                    value={restaurant.admin_settings?.email_header_color || '#0078d4'}
                     onChange={(e) => setRestaurant({
                       ...restaurant, 
                       admin_settings: {
@@ -588,8 +588,8 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
                         email_header_color: e.target.value
                       }
                     })}
-                    placeholder="#c1902f"
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#c1902f] focus:border-[#c1902f] sm:text-sm transition-all duration-200"
+                    placeholder="#0078d4"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#0078d4] focus:border-[#0078d4] sm:text-sm transition-all duration-200"
                   />
                 </div>
                 <p className="mt-2 text-sm text-gray-500 flex items-center">
@@ -613,7 +613,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
                         id="order-email"
                         checked={restaurant.admin_settings?.notification_channels?.orders?.email ?? true}
                         onChange={(e) => updateNotificationChannel('orders', 'email', e.target.checked)}
-                        className="h-4 w-4 text-[#c1902f] focus:ring-[#c1902f] border-gray-300 rounded"
+                        className="h-4 w-4 text-[#0078d4] focus:ring-[#0078d4] border-gray-300 rounded"
                       />
                       <label htmlFor="order-email" className="ml-2 block text-sm text-gray-700">
                         Send email notifications
@@ -626,7 +626,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
                         id="order-sms"
                         checked={restaurant.admin_settings?.notification_channels?.orders?.sms ?? true}
                         onChange={(e) => updateNotificationChannel('orders', 'sms', e.target.checked)}
-                        className="h-4 w-4 text-[#c1902f] focus:ring-[#c1902f] border-gray-300 rounded"
+                        className="h-4 w-4 text-[#0078d4] focus:ring-[#0078d4] border-gray-300 rounded"
                       />
                       <label htmlFor="order-sms" className="ml-2 block text-sm text-gray-700">
                         Send SMS notifications
@@ -645,7 +645,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
                         id="reservation-email"
                         checked={restaurant.admin_settings?.notification_channels?.reservations?.email ?? true}
                         onChange={(e) => updateNotificationChannel('reservations', 'email', e.target.checked)}
-                        className="h-4 w-4 text-[#c1902f] focus:ring-[#c1902f] border-gray-300 rounded"
+                        className="h-4 w-4 text-[#0078d4] focus:ring-[#0078d4] border-gray-300 rounded"
                       />
                       <label htmlFor="reservation-email" className="ml-2 block text-sm text-gray-700">
                         Send email notifications
@@ -658,7 +658,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
                         id="reservation-sms"
                         checked={restaurant.admin_settings?.notification_channels?.reservations?.sms ?? true}
                         onChange={(e) => updateNotificationChannel('reservations', 'sms', e.target.checked)}
-                        className="h-4 w-4 text-[#c1902f] focus:ring-[#c1902f] border-gray-300 rounded"
+                        className="h-4 w-4 text-[#0078d4] focus:ring-[#0078d4] border-gray-300 rounded"
                       />
                       <label htmlFor="reservation-sms" className="ml-2 block text-sm text-gray-700">
                         Send SMS notifications
@@ -681,7 +681,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
           <div className="bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md">
             <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
               <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#c1902f]" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#0078d4]" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
                 </svg>
                 Brand Images
@@ -736,8 +736,8 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
                                 file:mr-4 file:py-2 file:px-4
                                 file:rounded file:border-0
                                 file:text-sm file:font-semibold
-                                file:bg-[#c1902f] file:text-white
-                                hover:file:bg-[#d4a43f]"
+                                file:bg-[#0078d4] file:text-white
+                                hover:file:bg-[#50a3d9]"
                     />
                   </label>
                 </div>
@@ -788,8 +788,8 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
                                 file:mr-4 file:py-2 file:px-4
                                 file:rounded file:border-0
                                 file:text-sm file:font-semibold
-                                file:bg-[#c1902f] file:text-white
-                                hover:file:bg-[#d4a43f]"
+                                file:bg-[#0078d4] file:text-white
+                                hover:file:bg-[#50a3d9]"
                     />
                   </label>
                 </div>
@@ -801,7 +801,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
           <div className="bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md">
             <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
               <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#c1902f]" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#0078d4]" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                 </svg>
                 Reservation Settings
@@ -814,7 +814,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
                 <select
                   value={restaurant.time_zone}
                   onChange={(e) => setRestaurant({...restaurant, time_zone: e.target.value})}
-                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#c1902f] focus:border-[#c1902f] sm:text-sm rounded-md"
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#0078d4] focus:border-[#0078d4] sm:text-sm rounded-md"
                 >
                   {timezoneOptions.map(option => (
                     <option key={option.value} value={option.value}>
@@ -837,7 +837,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
                     value={restaurant.time_slot_interval.toString()}
                     onChange={(e) => setRestaurant({...restaurant, time_slot_interval: parseInt(e.target.value) || 30})}
                     placeholder="30"
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#c1902f] focus:border-[#c1902f] sm:text-sm transition-all duration-200"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#0078d4] focus:border-[#0078d4] sm:text-sm transition-all duration-200"
                   />
                 </div>
                 
@@ -853,7 +853,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
                     value={restaurant.default_reservation_length.toString()}
                     onChange={(e) => setRestaurant({...restaurant, default_reservation_length: parseInt(e.target.value) || 60})}
                     placeholder="60"
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#c1902f] focus:border-[#c1902f] sm:text-sm transition-all duration-200"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#0078d4] focus:border-[#0078d4] sm:text-sm transition-all duration-200"
                   />
                 </div>
               </div>
@@ -865,9 +865,9 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
             <button
               type="submit"
               disabled={loading}
-              className="w-full sm:w-auto px-5 py-2 bg-[#c1902f] text-white font-medium 
-                        rounded-md hover:bg-[#d4a43f]
-                        focus:outline-none focus:ring-2 focus:ring-[#c1902f]
+              className="w-full sm:w-auto px-5 py-2 bg-[#0078d4] text-white font-medium 
+                        rounded-md hover:bg-[#50a3d9]
+                        focus:outline-none focus:ring-2 focus:ring-[#0078d4]
                         transition-colors shadow-sm"
             >
               {loading ? 'Saving...' : 'Save Settings'}

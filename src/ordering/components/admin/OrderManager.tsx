@@ -1310,7 +1310,7 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
         </div>
         <button
           onClick={() => setShowStaffOrderModal(true)}
-          className="px-4 py-2 bg-[#c1902f] text-white rounded-md font-medium hover:bg-[#a97c28] focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:ring-opacity-50 flex items-center space-x-2"
+          className="px-4 py-2 bg-[#0078d4] text-white rounded-md font-medium hover:bg-[#005a9e] focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:ring-opacity-50 flex items-center space-x-2"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none"
                viewBox="0 0 24 24" stroke="currentColor">
@@ -1362,7 +1362,7 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
                 <button
                   onClick={handleToggleOnlineOrders}
                   className={`w-full py-2 px-4 border rounded-md text-sm font-medium transition-colors duration-200 h-12 shadow-sm ${onlineOrdersOnly 
-                    ? 'bg-[#c1902f] text-white border-[#c1902f]' 
+                    ? 'bg-[#0078d4] text-white border-[#0078d4]' 
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'}`}
                   aria-pressed={onlineOrdersOnly}
                 >
@@ -1451,7 +1451,7 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
               className={`
                 whitespace-nowrap px-6 py-3 rounded-md text-sm font-medium min-w-[100px] flex-shrink-0 snap-start transition-colors duration-200 shadow-sm border
                 ${selectedStatus === 'all'
-                  ? 'bg-[#c1902f] text-white border-[#c1902f]'
+                  ? 'bg-[#0078d4] text-white border-[#0078d4]'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
                 }
               `}
@@ -1468,7 +1468,7 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
                 className={`
                   whitespace-nowrap px-6 py-3 rounded-md text-sm font-medium min-w-[100px] flex-shrink-0 snap-start transition-colors duration-200 shadow-sm border
                   ${selectedStatus === status
-                    ? 'bg-[#c1902f] text-white border-[#c1902f]'
+                    ? 'bg-[#0078d4] text-white border-[#0078d4]'
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
                   }
                 `}
@@ -1677,7 +1677,7 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
                       }}
                       className={`w-10 h-10 flex items-center justify-center rounded-md text-sm font-medium ${
                         currentPage === page
-                          ? 'bg-[#c1902f] text-white'
+                          ? 'bg-[#0078d4] text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                       aria-label={`Page ${page}`}

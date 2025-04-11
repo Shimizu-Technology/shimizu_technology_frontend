@@ -611,7 +611,7 @@ export function CollapsibleOrderCard({
     ? 'animate-pulse-light border-yellow-300 shadow-yellow-100'
     : '';
   const highlightClasses = isHighlighted
-    ? 'ring-2 ring-[#c1902f] ring-opacity-70 shadow-md'
+    ? 'ring-2 ring-[#0078d4] ring-opacity-70 shadow-md'
     : '';
 
   // Calculate the actual total based on the current items in the order
@@ -660,7 +660,7 @@ export function CollapsibleOrderCard({
                 type="checkbox"
                 checked={isSelected}
                 onChange={(e) => onSelectChange(e.target.checked)}
-                className="h-5 w-5 text-[#c1902f] focus:ring-[#c1902f] border-gray-300 rounded"
+                className="h-5 w-5 text-[#0078d4] focus:ring-[#0078d4] border-gray-300 rounded"
                 aria-label="Select order"
               />
             </div>
@@ -891,7 +891,7 @@ export function CollapsibleOrderCard({
             <div className="flex justify-end">
               <button
                 onClick={onToggleExpand}
-                className="text-[#c1902f] hover:text-[#a07929] text-sm font-medium flex items-center mt-1 py-1"
+                className="text-[#0078d4] hover:text-[#005a9e] text-sm font-medium flex items-center mt-1 py-1"
                 aria-expanded={isExpanded}
                 aria-controls={`order-details-${order.id}`}
               >

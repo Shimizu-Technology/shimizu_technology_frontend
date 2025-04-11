@@ -201,7 +201,7 @@ export function SearchableMenuItemSelector({ onSelect, onClose }: SearchableMenu
       <div className="relative">
         <input
           type="text"
-          className="w-full border border-gray-300 rounded-md px-4 py-2 pl-10 focus:ring-[#c1902f] focus:border-[#c1902f]"
+          className="w-full border border-gray-300 rounded-md px-4 py-2 pl-10 focus:ring-[#0078d4] focus:border-[#0078d4]"
           placeholder="Search menu items..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -222,7 +222,7 @@ export function SearchableMenuItemSelector({ onSelect, onClose }: SearchableMenu
             <button
               className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
                 selectedCategoryId === null
-                  ? 'bg-[#c1902f] text-white'
+                  ? 'bg-[#0078d4] text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
               onClick={() => setSelectedCategoryId(null)}
@@ -235,7 +235,7 @@ export function SearchableMenuItemSelector({ onSelect, onClose }: SearchableMenu
                 key={category.id}
                 className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
                   selectedCategoryId === category.id
-                    ? 'bg-[#c1902f] text-white'
+                    ? 'bg-[#0078d4] text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
                 onClick={() => setSelectedCategoryId(category.id)}
@@ -249,7 +249,7 @@ export function SearchableMenuItemSelector({ onSelect, onClose }: SearchableMenu
       
       {loading ? (
         <div className="py-8 flex justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#c1902f]"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0078d4]"></div>
         </div>
       ) : (
         <div className="max-h-[400px] overflow-y-auto">
@@ -291,7 +291,7 @@ export function SearchableMenuItemSelector({ onSelect, onClose }: SearchableMenu
                           </div>
                         )}
                         {item.option_groups && item.option_groups.length > 0 && (
-                          <div className="mt-1 text-xs text-[#c1902f] font-medium">
+                          <div className="mt-1 text-xs text-[#0078d4] font-medium">
                             Customizable
                           </div>
                         )}

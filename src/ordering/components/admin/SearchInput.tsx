@@ -54,7 +54,7 @@ export function SearchInput({
       </div>
       <input
         type="text"
-        className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f]"
+        className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4]"
         placeholder={placeholder}
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}

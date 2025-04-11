@@ -389,7 +389,7 @@ const ItemInventoryModal: React.FC<ItemInventoryModalProps> = ({
                   }}
                   className="sr-only peer"
                 />
-                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#c1902f]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#c1902f]"></div>
+                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#0078d4]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0078d4]"></div>
                 <span className="ml-3 text-gray-900 font-medium">
                   Enable Inventory Tracking
                 </span>
@@ -412,7 +412,7 @@ const ItemInventoryModal: React.FC<ItemInventoryModalProps> = ({
                   </label>
                   <input
                     type="number"
-                    className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f]"
+                    className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4]"
                     value={stockQuantity}
                     min={0}
                     onChange={(e) =>
@@ -427,7 +427,7 @@ const ItemInventoryModal: React.FC<ItemInventoryModalProps> = ({
                   </label>
                   <input
                     type="number"
-                    className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f]"
+                    className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4]"
                     value={damagedQuantity}
                     min={0}
                     onChange={(e) =>
@@ -442,7 +442,7 @@ const ItemInventoryModal: React.FC<ItemInventoryModalProps> = ({
                   </label>
                   <input
                     type="number"
-                    className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f]"
+                    className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4]"
                     value={lowStockThreshold}
                     min={1}
                     onChange={(e) =>
@@ -467,7 +467,7 @@ const ItemInventoryModal: React.FC<ItemInventoryModalProps> = ({
                 </p>
                 
                 <button
-                  className="bg-[#c1902f] hover:bg-[#a97c28] text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:ring-opacity-50"
+                  className="bg-[#0078d4] hover:bg-[#005a9e] text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:ring-opacity-50"
                   onClick={handleSaveSettings}
                 >
                   Save Settings
@@ -485,7 +485,7 @@ const ItemInventoryModal: React.FC<ItemInventoryModalProps> = ({
                   </label>
                   <input
                     type="number"
-                    className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f]"
+                    className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4]"
                     value={damageQuantity}
                     min={1}
                     onChange={(e) =>
@@ -499,7 +499,7 @@ const ItemInventoryModal: React.FC<ItemInventoryModalProps> = ({
                     Reason for Damage
                   </label>
                   <select
-                    className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f]"
+                    className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4]"
                     value={damageReason}
                     onChange={(e) => setDamageReason(e.target.value)}
                   >
@@ -521,7 +521,7 @@ const ItemInventoryModal: React.FC<ItemInventoryModalProps> = ({
                     </label>
                     <input
                       type="text"
-                      className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f]"
+                      className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4]"
                       value={otherDamageReason}
                       placeholder="Enter custom reason"
                       onChange={(e) => setOtherDamageReason(e.target.value)}
@@ -534,7 +534,7 @@ const ItemInventoryModal: React.FC<ItemInventoryModalProps> = ({
                     <input
                       type="checkbox"
                       id="saveCustomReason"
-                      className="h-4 w-4 text-[#c1902f] focus:ring-[#c1902f] border-gray-300 rounded"
+                      className="h-4 w-4 text-[#0078d4] focus:ring-[#0078d4] border-gray-300 rounded"
                     />
                     <label htmlFor="saveCustomReason" className="ml-2 block text-sm text-gray-700">
                       Save this reason for future use
@@ -639,7 +639,7 @@ const ItemInventoryModal: React.FC<ItemInventoryModalProps> = ({
                     Reason Type
                   </label>
                   <select
-                    className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f]"
+                    className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4]"
                     value={reasonType}
                     onChange={(e) => {
                       const selectedType = e.target.value as
@@ -665,7 +665,7 @@ const ItemInventoryModal: React.FC<ItemInventoryModalProps> = ({
                   </label>
                   <input
                     type="text"
-                    className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#c1902f] focus:border-[#c1902f]"
+                    className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4]"
                     value={reasonDetails}
                     placeholder="Additional details about the update"
                     onChange={(e) => setReasonDetails(e.target.value)}

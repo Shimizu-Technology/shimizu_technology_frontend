@@ -29,7 +29,7 @@ export function InventoryReversionDialog({ itemName, onClose, onConfirm }: Inven
               <label className="flex items-center space-x-3 cursor-pointer">
                 <input
                   type="radio"
-                  className="form-radio h-5 w-5 text-[#c1902f]"
+                  className="form-radio h-5 w-5 text-[#0078d4]"
                   checked={action === 'return_to_inventory'}
                   onChange={() => setAction('return_to_inventory')}
                 />
@@ -46,7 +46,7 @@ export function InventoryReversionDialog({ itemName, onClose, onConfirm }: Inven
               <label className="flex items-center space-x-3 cursor-pointer">
                 <input
                   type="radio"
-                  className="form-radio h-5 w-5 text-[#c1902f]"
+                  className="form-radio h-5 w-5 text-[#0078d4]"
                   checked={action === 'mark_as_damaged'}
                   onChange={() => setAction('mark_as_damaged')}
                 />
@@ -67,7 +67,7 @@ export function InventoryReversionDialog({ itemName, onClose, onConfirm }: Inven
                 <input
                   type="text"
                   id="damage-reason"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-[#c1902f] focus:border-[#c1902f]"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-[#0078d4] focus:border-[#0078d4]"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="e.g., Dropped, customer complaint, etc."
@@ -81,14 +81,14 @@ export function InventoryReversionDialog({ itemName, onClose, onConfirm }: Inven
         <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
           <button
             type="button"
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#c1902f]"
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0078d4]"
             onClick={onClose}
           >
             Cancel
           </button>
           <button
             type="button"
-            className="px-4 py-2 bg-[#c1902f] border border-transparent rounded-md text-white hover:bg-[#d4a43f] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#c1902f]"
+            className="px-4 py-2 bg-[#0078d4] border border-transparent rounded-md text-white hover:bg-[#50a3d9] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0078d4]"
             onClick={() => {
               if (action === 'mark_as_damaged' && !reason.trim()) {
                 alert('Please provide a reason for marking the item as damaged.');

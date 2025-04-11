@@ -348,7 +348,7 @@ export function StaffManagement() {
               resetForm();
               setShowAddForm(!showAddForm);
             }}
-            className="px-4 py-2 bg-[#c1902f] text-white rounded-md hover:bg-[#a67b28] transition-colors"
+            className="px-4 py-2 bg-[#0078d4] text-white rounded-md hover:bg-[#a67b28] transition-colors"
           >
             {showAddForm ? 'Cancel' : 'Add Staff Member'}
           </button>
@@ -362,7 +362,7 @@ export function StaffManagement() {
             onClick={() => setActiveTab('management')}
             className={`py-2 px-4 font-medium ${
               activeTab === 'management'
-                ? 'text-[#c1902f] border-b-2 border-[#c1902f]'
+                ? 'text-[#0078d4] border-b-2 border-[#0078d4]'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -372,7 +372,7 @@ export function StaffManagement() {
             onClick={() => setActiveTab('reports')}
             className={`py-2 px-4 font-medium ${
               activeTab === 'reports'
-                ? 'text-[#c1902f] border-b-2 border-[#c1902f]'
+                ? 'text-[#0078d4] border-b-2 border-[#0078d4]'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -401,7 +401,7 @@ export function StaffManagement() {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#c1902f]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#0078d4]"
                   required
                 />
               </div>
@@ -414,7 +414,7 @@ export function StaffManagement() {
                   name="position"
                   value={formData.position}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#c1902f]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#0078d4]"
                   required
                 />
               </div>
@@ -452,7 +452,7 @@ export function StaffManagement() {
                     name="active"
                     checked={formData.active}
                     onChange={handleInputChange}
-                    className="h-4 w-4 text-[#c1902f] focus:ring-[#c1902f] border-gray-300 rounded"
+                    className="h-4 w-4 text-[#0078d4] focus:ring-[#0078d4] border-gray-300 rounded"
                   />
                   <label className="ml-2 text-sm text-gray-700 flex items-center">
                     Active
@@ -479,7 +479,7 @@ export function StaffManagement() {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-[#c1902f] text-white rounded-md hover:bg-[#a67b28] transition-colors"
+                className="px-4 py-2 bg-[#0078d4] text-white rounded-md hover:bg-[#a67b28] transition-colors"
               >
                 {editingStaffMember ? 'Update' : 'Create'}
               </button>
@@ -498,7 +498,7 @@ export function StaffManagement() {
           {/* Staff Members List */}
           {loading ? (
             <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#c1902f]"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#0078d4]"></div>
             </div>
           ) : (
             <div className="bg-white rounded-md shadow-md overflow-hidden">
@@ -575,7 +575,7 @@ export function StaffManagement() {
                                   fetchTransactions(staffMember.id);
                                 }
                               }}
-                              className="text-[#c1902f] hover:text-[#a67b28]"
+                              className="text-[#0078d4] hover:text-[#a67b28]"
                             >
                               {showTransactions === staffMember.id ? 'Hide Transactions' : 'View Transactions'}
                             </button>
@@ -625,7 +625,7 @@ export function StaffManagement() {
                         value="charge"
                         checked={transactionForm.action_type === 'charge'}
                         onChange={handleTransactionInputChange}
-                        className="h-4 w-4 text-[#c1902f] focus:ring-[#c1902f] border-gray-300"
+                        className="h-4 w-4 text-[#0078d4] focus:ring-[#0078d4] border-gray-300"
                       />
                       <span className="ml-2 text-sm text-gray-700">Add Charge</span>
                     </label>
@@ -636,7 +636,7 @@ export function StaffManagement() {
                         value="payment"
                         checked={transactionForm.action_type === 'payment'}
                         onChange={handleTransactionInputChange}
-                        className="h-4 w-4 text-[#c1902f] focus:ring-[#c1902f] border-gray-300"
+                        className="h-4 w-4 text-[#0078d4] focus:ring-[#0078d4] border-gray-300"
                       />
                       <span className="ml-2 text-sm text-gray-700">Receive Payment</span>
                     </label>
@@ -653,7 +653,7 @@ export function StaffManagement() {
                     onChange={handleTransactionInputChange}
                     step="0.01"
                     min="0"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#c1902f]"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#0078d4]"
                     required
                     placeholder={transactionForm.action_type === 'payment' ? "Payment amount" : "Charge amount"}
                   />
@@ -672,7 +672,7 @@ export function StaffManagement() {
                     name="reference"
                     value={transactionForm.reference}
                     onChange={handleTransactionInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#c1902f]"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#0078d4]"
                     placeholder="e.g., Payroll 04/15/2025"
                   />
                 </div>
@@ -684,7 +684,7 @@ export function StaffManagement() {
                     name="description"
                     value={transactionForm.description}
                     onChange={handleTransactionInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#c1902f]"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#0078d4]"
                     rows={1}
                     required
                   ></textarea>
@@ -700,7 +700,7 @@ export function StaffManagement() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#c1902f] text-white rounded-md hover:bg-[#a67b28] transition-colors"
+                  className="px-4 py-2 bg-[#0078d4] text-white rounded-md hover:bg-[#a67b28] transition-colors"
                 >
                   Add Transaction
                 </button>
@@ -711,7 +711,7 @@ export function StaffManagement() {
           {/* Transactions List */}
           {loadingTransactions ? (
             <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#c1902f]"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#0078d4]"></div>
             </div>
           ) : (
             <div className="overflow-x-auto">

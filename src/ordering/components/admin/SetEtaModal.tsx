@@ -112,7 +112,7 @@ export function SetEtaModal({
           </button>
           <button
             onClick={onConfirm}
-            className="w-full sm:w-auto px-4 py-2 bg-[#c1902f] text-white rounded-md text-sm font-medium hover:bg-[#d4a43f] transition-colors"
+            className="w-full sm:w-auto px-4 py-2 bg-[#0078d4] text-white rounded-md text-sm font-medium hover:bg-[#50a3d9] transition-colors"
           >
             {requiresAdvanceNotice 
               ? isUpdateMode ? 'Update Pickup Time' : 'Confirm Next-Day Pickup' 

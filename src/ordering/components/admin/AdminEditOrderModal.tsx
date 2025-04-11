@@ -3322,7 +3322,7 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
               onClick={() => setActiveTab('items')}
               className={`mr-4 pb-2 font-medium text-sm whitespace-nowrap transition-colors ${
                 activeTab === 'items'
-                  ? 'text-[#c1902f] border-b-2 border-[#c1902f]'
+                  ? 'text-[#0078d4] border-b-2 border-[#0078d4]'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -3332,7 +3332,7 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
               onClick={() => setActiveTab('details')}
               className={`mr-4 pb-2 font-medium text-sm whitespace-nowrap transition-colors ${
                 activeTab === 'details'
-                  ? 'text-[#c1902f] border-b-2 border-[#c1902f]'
+                  ? 'text-[#0078d4] border-b-2 border-[#0078d4]'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -3342,7 +3342,7 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
               onClick={() => setActiveTab('payments')}
               className={`pb-2 font-medium text-sm whitespace-nowrap transition-colors ${
                 activeTab === 'payments'
-                  ? 'text-[#c1902f] border-b-2 border-[#c1902f]'
+                  ? 'text-[#0078d4] border-b-2 border-[#0078d4]'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -3401,7 +3401,7 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
               className={`w-full sm:w-auto px-4 py-3 sm:py-2.5 ${
                 isProcessingPayment
                   ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-[#c1902f] hover:bg-[#d4a43f]'
+                  : 'bg-[#0078d4] hover:bg-[#50a3d9]'
               } text-white rounded-lg text-sm font-medium transition-colors shadow-sm
                 order-1 sm:order-2`}
             >

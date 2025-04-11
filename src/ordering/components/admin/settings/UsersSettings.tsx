@@ -163,7 +163,7 @@ export function UsersSettings({ restaurantId }: UsersSettingsProps) {
             }}
             className="border border-gray-300 rounded-md px-3 py-2
                        text-sm focus:outline-none focus:ring-1 
-                       focus:ring-[#c1902f] w-full transition-colors duration-200"
+                       focus:ring-[#0078d4] w-full transition-colors duration-200"
           />
         </div>
         
@@ -177,7 +177,7 @@ export function UsersSettings({ restaurantId }: UsersSettingsProps) {
               setFilterRole(e.target.value as RoleFilter);
             }}
             className="border border-gray-300 rounded-md px-2 py-1.5 text-sm
-                       focus:outline-none focus:ring-1 focus:ring-[#c1902f] flex-1 min-w-[120px]
+                       focus:outline-none focus:ring-1 focus:ring-[#0078d4] flex-1 min-w-[120px]
                        transition-colors duration-200"
           >
             <option value="all">All Roles</option>
@@ -195,7 +195,7 @@ export function UsersSettings({ restaurantId }: UsersSettingsProps) {
               setPage(1);
             }}
             className="border border-gray-300 rounded-md px-2 py-1.5 text-sm 
-                       focus:outline-none focus:ring-1 focus:ring-[#c1902f] flex-1 min-w-[120px]
+                       focus:outline-none focus:ring-1 focus:ring-[#0078d4] flex-1 min-w-[120px]
                        transition-colors duration-200"
           >
             <option value="created_at">Sort: Date Created</option>
@@ -209,7 +209,7 @@ export function UsersSettings({ restaurantId }: UsersSettingsProps) {
               setPage(1);
             }}
             className="border border-gray-300 rounded-md px-2 py-1.5 text-sm
-                       focus:outline-none focus:ring-1 focus:ring-[#c1902f] w-20
+                       focus:outline-none focus:ring-1 focus:ring-[#0078d4] w-20
                        transition-colors duration-200"
           >
             <option value="desc">DESC</option>
@@ -220,7 +220,7 @@ export function UsersSettings({ restaurantId }: UsersSettingsProps) {
         {/* Create User Button - full width on mobile */}
         <button
           onClick={handleCreateNewUser}
-          className="w-full sm:w-auto px-4 py-2 bg-[#c1902f] text-white rounded-md hover:bg-[#d4a43f]
+          className="w-full sm:w-auto px-4 py-2 bg-[#0078d4] text-white rounded-md hover:bg-[#50a3d9]
                      text-sm transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
         >
           + Create New User

@@ -703,7 +703,7 @@ const MerchandiseManager: React.FC<MerchandiseManagerProps> = ({ restaurantId })
             });
             setIsAddingCollection(true);
           }}
-          className="bg-[#c1902f] text-white px-4 py-2 rounded-md flex items-center"
+          className="bg-[#0078d4] text-white px-4 py-2 rounded-md flex items-center"
         >
           <Plus className="h-4 w-4 mr-2" />
           Add Collection
@@ -723,7 +723,7 @@ const MerchandiseManager: React.FC<MerchandiseManagerProps> = ({ restaurantId })
                 }}
                 className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
                   selectedCollectionId === null
-                    ? 'border-[#c1902f] text-[#c1902f]'
+                    ? 'border-[#0078d4] text-[#0078d4]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
@@ -739,7 +739,7 @@ const MerchandiseManager: React.FC<MerchandiseManagerProps> = ({ restaurantId })
                   }}
                   className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
                     selectedCollectionId === collection.id
-                      ? 'border-[#c1902f] text-[#c1902f]'
+                      ? 'border-[#0078d4] text-[#0078d4]'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
@@ -870,7 +870,7 @@ const MerchandiseManager: React.FC<MerchandiseManagerProps> = ({ restaurantId })
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex items-center px-4 py-2 bg-[#c1902f] text-white rounded-md hover:bg-[#d4a43f]"
+                  className="inline-flex items-center px-4 py-2 bg-[#0078d4] text-white rounded-md hover:bg-[#50a3d9]"
                 >
                   <Save className="h-5 w-5 mr-2" />
                   Save
@@ -1504,7 +1504,7 @@ const MerchandiseManager: React.FC<MerchandiseManagerProps> = ({ restaurantId })
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex items-center px-4 py-2 bg-[#c1902f] text-white rounded-md hover:bg-[#d4a43f]"
+                  className="inline-flex items-center px-4 py-2 bg-[#0078d4] text-white rounded-md hover:bg-[#50a3d9]"
                 >
                   <Save className="h-5 w-5 mr-2" />
                   {isEditingItem ? 'Save Changes' : 'Save'}
@@ -1560,7 +1560,7 @@ const MerchandiseManager: React.FC<MerchandiseManagerProps> = ({ restaurantId })
                 setIsAddingItem(true);
                 setIsEditingItem(false);
               }}
-              className="bg-[#c1902f] text-white px-3 py-1.5 rounded-md flex items-center text-sm"
+              className="bg-[#0078d4] text-white px-3 py-1.5 rounded-md flex items-center text-sm"
             >
               <Plus className="h-4 w-4 mr-1" />
               Add Item
