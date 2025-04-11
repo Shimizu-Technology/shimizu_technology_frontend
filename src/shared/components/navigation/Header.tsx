@@ -153,7 +153,7 @@ export function Header() {
   const firstName = user?.first_name || user?.email?.split('@')[0] || 'Guest';
 
   // Active link style
-  const activeLinkClass = "text-[#c1902f] font-medium";
+  const activeLinkClass = "text-[#0078d4] font-medium";
   const isActiveLink = (path: string) => location.pathname === path ? activeLinkClass : "";
 
   return (
@@ -163,7 +163,7 @@ export function Header() {
           {/* Mobile menu button */}
           <button
             data-mobile-toggle="true"
-            className="p-2 rounded-md text-gray-700 hover:text-[#c1902f] hover:bg-gray-100 
+            className="p-2 rounded-md text-gray-700 hover:text-[#0078d4] hover:bg-gray-100 
                      transition-colors duration-200 lg:hidden focus:outline-none focus:ring-2 
                      focus:ring-[#c1902f] focus:ring-opacity-50"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -191,7 +191,7 @@ export function Header() {
           <nav className="hidden lg:flex items-center space-x-2 xl:space-x-6">
             <Link
               to="/menu"
-              className={`px-3 py-2 rounded-md text-gray-700 hover:text-[#c1902f] hover:bg-gray-50
+              className={`px-3 py-2 rounded-md text-gray-700 hover:text-[#0078d4] hover:bg-gray-50
                         transition-colors duration-200 ${isActiveLink('/menu')}`}
             >
               Menu
@@ -199,7 +199,7 @@ export function Header() {
             {/* Merchandise link temporarily hidden
             <Link
               to="/merchandise"
-              className={`px-3 py-2 rounded-md text-gray-700 hover:text-[#c1902f] hover:bg-gray-50
+              className={`px-3 py-2 rounded-md text-gray-700 hover:text-[#0078d4] hover:bg-gray-50
                         transition-colors duration-200 ${isActiveLink('/merchandise')}`}
             >
               Merchandise
@@ -208,7 +208,7 @@ export function Header() {
             {/* Reservations link temporarily hidden
             <Link
               to="/reservations"
-              className={`px-3 py-2 rounded-md text-gray-700 hover:text-[#c1902f] hover:bg-gray-50
+              className={`px-3 py-2 rounded-md text-gray-700 hover:text-[#0078d4] hover:bg-gray-50
                         transition-colors duration-200 ${isActiveLink('/reservations')}`}
             >
               Reservations
@@ -218,31 +218,31 @@ export function Header() {
             {/* Info section with subtle divider */}
             <div className="flex items-center space-x-2 sm:space-x-3 xl:space-x-4 pl-2 border-l border-gray-200">
               <div className="hidden xl:flex items-center text-gray-600 group">
-                <Clock className="h-4 w-4 mr-1.5 text-[#c1902f] group-hover:scale-110 transition-transform duration-200" />
+                <Clock className="h-4 w-4 mr-1.5 text-[#0078d4] group-hover:scale-110 transition-transform duration-200" />
                 <span className="text-sm">11AM-9PM</span>
               </div>
               
               <div className="hidden lg:flex xl:flex items-center text-gray-600 group">
-                <MapPin className="h-4 w-4 mr-1.5 text-[#c1902f] group-hover:scale-110 transition-transform duration-200" />
+                <MapPin className="h-4 w-4 mr-1.5 text-[#0078d4] group-hover:scale-110 transition-transform duration-200" />
                 <span className="text-sm truncate max-w-[100px] xl:max-w-none">{restaurant?.address ? restaurant.address.split(',')[0] : 'Tamuning'}</span>
               </div>
               
               {restaurant?.phone_number ? (
                 <a
                   href={`tel:${restaurant.phone_number}`}
-                  className="flex items-center text-gray-600 hover:text-[#c1902f] 
+                  className="flex items-center text-gray-600 hover:text-[#0078d4] 
                            transition-colors duration-200 group"
                 >
-                  <Phone className="h-4 w-4 mr-1 xl:mr-1.5 text-[#c1902f] group-hover:scale-110 transition-transform duration-200" />
+                  <Phone className="h-4 w-4 mr-1 xl:mr-1.5 text-[#0078d4] group-hover:scale-110 transition-transform duration-200" />
                   <span className="hidden sm:inline text-sm">{formatPhoneNumber(restaurant.phone_number)}</span>
                 </a>
               ) : (
                 <a
                   href="tel:+16719893444"
-                  className="flex items-center text-gray-600 hover:text-[#c1902f] 
+                  className="flex items-center text-gray-600 hover:text-[#0078d4] 
                            transition-colors duration-200 group"
                 >
-                  <Phone className="h-4 w-4 mr-1 xl:mr-1.5 text-[#c1902f] group-hover:scale-110 transition-transform duration-200" />
+                  <Phone className="h-4 w-4 mr-1 xl:mr-1.5 text-[#0078d4] group-hover:scale-110 transition-transform duration-200" />
                   <span className="hidden sm:inline text-sm">(671) 989-3444</span>
                 </a>
               )}
@@ -255,14 +255,14 @@ export function Header() {
             {user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
-                  className="flex items-center text-gray-700 hover:text-[#c1902f] px-2 py-1.5 rounded-md 
+                  className="flex items-center text-gray-700 hover:text-[#0078d4] px-2 py-1.5 rounded-md 
                            hover:bg-gray-50 transition-colors duration-200 focus:outline-none 
-                           focus:ring-2 focus:ring-[#c1902f] focus:ring-opacity-50"
+                           focus:ring-2 focus:ring-[#0078d4] focus:ring-opacity-50"
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   aria-expanded={isDropdownOpen}
                   aria-haspopup="true"
                 >
-                  <User className="h-5 w-5 text-[#c1902f]" />
+                  <User className="h-5 w-5 text-[#0078d4]" />
                   <span className="ml-1.5 hidden sm:inline text-sm font-medium">{firstName}</span>
                   <ChevronDown className={`h-4 w-4 ml-1 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
@@ -281,7 +281,7 @@ export function Header() {
                         {isAdminOrAbove && (
                           <Link
                             to="/reservations/dashboard"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#c1902f]
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#0078d4]
                                      transition-colors duration-150"
                             onClick={() => setIsDropdownOpen(false)}
                           >
@@ -292,7 +292,7 @@ export function Header() {
                         {/* Admin Dashboard - visible to all admin roles */}
                         <Link
                           to="/admin"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#c1902f]
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#0078d4]
                                    transition-colors duration-150"
                           onClick={() => setIsDropdownOpen(false)}
                         >
@@ -308,7 +308,7 @@ export function Header() {
                     {/* Normal user links */}
                     <Link
                       to="/orders"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#c1902f]
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#0078d4]
                                transition-colors duration-150"
                       onClick={() => setIsDropdownOpen(false)}
                     >
@@ -316,7 +316,7 @@ export function Header() {
                     </Link>
                     <Link
                       to="/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#c1902f]
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#0078d4]
                                transition-colors duration-150"
                       onClick={() => setIsDropdownOpen(false)}
                     >
@@ -331,7 +331,7 @@ export function Header() {
                         setIsDropdownOpen(false);
                       }}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 
-                               hover:bg-gray-50 hover:text-[#c1902f] transition-colors duration-150"
+                               hover:bg-gray-50 hover:text-[#0078d4] transition-colors duration-150"
                     >
                       Sign Out
                     </button>
@@ -343,7 +343,7 @@ export function Header() {
               <div className="hidden sm:flex items-center space-x-2">
                 <Link
                   to="/login"
-                  className="text-gray-700 hover:text-[#c1902f] px-3 py-1.5 rounded-md 
+                  className="text-gray-700 hover:text-[#0078d4] px-3 py-1.5 rounded-md 
                            hover:bg-gray-50 transition-colors duration-200 text-sm font-medium"
                 >
                   Sign In
@@ -361,9 +361,9 @@ export function Header() {
             {/* Cart icon */}
             <Link
               to="/cart"
-              className="p-2 relative text-gray-700 hover:text-[#c1902f] hover:bg-gray-50 
+              className="p-2 relative text-gray-700 hover:text-[#0078d4] hover:bg-gray-50 
                        transition-colors duration-200 rounded-md focus:outline-none 
-                       focus:ring-2 focus:ring-[#c1902f] focus:ring-opacity-50"
+                       focus:ring-2 focus:ring-[#0078d4] focus:ring-opacity-50"
               aria-label={`Shopping cart with ${cartCount} items`}
             >
               <ShoppingCart
@@ -394,13 +394,13 @@ export function Header() {
         <div className="p-4 border-b border-gray-100 flex justify-between items-center">
           <Link 
             to="/" 
-            className="text-xl font-bold text-[#c1902f]"
+            className="text-xl font-bold text-[#0078d4]"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             håfaloha!
           </Link>
           <button
-            className="p-2 rounded-md text-gray-700 hover:text-[#c1902f] hover:bg-gray-100 
+            className="p-2 rounded-md text-gray-700 hover:text-[#0078d4] hover:bg-gray-100 
                      transition-colors duration-200 focus:outline-none"
             onClick={() => setIsMobileMenuOpen(false)}
             aria-label="Close menu"
@@ -416,7 +416,7 @@ export function Header() {
             <Link
               to="/menu"
               className={`block px-3 py-2 rounded-md text-base font-medium text-gray-700
-                         hover:text-[#c1902f] hover:bg-gray-50 transition-colors duration-150
+                         hover:text-[#0078d4] hover:bg-gray-50 transition-colors duration-150
                          ${isActiveLink('/menu')}`}
               onClick={() => setIsMobileMenuOpen(false)}
             >
@@ -426,7 +426,7 @@ export function Header() {
             <Link
               to="/merchandise"
               className={`block px-3 py-2 rounded-md text-base font-medium text-gray-700
-                         hover:text-[#c1902f] hover:bg-gray-50 transition-colors duration-150
+                         hover:text-[#0078d4] hover:bg-gray-50 transition-colors duration-150
                          ${isActiveLink('/merchandise')}`}
               onClick={() => setIsMobileMenuOpen(false)}
             >
@@ -437,7 +437,7 @@ export function Header() {
             <Link
               to="/reservations"
               className={`block px-3 py-2 rounded-md text-base font-medium text-gray-700
-                         hover:text-[#c1902f] hover:bg-gray-50 transition-colors duration-150
+                         hover:text-[#0078d4] hover:bg-gray-50 transition-colors duration-150
                          ${isActiveLink('/reservations')}`}
               onClick={() => setIsMobileMenuOpen(false)}
             >
@@ -450,31 +450,31 @@ export function Header() {
           <div className="space-y-2 pt-2 border-t border-gray-100">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Restaurant Info</h3>
             <div className="px-3 py-2 text-base text-gray-700 flex items-center">
-              <Clock className="inline-block h-4 w-4 mr-3 text-[#c1902f]" />
+              <Clock className="inline-block h-4 w-4 mr-3 text-[#0078d4]" />
               11AM-9PM
             </div>
             <div className="px-3 py-2 text-base text-gray-700 flex items-center">
-              <MapPin className="inline-block h-4 w-4 mr-3 text-[#c1902f]" />
+              <MapPin className="inline-block h-4 w-4 mr-3 text-[#0078d4]" />
               {restaurant?.address ? restaurant.address.split(',')[0] : 'Tamuning'}
             </div>
             {restaurant?.phone_number ? (
               <a
                 href={`tel:${restaurant.phone_number}`}
-                className="block px-3 py-2 text-base text-gray-700 hover:text-[#c1902f]
+                className="px-3 py-2 text-base text-gray-700 hover:text-[#0078d4]
                          hover:bg-gray-50 transition-colors duration-150 flex items-center"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <Phone className="inline-block h-4 w-4 mr-3 text-[#c1902f]" />
+                <Phone className="h-4 w-4 mr-3 text-[#0078d4]" />
                 {formatPhoneNumber(restaurant.phone_number)}
               </a>
             ) : (
               <a
                 href="tel:+16719893444"
-                className="block px-3 py-2 text-base text-gray-700 hover:text-[#c1902f]
+                className="px-3 py-2 text-base text-gray-700 hover:text-[#0078d4]
                          hover:bg-gray-50 transition-colors duration-150 flex items-center"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <Phone className="inline-block h-4 w-4 mr-3 text-[#c1902f]" />
+                <Phone className="h-4 w-4 mr-3 text-[#0078d4]" />
                 (671) 989-3444
               </a>
             )}
@@ -495,7 +495,7 @@ export function Header() {
                       <Link
                         to="/reservations/dashboard"
                         className="block px-3 py-2 rounded-md text-base font-medium text-gray-700
-                                 hover:text-[#c1902f] hover:bg-gray-50 transition-colors duration-150"
+                                 hover:text-[#0078d4] hover:bg-gray-50 transition-colors duration-150"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         Manage Reservations
@@ -506,7 +506,7 @@ export function Header() {
                     <Link
                       to="/admin"
                       className="block px-3 py-2 rounded-md text-base font-medium text-gray-700
-                               hover:text-[#c1902f] hover:bg-gray-50 transition-colors duration-150"
+                               hover:text-[#0078d4] hover:bg-gray-50 transition-colors duration-150"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {isStaffOnly ? 'Order Management' : 'Admin Dashboard'}
@@ -519,7 +519,7 @@ export function Header() {
                 <Link
                   to="/orders"
                   className="block px-3 py-2 rounded-md text-base font-medium text-gray-700
-                           hover:text-[#c1902f] hover:bg-gray-50 transition-colors duration-150"
+                           hover:text-[#0078d4] hover:bg-gray-50 transition-colors duration-150"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Order History
@@ -527,7 +527,7 @@ export function Header() {
                 <Link
                   to="/profile"
                   className="block px-3 py-2 rounded-md text-base font-medium text-gray-700
-                           hover:text-[#c1902f] hover:bg-gray-50 transition-colors duration-150"
+                           hover:text-[#0078d4] hover:bg-gray-50 transition-colors duration-150"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   My Profile
@@ -540,7 +540,7 @@ export function Header() {
                     setIsMobileMenuOpen(false);
                   }}
                   className="block w-full text-left px-3 py-2 rounded-md text-base font-medium
-                           text-gray-700 hover:text-[#c1902f] hover:bg-gray-50 transition-colors duration-150"
+                           text-gray-700 hover:text-[#0078d4] hover:bg-gray-50 transition-colors duration-150"
                 >
                   Sign Out
                 </button>
@@ -550,7 +550,7 @@ export function Header() {
                 <Link
                   to="/login"
                   className="block px-3 py-2 rounded-md text-base font-medium text-gray-700
-                           hover:text-[#c1902f] hover:bg-gray-50 transition-colors duration-150"
+                           hover:text-[#0078d4] hover:bg-gray-50 transition-colors duration-150"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Sign In

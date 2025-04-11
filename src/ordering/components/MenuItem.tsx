@@ -213,7 +213,7 @@ export function MenuItem({ item }: MenuItemProps) {
                   text-white ${
                     isOutOfStock
                       ? 'bg-gray-300 cursor-not-allowed'
-                      : 'bg-[#c1902f] hover:bg-[#d4a43f]'
+                      : 'bg-[#0078d4] hover:bg-[#50a3d9]'
                   }
                 `}
               >
@@ -230,7 +230,7 @@ export function MenuItem({ item }: MenuItemProps) {
                   ${
                     isOutOfStock
                       ? 'bg-gray-300 cursor-not-allowed'
-                      : 'bg-[#c1902f] hover:bg-[#d4a43f]'
+                      : 'bg-[#0078d4] hover:bg-[#50a3d9]'
                   }
                   ${buttonClicked ? 'animate-bounce' : ''}
                 `}

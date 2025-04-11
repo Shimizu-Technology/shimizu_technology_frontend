@@ -18,12 +18,16 @@ export default {
         'shimizu-gray': '#505050',
         'shimizu-light-gray': '#f3f3f3',
         
-        // Keep original colors for backward compatibility
+        // Keep original colors for backward compatibility but map to Shimizu colors
         'hafaloha-pink': '#0078d4', // Mapped to shimizu-blue
         'hafaloha-teal': '#45c0b5',
         'hafaloha-yellow': '#ffd84c',
         'hafaloha-coral': '#50a3d9', // Mapped to shimizu-light-blue
         'hafaloha-gold': '#0078d4', // Mapped to shimizu-blue
+        
+        // Add direct color references for easy migration
+        'gold': '#0078d4', // Actually blue now
+        'light-gold': '#50a3d9', // Actually light blue now
       },
       animation: {
         'fadeIn': 'fadeIn 0.3s ease-in-out',

@@ -5,8 +5,8 @@ import { ReservationModal } from './reservation/ReservationModal';
 
 import { useRestaurantStore } from '../../shared/store/restaurantStore';
 import { useSiteSettingsStore } from '../store/siteSettingsStore';
-// TODO: Replace with Shimizu-specific hero image once available
-import fallbackHero from '../assets/hafaloha_hero.webp';
+// Using Shimizu Technology hero image as fallback
+import fallbackHero from '../assets/shimizu-technology-hero-2.png';
 import OptimizedImage from '../../shared/components/ui/OptimizedImage';
 
 export function Hero() {

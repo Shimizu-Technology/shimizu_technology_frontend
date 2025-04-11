@@ -1,11 +1,11 @@
 // src/ordering/components/MenuPage.tsx
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { MenuItem } from './MenuItem';
 import { useMenuStore } from '../store/menuStore';
 import { useCategoryStore } from '../store/categoryStore';
 import { useRestaurantStore } from '../../shared/store/restaurantStore';
-import { deriveStockStatus, calculateAvailableQuantity } from '../utils/inventoryUtils';
+// import { deriveStockStatus, calculateAvailableQuantity } from '../utils/inventoryUtils';
 
 export function MenuPage() {
   const { menuItems, fetchMenuItems, fetchMenus, error, currentMenuId, websocketConnected: menuWebsocketConnected } = useMenuStore();
@@ -145,7 +145,7 @@ export function MenuPage() {
             className={`
               flex-shrink-0 px-4 py-2 rounded-md
               ${selectedCategoryId === null 
-                ? 'bg-[#c1902f] text-white' 
+                ? 'bg-[#0078d4] text-white' 
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
             `}
             onClick={() => setSelectedCategoryId(null)}
@@ -160,7 +160,7 @@ export function MenuPage() {
               className={`
                 flex-shrink-0 px-4 py-2 rounded-md
                 ${selectedCategoryId === cat.id
-                  ? 'bg-[#c1902f] text-white'
+                  ? 'bg-[#0078d4] text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
               `}
               onClick={() => setSelectedCategoryId(cat.id)}
@@ -174,7 +174,7 @@ export function MenuPage() {
       {/* Category Description - Only shown when a category is selected */}
       {selectedCategoryId && selectedCategoryDescription && (
         <div className="animate-fadeIn transition-all duration-300 mb-6">
-          <div className="bg-white/80 backdrop-blur-sm border-l-2 border-[#c1902f]/70 rounded-lg px-4 py-3 sm:p-4 shadow-sm">
+          <div className="bg-white/80 backdrop-blur-sm border-l-2 border-[#0078d4]/70 rounded-lg px-4 py-3 sm:p-4 shadow-sm">
             <p className="text-gray-600 font-normal leading-relaxed text-sm sm:text-base">
               {selectedCategoryDescription}
             </p>

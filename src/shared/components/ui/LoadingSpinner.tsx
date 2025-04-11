@@ -1,8 +1,7 @@
 // src/shared/components/ui/LoadingSpinner.tsx
-import React from 'react';
 import { useRestaurantStore } from '../../store/restaurantStore';
 import { useSiteSettingsStore } from '../../store/siteSettingsStore';
-import fallbackSpinner from '../../assets/Hafaloha-Fat-Pua.png';
+import fallbackSpinner from '../../../ordering/assets/shimizu-technology-spinner.png';
 
 interface LoadingSpinnerProps {
   className?: string;
