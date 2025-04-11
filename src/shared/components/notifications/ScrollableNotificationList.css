@@ -1,0 +1,45 @@
+/* ScrollableNotificationList.css */
+
+.scrollable-notification-list {
+  /* Base styles */
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  
+  /* Prevent content from being cut off at the bottom */
+  padding-bottom: 16px;
+  
+  /* Hide scrollbar in WebKit browsers while preserving functionality */
+  scrollbar-width: thin;
+}
+
+.scrollable-notification-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollable-notification-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollable-notification-list::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+/* Device-specific adjustments */
+@media (max-width: 768px) {
+  .scrollable-notification-list {
+    /* More aggressive touch scrolling for mobile */
+    max-height: 60vh !important; /* Override any inline styles */
+    
+    /* Add some space at the bottom to prevent the "Acknowledge All" button overlap */
+    padding-bottom: 80px;
+  }
+}
+
+/* iPad-specific adjustments */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .scrollable-notification-list {
+    max-height: 65vh !important;
+    padding-bottom: 60px;
+  }
+}

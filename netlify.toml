@@ -1,0 +1,19 @@
+# Netlify configuration file
+
+# Build settings
+[build]
+  # Directory to publish (relative to root of your repo)
+  publish = "dist"
+  # Default build command
+  command = "npm run build"
+
+# Image CDN configuration
+[images]
+  # Allow Netlify to fetch images from the Hafaloha S3 bucket
+  remote_images = [
+    "https:\\/\\/hafaloha\\.s3\\.ap-southeast-2\\.amazonaws\\.com\\/.*"
+  ]
+  
+  # Default image optimization settings
+  quality = 80
+  format = "auto"  # Will serve WebP or AVIF when supported by the browser

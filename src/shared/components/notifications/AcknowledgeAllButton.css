@@ -1,0 +1,80 @@
+/* AcknowledgeAllButton.css */
+
+.fixed-acknowledge-button {
+  /* Base styles */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #c1902f;
+  color: white;
+  font-weight: 500;
+  border-radius: 9999px;
+  border: 2px solid white;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+  
+  /* Positioning */
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 1.5rem);
+  transform: translateX(-50%);
+  z-index: 9999;
+  
+  /* Ensure proper sizing for touch targets */
+  min-height: 48px;
+  min-width: 180px;
+  
+  /* Responsive adjustments */
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+}
+
+/* Icon styling */
+.fixed-acknowledge-button .icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Active state */
+.fixed-acknowledge-button:active {
+  transform: translateX(-50%) scale(0.97);
+}
+
+/* Hover state */
+.fixed-acknowledge-button:hover {
+  background-color: #d4a43f;
+}
+
+/* Disabled state */
+.fixed-acknowledge-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Success state */
+.fixed-acknowledge-button.success {
+  background-color: #10b981;
+  animation: pulse 0.5s ease-out;
+}
+
+/* Device-specific adjustments */
+@media (min-width: 768px) {
+  .fixed-acknowledge-button {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    min-width: 220px;
+  }
+  
+  .fixed-acknowledge-button .icon {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}
+
+/* Animation keyframes */
+@keyframes pulse {
+  0% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.05); }
+  100% { transform: translateX(-50%) scale(1); }
+}

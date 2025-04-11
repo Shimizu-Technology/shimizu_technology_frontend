@@ -1,0 +1,29 @@
+{
+  "name": "Shimizu Technology",
+  "short_name": "Shimizu Tech",
+  "description": "Shimizu Technology online ordering and restaurant management system",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0078d4",
+  "icons": [
+    {
+      "src": "/ShimizuTechnologyLogo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/ShimizuTechnologyLogo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/ShimizuTechnologyLogo.jpg",
+      "sizes": "96x96",
+      "type": "image/jpeg",
+      "purpose": "badge"
+    }
+  ]
+}
