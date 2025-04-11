@@ -57,15 +57,15 @@ export function OrderConfirmation() {
           <Link
             to="/menu"
             className="inline-flex items-center px-6 py-3 border border-transparent
-                       text-base font-medium rounded-md text-white bg-[#c1902f]
-                       hover:bg-[#d4a43f]"
+                       text-base font-medium rounded-md text-white bg-[#0078d4]
+                       hover:bg-[#50a3d9]"
           >
             Order More
           </Link>
           <Link
             to="/"
-            className="inline-flex items-center px-6 py-3 border border-[#c1902f]
-                       text-base font-medium rounded-md text-[#c1902f]
+            className="inline-flex items-center px-6 py-3 border border-[#0078d4]
+                       text-base font-medium rounded-md text-[#0078d4]
                        hover:bg-gray-50"
           >
             Return Home
