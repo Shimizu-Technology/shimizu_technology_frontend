@@ -232,14 +232,24 @@ class WebSocketManager {
     
     // TENANT ISOLATION: Validate that the notification belongs to the current restaurant
     if (this.restaurantId && data) {
-      const notificationRestaurantId = data.restaurant_id || 
-                                      (data.metadata && data.metadata.restaurant_id) || 
-                                      (type === NotificationType.NEW_ORDER && data.id && data.restaurant_id);
+      let notificationRestaurantId;
+      
+      // Handle different notification types differently
+      if (type === NotificationType.LOW_STOCK) {
+        // For low stock notifications, check restaurant_id in the menu_item or in the data itself
+        notificationRestaurantId = data.restaurant_id || 
+                                  (data.menu_item && data.menu_item.restaurant_id) || 
+                                  (data.metadata && data.metadata.restaurant_id);
+      } else {
+        // For other notifications (orders, etc.)
+        notificationRestaurantId = data.restaurant_id || 
+                                  (data.metadata && data.metadata.restaurant_id);
+      }
       
       // If the notification has a restaurant_id and it doesn't match our current restaurant,
       // ignore the notification to maintain tenant isolation
       if (notificationRestaurantId && String(notificationRestaurantId) !== String(this.restaurantId)) {
-        console.debug(`[WebSocketManager] Ignoring notification for different restaurant: ${notificationRestaurantId} (current: ${this.restaurantId})`);
+        console.debug(`[WebSocketManager] Ignoring ${type} notification for different restaurant: ${notificationRestaurantId} (current: ${this.restaurantId})`);
         return;
       }
     }
