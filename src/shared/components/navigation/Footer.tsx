@@ -88,9 +88,8 @@ export function Footer() {
           <div>
             <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
             <address className="not-italic text-gray-300 space-y-2">
-              <p>{restaurant?.address || "955 Pale San Vitores Rd"}</p>
-              <p>Tamuning, Guam 96913</p>
-              <p>Phone: {formatPhoneNumber(restaurant?.phone_number) || "+1 (671) 989-3444"}</p>
+              <p>{restaurant?.address || "Barrigada Heights, Guam 96913"}</p>
+              <p>Phone: {formatPhoneNumber(restaurant?.phone_number) || "+1 (702) 742-1168"}</p>
               <p>Email: {restaurant?.contact_email || "ShimizuTechnology@gmail.com"}</p>
             </address>
           </div>
