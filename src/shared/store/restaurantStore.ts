@@ -20,6 +20,7 @@ export interface Restaurant {
   default_reservation_length: number;
   admin_settings: Record<string, any>;
   allowed_origins: string[];
+  primary_frontend_url?: string;
   custom_pickup_location?: string;
   // Social media fields
   facebook_url?: string;
