@@ -7,6 +7,7 @@ interface PaymentIntentResponse {
   success: boolean;
   client_secret?: string;
   free_order?: boolean;
+  small_order?: boolean;
   order_id?: string;
   errors?: string[];
   status?: string;
@@ -49,7 +50,8 @@ export const StripeCheckout = React.forwardRef<StripeCheckoutRef, StripeCheckout
   const [stripe, setStripe] = useState<any>(null);
   const [elements, setElements] = useState<any>(null);
   const [isFreeOrder, setIsFreeOrder] = useState(false);
-  const [freeOrderId, setFreeOrderId] = useState<string | null>(null);
+  const [isSmallOrder, setIsSmallOrder] = useState(false);
+  const [specialOrderId, setSpecialOrderId] = useState<string | null>(null);
 
   // Use refs to track initialization state
   const stripeLoaded = useRef(false);
@@ -125,10 +127,14 @@ export const StripeCheckout = React.forwardRef<StripeCheckoutRef, StripeCheckout
           restaurant_id: restaurantId // Include restaurant_id for tenant isolation
         });
         
-        // Check if this is a free order
-        if (response && response.free_order) {
-          setIsFreeOrder(true);
-          setFreeOrderId(response.order_id || `free_${Math.random().toString(36).substring(2, 10)}`);
+        // Check if this is a free or small order
+        if (response && (response.free_order || response.small_order)) {
+          if (response.free_order) {
+            setIsFreeOrder(true);
+          } else if (response.small_order) {
+            setIsSmallOrder(true);
+          }
+          setSpecialOrderId(response.order_id || `special_${Math.random().toString(36).substring(2, 10)}`);
           setLoading(false);
           return;
         }
@@ -150,7 +156,7 @@ export const StripeCheckout = React.forwardRef<StripeCheckoutRef, StripeCheckout
 
   // Initialize Stripe Elements - only once
   useEffect(() => {
-    if (elementsInitialized.current || testMode || !stripe || !clientSecret || isFreeOrder) {
+    if (elementsInitialized.current || testMode || !stripe || !clientSecret || isFreeOrder || isSmallOrder) {
       return;
     }
     
@@ -174,8 +180,8 @@ export const StripeCheckout = React.forwardRef<StripeCheckoutRef, StripeCheckout
 
   // Mount payment element when elements is ready
   useEffect(() => {
-    // Skip if already mounted or if we're in test mode or if elements isn't ready or if it's a free order
-    if (paymentElementMounted.current || testMode || !elements || !paymentElementRef.current || isFreeOrder) {
+    // Skip if already mounted or if we're in test mode or if elements isn't ready or if it's a special order
+    if (paymentElementMounted.current || testMode || !elements || !paymentElementRef.current || isFreeOrder || isSmallOrder) {
       return;
     }
     
@@ -231,15 +237,15 @@ export const StripeCheckout = React.forwardRef<StripeCheckoutRef, StripeCheckout
       return true;
     }
     
-    // Handle free orders
-    if (isFreeOrder) {
+    // Handle free or small orders
+    if (isFreeOrder || isSmallOrder) {
       setTimeout(() => {
         onPaymentSuccess({
           status: 'succeeded',
-          transaction_id: freeOrderId || `free_${Math.random().toString(36).substring(2, 10)}`,
-          payment_id: freeOrderId || undefined, 
-          payment_intent_id: freeOrderId || undefined,
-          amount: '0',
+          transaction_id: specialOrderId || `special_${Math.random().toString(36).substring(2, 10)}`,
+          payment_id: specialOrderId || undefined, 
+          payment_intent_id: specialOrderId || undefined,
+          amount: isFreeOrder ? '0' : '0.50',
         });
         setProcessing(false);
       }, 500);
@@ -304,7 +310,7 @@ export const StripeCheckout = React.forwardRef<StripeCheckoutRef, StripeCheckout
     processPayment
   }), [processPayment]);
 
-  if (loading && !isFreeOrder) {
+  if (loading && !isFreeOrder && !isSmallOrder) {
     return (
       <div className="flex justify-center items-center p-4">
         <LoadingSpinner className="w-8 h-8" />
@@ -329,6 +335,11 @@ export const StripeCheckout = React.forwardRef<StripeCheckoutRef, StripeCheckout
         <div className="bg-green-50 border border-green-100 p-3 mb-4 rounded-md">
           <p className="font-bold text-green-700 inline-block mr-2">FREE ORDER</p>
           <span className="text-green-700">No payment required. Click the button below to complete your order.</span>
+        </div>
+      ) : isSmallOrder ? (
+        <div className="bg-blue-50 border border-blue-100 p-3 mb-4 rounded-md">
+          <p className="font-bold text-blue-700 inline-block mr-2">SMALL ORDER</p>
+          <span className="text-blue-700">Small orders are processed without requiring card details. Click the button below to complete your order.</span>
         </div>
       ) : testMode ? (
         <div>
