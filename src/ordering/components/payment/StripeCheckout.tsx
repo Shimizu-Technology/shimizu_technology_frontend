@@ -206,8 +206,13 @@ export const StripeCheckout = React.forwardRef<StripeCheckoutRef, StripeCheckout
     
     // Cleanup function to unmount element when component unmounts
     return () => {
-      if (paymentElementMounted.current) {
-        paymentElement.unmount();
+      if (paymentElementMounted.current && paymentElement) {
+        try {
+          paymentElement.unmount();
+        } catch (err) {
+          console.log('Error unmounting Stripe element:', err);
+          // Ignore errors during unmount - element might already be destroyed
+        }
         paymentElementMounted.current = false;
       }
     };
