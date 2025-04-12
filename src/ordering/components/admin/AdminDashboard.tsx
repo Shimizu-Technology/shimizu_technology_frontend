@@ -329,8 +329,12 @@ export function AdminDashboard() {
       setIsAcknowledgingAll(true);
       // Acknowledging all ${unacknowledgedOrders.length} unacknowledged orders
       
-      // Create a copy of the current unacknowledged orders
-      const ordersToAcknowledge = [...unacknowledgedOrders];
+      // Create a copy of the current unacknowledged orders and filter by current restaurant
+      const ordersToAcknowledge = unacknowledgedOrders.filter(order => {
+        // TENANT ISOLATION: Only acknowledge orders for the current restaurant
+        return currentRestaurantId && order.restaurant_id && 
+               String(order.restaurant_id) === String(currentRestaurantId);
+      });
       
       // First dismiss all toast notifications for all unacknowledged orders
       // Using our improved dismissAllToastsForOrder function
@@ -380,6 +384,13 @@ export function AdminDashboard() {
   // Function to display order notification with improved handling and deduplication
   const displayOrderNotification = useCallback((order: Order) => {
     // Starting displayOrderNotification for order
+    
+    // TENANT ISOLATION: Skip notifications for other restaurants
+    if (order.restaurant_id && currentRestaurantId && 
+        String(order.restaurant_id) !== String(currentRestaurantId)) {
+      console.debug(`[AdminDashboard] Ignoring order notification for different restaurant: ${order.restaurant_id} (current: ${currentRestaurantId})`);
+      return;
+    }
     
     // Skip displaying notification if the order has already been acknowledged globally
     if (order.global_last_acknowledged_at) {
@@ -1076,8 +1087,8 @@ useEffect(() => {
       fetchingNotificationsRef.current = true;
       // AdminDashboard: Checking for unacknowledged orders...
       
-      // Get unacknowledged orders from the last 24 hours
-      const url = `/orders/unacknowledged?hours=24`;
+      // Get unacknowledged orders from the last 24 hours for the current restaurant only
+      const url = `/orders/unacknowledged?hours=24${currentRestaurantId ? `&restaurant_id=${currentRestaurantId}` : ''}`;
       const fetchedOrders: Order[] = await api.get(url);
       
       if (!mountedRef.current) {
@@ -1288,7 +1299,10 @@ useEffect(() => {
     <div className="min-h-screen bg-gray-50 relative">
   {/* Acknowledge All button using the new component */}
   <AcknowledgeAllButton
-    count={unacknowledgedOrders.length}
+    count={unacknowledgedOrders.filter(order => 
+      currentRestaurantId && order.restaurant_id && 
+      String(order.restaurant_id) === String(currentRestaurantId)
+    ).length}
     isLoading={isAcknowledgingAll}
     onClick={acknowledgeAllOrders}
     showSuccess={acknowledgeSuccess}

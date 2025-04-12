@@ -230,6 +230,20 @@ class WebSocketManager {
       return;
     }
     
+    // TENANT ISOLATION: Validate that the notification belongs to the current restaurant
+    if (this.restaurantId && data) {
+      const notificationRestaurantId = data.restaurant_id || 
+                                      (data.metadata && data.metadata.restaurant_id) || 
+                                      (type === NotificationType.NEW_ORDER && data.id && data.restaurant_id);
+      
+      // If the notification has a restaurant_id and it doesn't match our current restaurant,
+      // ignore the notification to maintain tenant isolation
+      if (notificationRestaurantId && String(notificationRestaurantId) !== String(this.restaurantId)) {
+        console.debug(`[WebSocketManager] Ignoring notification for different restaurant: ${notificationRestaurantId} (current: ${this.restaurantId})`);
+        return;
+      }
+    }
+    
     // Mark this notification as displayed
     this.markAsDisplayed(notificationId, type, data);
     
