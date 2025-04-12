@@ -201,6 +201,14 @@ class WebSocketService {
     this.isConnecting = true;
     this.setActive(true, 'connect');
     this.restaurantId = restaurantId;
+    
+    // Store restaurant ID in localStorage for persistence across page refreshes
+    // This is important for multi-tenant user authentication
+    if (restaurantId) {
+      localStorage.setItem('current_restaurant_id', restaurantId);
+      this.log('debug', `Stored restaurant ID in localStorage: ${restaurantId}`);
+    }
+    
     this.callbacks = callbacks;
     this.connectionStartTime = now;
     this.lastConnectionAttempt = now;
@@ -280,19 +288,33 @@ class WebSocketService {
         // Decode the base64 payload
         const decodedPayload = JSON.parse(atob(payload));
         if (decodedPayload.restaurant_id) {
-          tokenRestaurantId = decodedPayload.restaurant_id.toString();
-          this.log('debug', `Extracted restaurant ID from token: ${tokenRestaurantId}`);
+          // Convert to string to ensure we have a valid string value
+          const restaurantIdStr = decodedPayload.restaurant_id.toString();
+          tokenRestaurantId = restaurantIdStr;
+          this.log('debug', `Extracted restaurant ID from token: ${restaurantIdStr}`);
+          
+          // Store the restaurant ID from token in localStorage if we don't already have one
+          // This helps maintain consistent restaurant context across the application
+          const storedRestaurantId = localStorage.getItem('current_restaurant_id');
+          if (!storedRestaurantId) {
+            localStorage.setItem('current_restaurant_id', restaurantIdStr);
+            this.log('debug', `Stored restaurant ID from token in localStorage: ${restaurantIdStr}`);
+          }
         }
       }
     } catch (error) {
       this.log('error', 'Error extracting restaurant ID from token:', { error });
     }
     
+    // Try to get restaurant ID from localStorage if not already available
+    const localStorageRestaurantId = localStorage.getItem('current_restaurant_id') || '';
+    
     // Use the restaurant ID in this priority order:
     // 1. URL parameter (highest priority - user explicitly selected this restaurant)
     // 2. Token restaurant ID (from JWT - represents the restaurant the user is authenticated for)
-    // 3. Passed restaurant ID (from function parameter - fallback)
-    const effectiveRestaurantId = urlRestaurantId || tokenRestaurantId || this.restaurantId;
+    // 3. Passed restaurant ID (from function parameter)
+    // 4. localStorage restaurant ID (persisted from previous sessions)
+    const effectiveRestaurantId = urlRestaurantId || tokenRestaurantId || this.restaurantId || localStorageRestaurantId;
     
     // Add restaurant_id to the connection URL for better debugging
     // IMPORTANT: This ensures we're using the correct restaurant ID for WebSocket connections
