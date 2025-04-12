@@ -2,6 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../../../shared/api/apiClient';
 import { LoadingSpinner } from '../../../shared/components/ui';
 
+// Define the possible response types from the payment intent API
+interface PaymentIntentResponse {
+  success: boolean;
+  client_secret?: string;
+  free_order?: boolean;
+  order_id?: string;
+  errors?: string[];
+  status?: string;
+}
+
 interface StripeCheckoutProps {
   amount: string;
   currency?: string;
@@ -38,6 +48,8 @@ export const StripeCheckout = React.forwardRef<StripeCheckoutRef, StripeCheckout
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [stripe, setStripe] = useState<any>(null);
   const [elements, setElements] = useState<any>(null);
+  const [isFreeOrder, setIsFreeOrder] = useState(false);
+  const [freeOrderId, setFreeOrderId] = useState<string | null>(null);
 
   // Use refs to track initialization state
   const stripeLoaded = useRef(false);
@@ -107,12 +119,21 @@ export const StripeCheckout = React.forwardRef<StripeCheckoutRef, StripeCheckout
         // Get restaurant ID from localStorage or use default
         const restaurantId = localStorage.getItem('restaurant_id') || '2';
         
-        const response = await api.post<{ client_secret: string }>('/stripe/create_intent', {
+        const response = await api.post<PaymentIntentResponse>('/stripe/create_intent', {
           amount,
           currency,
           restaurant_id: restaurantId // Include restaurant_id for tenant isolation
         });
         
+        // Check if this is a free order
+        if (response && response.free_order) {
+          setIsFreeOrder(true);
+          setFreeOrderId(response.order_id || `free_${Math.random().toString(36).substring(2, 10)}`);
+          setLoading(false);
+          return;
+        }
+        
+        // Normal paid order with client secret
         if (response && response.client_secret) {
           setClientSecret(response.client_secret);
         } else {
@@ -129,7 +150,7 @@ export const StripeCheckout = React.forwardRef<StripeCheckoutRef, StripeCheckout
 
   // Initialize Stripe Elements - only once
   useEffect(() => {
-    if (elementsInitialized.current || testMode || !stripe || !clientSecret) {
+    if (elementsInitialized.current || testMode || !stripe || !clientSecret || isFreeOrder) {
       return;
     }
     
@@ -153,8 +174,8 @@ export const StripeCheckout = React.forwardRef<StripeCheckoutRef, StripeCheckout
 
   // Mount payment element when elements is ready
   useEffect(() => {
-    // Skip if already mounted or if we're in test mode or if elements isn't ready
-    if (paymentElementMounted.current || testMode || !elements || !paymentElementRef.current) {
+    // Skip if already mounted or if we're in test mode or if elements isn't ready or if it's a free order
+    if (paymentElementMounted.current || testMode || !elements || !paymentElementRef.current || isFreeOrder) {
       return;
     }
     
@@ -207,6 +228,21 @@ export const StripeCheckout = React.forwardRef<StripeCheckoutRef, StripeCheckout
         });
         setProcessing(false);
       }, 1000);
+      return true;
+    }
+    
+    // Handle free orders
+    if (isFreeOrder) {
+      setTimeout(() => {
+        onPaymentSuccess({
+          status: 'succeeded',
+          transaction_id: freeOrderId || `free_${Math.random().toString(36).substring(2, 10)}`,
+          payment_id: freeOrderId || undefined, 
+          payment_intent_id: freeOrderId || undefined,
+          amount: '0',
+        });
+        setProcessing(false);
+      }, 500);
       return true;
     }
     
@@ -268,7 +304,7 @@ export const StripeCheckout = React.forwardRef<StripeCheckoutRef, StripeCheckout
     processPayment
   }), [processPayment]);
 
-  if (loading) {
+  if (loading && !isFreeOrder) {
     return (
       <div className="flex justify-center items-center p-4">
         <LoadingSpinner className="w-8 h-8" />
@@ -288,8 +324,13 @@ export const StripeCheckout = React.forwardRef<StripeCheckoutRef, StripeCheckout
 
   return (
     <div className="stripe-checkout-container">
-      {/* Test mode view - just show test fields, no submit button */}
-      {testMode ? (
+      {/* Free order view */}
+      {isFreeOrder ? (
+        <div className="bg-green-50 border border-green-100 p-3 mb-4 rounded-md">
+          <p className="font-bold text-green-700 inline-block mr-2">FREE ORDER</p>
+          <span className="text-green-700">No payment required. Click the button below to complete your order.</span>
+        </div>
+      ) : testMode ? (
         <div>
           <div className="bg-yellow-50 border border-yellow-100 p-3 mb-4 rounded-md">
             <p className="font-bold text-yellow-700 inline-block mr-2">TEST MODE</p>
