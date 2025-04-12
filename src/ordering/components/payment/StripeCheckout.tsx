@@ -104,9 +104,13 @@ export const StripeCheckout = React.forwardRef<StripeCheckoutRef, StripeCheckout
     
     const createPaymentIntent = async () => {
       try {
+        // Get restaurant ID from localStorage or use default
+        const restaurantId = localStorage.getItem('restaurant_id') || '2';
+        
         const response = await api.post<{ client_secret: string }>('/stripe/create_intent', {
           amount,
-          currency
+          currency,
+          restaurant_id: restaurantId // Include restaurant_id for tenant isolation
         });
         
         if (response && response.client_secret) {
