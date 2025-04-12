@@ -142,6 +142,12 @@ export const StripeCheckout = React.forwardRef<StripeCheckoutRef, StripeCheckout
         // Normal paid order with client secret
         if (response && response.client_secret) {
           setClientSecret(response.client_secret);
+        } else if (response && response.success) {
+          // This is a successful response but doesn't have a client secret
+          // (could be a free or small order that wasn't caught above)
+          setIsSmallOrder(true);
+          setSpecialOrderId(`special_${Math.random().toString(36).substring(2, 10)}`);
+          setLoading(false);
         } else {
           throw new Error('No client secret returned');
         }
