@@ -10,7 +10,7 @@ import { AnalyticsManager } from './AnalyticsManager';
 import { SettingsManager } from './SettingsManager';
 import MerchandiseManager from './MerchandiseManager';
 import { StaffManagement } from './StaffManagement';
-import RestaurantSelector from './RestaurantSelector';
+// RestaurantSelector removed - super admins now only see data for the current restaurant
 import NotificationContainer from '../../../shared/components/notifications/NotificationContainer';
 /* eslint-enable @typescript-eslint/no-unused-vars */
 
@@ -56,9 +56,9 @@ type Tab = 'analytics' | 'orders' | 'menu' | 'promos' | 'settings' | 'merchandis
 export function AdminDashboard() {
   const { user } = useAuthStore();
   const authStore = useAuthStore();
-  const [currentRestaurantId, setCurrentRestaurantId] = useState<string | undefined>(
-    user?.restaurant_id
-  );
+  // Restaurant selector removed - super admins now only see data for the current restaurant
+  // Use user's restaurant_id directly instead of state since we no longer need to change restaurants
+  const currentRestaurantId = user?.restaurant_id;
   
   // Direct role check as a fallback
   const directRoleCheck = user?.role === 'super_admin' || user?.role === 'admin' || user?.role === 'staff';
@@ -1311,16 +1311,7 @@ useEffect(() => {
             <div className="flex items-center space-x-4">
               {/* Stock notification bell and panel - commented out as not currently in use */}
               
-              {/* Restaurant selector - only for super admins */}
-              {user?.role === 'super_admin' && (
-                <div className="mt-4 md:mt-0 md:ml-4 w-full md:w-64">
-                  <RestaurantSelector 
-                    onRestaurantChange={(restaurantId) => {
-                      setCurrentRestaurantId(restaurantId);
-                    }}
-                  />
-                </div>
-              )}
+              {/* Restaurant selector removed - super admins now only see data for the current restaurant */}
             </div>
           </div>
         </div>

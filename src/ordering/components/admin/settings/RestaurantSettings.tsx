@@ -1,12 +1,11 @@
 // src/ordering/components/admin/settings/RestaurantSettings.tsx
 
 import React, { useEffect, useState, useRef } from 'react';
+import { config } from '../../../../shared/config';
 import toastUtils from '../../../../shared/utils/toastUtils';
 import { Input, LoadingSpinner, SettingsHeader } from '../../../../shared/components/ui';
 import { Settings } from 'lucide-react';
 import { 
-  fetchRestaurant as apiFetchRestaurant, 
-  fetchRestaurants,
   updateRestaurant as apiUpdateRestaurant,
   uploadRestaurantImages
 } from '../../../../shared/api/endpoints/restaurants';
@@ -162,38 +161,121 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
   }, []);
 
   async function fetchRestaurantData() {
+    
     // Set up a timer to show loading state only if the request takes longer than 500ms
     const loadingTimer = setTimeout(() => {
       setLoading(true);
     }, 500);
     
     try {
-      // First try to get all restaurants
+      // Get the restaurant ID from the URL params or props
+      // This ensures we're using the restaurant the user is currently logged into
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlRestaurantId = urlParams.get('restaurant_id');
+      
+      // For super_admins, we need to ensure we're using the restaurant ID they're currently viewing
+      // rather than defaulting to a specific restaurant
+      let targetRestaurantId;
+      
+      // PRIORITY ORDER FOR RESTAURANT ID:
+      // 1. URL parameters (highest priority for super_admins) - this is what they're currently viewing
+      if (urlRestaurantId) {
+        targetRestaurantId = parseInt(urlRestaurantId, 10);
+        console.log(`Using restaurant ID from URL: ${targetRestaurantId}`);
+      }
+      // 2. Props passed by parent component
+      else if (restaurantId) {
+        targetRestaurantId = parseInt(restaurantId, 10);
+        console.log(`Using restaurant ID from props: ${targetRestaurantId}`);
+      }
+      // Finally, try to extract restaurant_id from JWT token
+      else {
+        try {
+          const token = localStorage.getItem('token') || '';
+          if (token) {
+            // JWT tokens are in format: header.payload.signature
+            const payload = token.split('.')[1];
+            if (payload) {
+              // Decode the base64 payload
+              const decodedPayload = JSON.parse(atob(payload));
+              if (decodedPayload.restaurant_id) {
+                targetRestaurantId = parseInt(decodedPayload.restaurant_id, 10);
+                console.log(`Using restaurant ID from JWT token: ${targetRestaurantId}`);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error extracting restaurant ID from token:', error);
+        }
+      }
+      
+      // If all else fails, use the config default
+      if (!targetRestaurantId || isNaN(targetRestaurantId)) {
+        targetRestaurantId = parseInt(config.restaurantId, 10);
+        console.log(`Using default restaurant ID from config: ${targetRestaurantId}`);
+      }
+      
+      console.log(`Fetching restaurant with ID: ${targetRestaurantId}`);
+      
       try {
-        const response = await fetchRestaurants();
-        // Check if response is an array and has items
-        if (Array.isArray(response) && response.length > 0) {
-          setRestaurant(response[0]); // Assuming the first restaurant is the current one
-          return; // Exit if successful
-        } else if (response && typeof response === 'object') {
-          // If it's a single restaurant object
-          setRestaurant(response as Restaurant);
+        // Use API base URL from config instead of hardcoded value
+        const token = localStorage.getItem('token') || '';
+        const currentOrigin = window.location.origin;
+        
+        // For the URL path, we use the targetRestaurantId to specify which restaurant data we want to fetch
+        // For the query parameter, we also use targetRestaurantId to set the tenant context
+        // This ensures super_admins see data for the restaurant they're currently viewing
+        const response = await fetch(`${config.apiBaseUrl}/restaurants/${targetRestaurantId}?restaurant_id=${targetRestaurantId}`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': token,
+            'X-Restaurant-Id': targetRestaurantId.toString(),
+            'X-Frontend-Id': 'shimizu_technology',
+            'X-Frontend-Restaurant-Id': targetRestaurantId.toString(),
+            'Origin': currentOrigin,
+            'Referer': currentOrigin
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+        
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text();
+          console.error('Received non-JSON response:', text.substring(0, 100) + '...');
+          throw new Error('Received non-JSON response from server');
+        }
+        
+        const singleRestaurant = await response.json();
+        if (singleRestaurant) {
+          console.log(`Successfully fetched restaurant data for ID: ${targetRestaurantId}`, singleRestaurant);
+          setRestaurant(singleRestaurant as Restaurant);
+          
+          // Clear loading state
+          clearTimeout(loadingTimer);
+          setLoading(false);
           return; // Exit if successful
         }
       } catch (fetchError) {
-        console.warn('Could not fetch restaurants list, trying with ID 1:', fetchError);
+        console.error(`Failed to fetch restaurant with ID ${targetRestaurantId}:`, fetchError);
+        // Only proceed to fallback if there was an error
       }
       
-      // Fallback: try to get restaurant with ID 1 if the above fails
-      try {
-        const singleRestaurant = await apiFetchRestaurant(1);
-        if (singleRestaurant) {
-          setRestaurant(singleRestaurant as Restaurant);
-        }
-      } catch (singleFetchError) {
-        // If both methods fail, throw the error to be caught by the outer catch
-        throw singleFetchError;
-      }
+      // Do not fall back to default restaurant ID
+      // This ensures super admins always see data for the restaurant they're currently viewing
+      console.error(`Failed to fetch restaurant data for ID: ${targetRestaurantId}. No fallback will be used.`);
+      
+      // If we get here, the primary request failed
+      toastUtils.error('Could not load restaurant data. Please try refreshing the page.');
+      
+      // If we get here, all attempts failed
+      toastUtils.error('Could not load restaurant data. Please try refreshing the page.');
+    
     } catch (err: any) {
       console.error('Failed to load restaurant data:', err);
       toastUtils.error('Failed to load restaurant data');

@@ -267,8 +267,36 @@ class WebSocketService {
     // Get token without 'Bearer ' prefix if it exists
     const cleanToken = token.startsWith('Bearer ') ? token.substring(7) : token;
     
+    // Get the restaurant ID from URL parameters if available
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlRestaurantId = urlParams.get('restaurant_id');
+    
+    // Try to extract restaurant_id from JWT token
+    let tokenRestaurantId: string | null = null;
+    try {
+      // JWT tokens are in format: header.payload.signature
+      const payload = cleanToken.split('.')[1];
+      if (payload) {
+        // Decode the base64 payload
+        const decodedPayload = JSON.parse(atob(payload));
+        if (decodedPayload.restaurant_id) {
+          tokenRestaurantId = decodedPayload.restaurant_id.toString();
+          this.log('debug', `Extracted restaurant ID from token: ${tokenRestaurantId}`);
+        }
+      }
+    } catch (error) {
+      this.log('error', 'Error extracting restaurant ID from token:', { error });
+    }
+    
+    // Use the restaurant ID in this priority order:
+    // 1. URL parameter (highest priority - user explicitly selected this restaurant)
+    // 2. Token restaurant ID (from JWT - represents the restaurant the user is authenticated for)
+    // 3. Passed restaurant ID (from function parameter - fallback)
+    const effectiveRestaurantId = urlRestaurantId || tokenRestaurantId || this.restaurantId;
+    
     // Add restaurant_id to the connection URL for better debugging
-    const wsUrl = `${protocol}//${host}/cable?token=${cleanToken}&restaurant_id=${this.restaurantId}`;
+    // IMPORTANT: This ensures we're using the correct restaurant ID for WebSocket connections
+    const wsUrl = `${protocol}//${host}/cable?token=${cleanToken}&restaurant_id=${effectiveRestaurantId}`;
     
     this.log('info', `WebSocket URL: ${wsUrl.replace(token, '[REDACTED]')}`, {
       protocol,
