@@ -1,5 +1,5 @@
 // src/ordering/components/profile/OrderHistory.tsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useOrderStore } from '../../store/orderStore';
 import { useAuthStore } from '../../store/authStore';
 import { Clock, ShoppingBag, Filter, Calendar } from 'lucide-react';
@@ -61,9 +61,9 @@ export function OrderHistory() {
   const sortedOrders = [...orders].sort((a, b) => {
     switch (sortOption) {
       case 'newest':
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        return new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime();
       case 'oldest':
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        return new Date(a.createdAt || '').getTime() - new Date(b.createdAt || '').getTime();
       case 'highest':
         return b.total - a.total;
       case 'lowest':
@@ -101,7 +101,8 @@ export function OrderHistory() {
   };
 
   // Format date for better display
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return date.toLocaleDateString(undefined, { 
       year: 'numeric', 
@@ -226,7 +227,7 @@ export function OrderHistory() {
                 {/* Order header */}
                 <div className="flex justify-between items-start p-4 border-b border-gray-100">
                   <div>
-                    <h3 className="text-base font-medium text-gray-900">Order #{order.id}</h3>
+                    <h3 className="text-base font-medium text-gray-900">Order #{order.order_number || order.id}</h3>
                     <div className="flex items-center text-xs text-gray-500 mt-1">
                       <Calendar className="h-3 w-3 mr-1" />
                       {formatDate(order.createdAt)}

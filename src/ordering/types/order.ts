@@ -23,6 +23,7 @@ export interface MerchandiseOrderItem {
 
 export interface Order {
   id: string;
+  order_number?: string; // New restaurant-specific order number
   created_at?: string;
   updated_at?: string;
   createdAt?: string;

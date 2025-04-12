@@ -1,10 +1,9 @@
 // src/ordering/components/admin/settings/VipCodeUsageModal.tsx
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import toastUtils from '../../../../shared/utils/toastUtils';
-import { X, ShoppingBag, User, Calendar, DollarSign } from 'lucide-react';
+import { X, ShoppingBag, User, Calendar } from 'lucide-react';
 import { getCodeUsage } from '../../../../shared/api/endpoints/vipCodes';
-import { LoadingSpinner } from '../../../../shared/components/ui/LoadingSpinner';
 
 interface VipCodeUsageModalProps {
   codeId: number;
@@ -26,6 +25,7 @@ interface Order {
   customer_name: string;
   customer_email: string;
   customer_phone: string;
+  order_number?: string;
   user: {
     id: number;
     name: string;
@@ -55,7 +55,7 @@ interface CodeUsageData {
   orders: Order[];
 }
 
-export const VipCodeUsageModal: React.FC<VipCodeUsageModalProps> = ({ codeId, onClose }) => {
+export const VipCodeUsageModal = ({ codeId, onClose }: VipCodeUsageModalProps) => {
   const [loading, setLoading] = useState(true);
   const [usageData, setUsageData] = useState<CodeUsageData | null>(null);
   const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
@@ -242,7 +242,7 @@ export const VipCodeUsageModal: React.FC<VipCodeUsageModalProps> = ({ codeId, on
                     {/* Mobile layout */}
                     <div className="md:hidden">
                       <div className="flex justify-between items-center">
-                        <span className="font-medium">Order #{order.id}</span>
+                        <span className="font-medium">Order #{order.order_number || order.id}</span>
                         <div className="font-semibold">{formatCurrency(order.total)}</div>
                       </div>
                       <div className="flex justify-between items-center mt-2">
@@ -260,7 +260,7 @@ export const VipCodeUsageModal: React.FC<VipCodeUsageModalProps> = ({ codeId, on
                     {/* Desktop layout */}
                     <div className="hidden md:flex md:justify-between md:items-center">
                       <div className="flex items-center space-x-4">
-                        <span className="font-medium">Order #{order.id}</span>
+                        <span className="font-medium">Order #{order.order_number || order.id}</span>
                         <span className="text-sm text-gray-500">{formatDate(order.created_at)}</span>
                         <span className={`px-2 py-1 text-xs rounded-full ${
                           order.status === 'completed' ? 'bg-green-100 text-green-800' :

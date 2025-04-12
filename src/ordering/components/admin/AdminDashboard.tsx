@@ -520,7 +520,7 @@ export function AdminDashboard() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <h4 className="text-base font-bold text-gray-900 truncate pr-2 w-full">
-                New Order #{order.id}
+                New Order #{order.order_number || order.id}
               </h4>
               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeColor(order.status)}`}>
                 {order.status.charAt(0).toUpperCase() + order.status.slice(1)}

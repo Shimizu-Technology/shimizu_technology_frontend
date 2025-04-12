@@ -1947,7 +1947,7 @@ export function AdminEditOrderModal({
               const updateResult = await menuItemsApi.updateStock(i.itemId, {
                 stock_quantity: newStockLevel,
                 reason_type: 'return',
-                reason_details: `Items returned from refund of Order #${order.id}`,
+                reason_details: `Items returned from refund of Order #${order.order_number || order.id}`,
               });
               
               // Inventory update successful
@@ -3183,7 +3183,7 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
           <div className="px-4 sm:px-6 py-4 border-b border-gray-200 sticky top-0 bg-white z-20">
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-lg sm:text-xl font-bold text-gray-900">
-                Order #{order.id}
+                Order #{order.order_number || order.id}
               </h3>
               <button
                 onClick={onClose}

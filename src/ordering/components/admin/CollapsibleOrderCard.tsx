@@ -687,7 +687,7 @@ export function CollapsibleOrderCard({
                   Customer Order
                 </span>
               )}
-              <h3 className="text-base font-medium text-gray-900">Order #{order.id}</h3>
+              <h3 className="text-base font-medium text-gray-900">Order #{order.order_number || order.id}</h3>
             </div>
             {order.createdAt && (
               <div>

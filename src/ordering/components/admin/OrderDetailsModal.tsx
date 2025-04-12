@@ -27,7 +27,7 @@ export function OrderDetailsModal({
         </button>
 
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-bold">Order #{order.id}</h3>
+          <h3 className="text-lg font-bold">Order #{order.order_number || order.id}</h3>
           {isRefunded && (
             <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
               Refunded

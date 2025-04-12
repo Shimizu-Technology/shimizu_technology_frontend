@@ -28,6 +28,7 @@ interface Transaction {
   id: number;
   staff_member_id: number;
   order_id: number | null;
+  order_number?: string;
   amount: number;
   transaction_type: string;
   description: string;
@@ -771,7 +772,11 @@ export function StaffManagement() {
                             <div className="text-sm text-gray-900">{transaction.description}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">{transaction.reference}</div>
+                            <div className="text-sm text-gray-500">
+                              {transaction.transaction_type === 'order' && transaction.order_number ? 
+                                `Order #${transaction.order_number}` : 
+                                transaction.reference}
+                            </div>
                           </td>
                         </tr>
                       ))
