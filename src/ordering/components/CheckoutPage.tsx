@@ -217,7 +217,7 @@ export function CheckoutPage() {
       const estimatedTime = hasAny24hrItem ? '24 hours' : '20–25 min';
       navigate('/order-confirmation', {
         state: {
-          orderId: newOrder.id || '12345',
+          orderId: newOrder.order_number || newOrder.id || '12345',
           total: finalTotal,
           estimatedTime,
           hasAny24hrItem,
