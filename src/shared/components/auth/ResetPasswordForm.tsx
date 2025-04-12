@@ -10,7 +10,16 @@ export function ResetPasswordForm() {
   const token = searchParams.get('token') || '';
   const email = searchParams.get('email') || '';
 
+  // Redirect to forgot-password if token or email is missing
   const navigate = useNavigate();
+  React.useEffect(() => {
+    if (!token || !email) {
+      console.error('Missing token or email in reset password URL', { token, email });
+      toastUtils.error('Invalid password reset link. Please request a new one.');
+      navigate('/forgot-password');
+    }
+  }, [token, email, navigate]);
+
   const { setUserFromResponse } = useAuthStore.getState();
 
   const [newPassword, setNewPassword] = useState('');
