@@ -23,7 +23,7 @@ import { useMerchandiseStore } from './store/merchandiseStore';
 import { MenuItem as MenuItemCard } from './components/MenuItem';
 import { useSiteSettingsStore } from './store/siteSettingsStore'; // <-- IMPORTANT
 
-import { ProtectedRoute, AnonymousRoute } from '../shared';
+import { ProtectedRoute, AnonymousRoute, PhoneVerificationRoute } from '../shared';
 
 function OrderingLayout() {
   const loadingCount = useLoadingStore((state) => state.loadingCount);
@@ -173,9 +173,9 @@ export default function OnlineOrderingApp() {
 
         {/* Phone verification */}
         <Route path="verify-phone" element={
-          <AnonymousRoute>
+          <PhoneVerificationRoute>
             <VerifyPhonePage />
-          </AnonymousRoute>
+          </PhoneVerificationRoute>
         } />
 
         {/* Protected user pages => /orders, /profile */}
