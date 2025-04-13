@@ -39,7 +39,7 @@ export function CustomizationModal({ item, onClose }: CustomizationModalProps) {
     
     optionGroups.forEach(group => {
       const preselectedOptions = group.options
-        .filter(opt => opt.is_preselected)
+        .filter(opt => opt.is_preselected && opt.is_available !== false) // Only include available options
         .map(opt => opt.id);
       
       if (preselectedOptions.length > 0) {
@@ -465,7 +465,9 @@ export function CustomizationModal({ item, onClose }: CustomizationModalProps) {
                       )}
                       
                       <div className="space-y-2">
-                        {group.options.map((opt) => {
+                        {group.options
+                          .filter(opt => opt.is_available !== false) // Only show available options
+                          .map((opt) => {
                           const selected = selections[groupId]?.includes(opt.id);
                           
                           // Try different ways to access the price

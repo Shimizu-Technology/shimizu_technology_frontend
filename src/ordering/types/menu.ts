@@ -13,6 +13,7 @@ export interface MenuOption {
   additional_price_float?: number; // Added this property to match the API response
   available: boolean;
   is_preselected?: boolean;
+  is_available?: boolean; // Whether this option is currently available for ordering
 }
 
 export interface OptionGroup {

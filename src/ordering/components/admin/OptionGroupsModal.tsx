@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Trash2, X, Save } from 'lucide-react';
 import { api } from '../../lib/api';
 import type { MenuItem } from '../../types/menu';
+import toastUtils from '../../../shared/utils/toastUtils';
 
 interface OptionRow {
   id: number;
@@ -12,6 +13,8 @@ interface OptionRow {
   position: number;
   // Pre-selected support
   is_preselected?: boolean;
+  // Availability toggle
+  is_available?: boolean;
 }
 
 interface OptionGroup {
@@ -153,6 +156,7 @@ export function OptionGroupsModal({ item, onClose }: OptionGroupsModalProps) {
             additional_price: 0,
             position: maxOptPos + 1,
             is_preselected: false,
+            is_available: true,
           };
           return { ...g, options: [...g.options, newOpt] };
         }
@@ -281,6 +285,7 @@ export function OptionGroupsModal({ item, onClose }: OptionGroupsModalProps) {
             additional_price: oNew.additional_price,
             position: oNew.position,
             is_preselected: oNew.is_preselected || false,
+            is_available: oNew.is_available !== false, // Default to true if undefined
           });
         }
         // Update
@@ -290,6 +295,7 @@ export function OptionGroupsModal({ item, onClose }: OptionGroupsModalProps) {
             additional_price: oUpd.additional_price,
             position: oUpd.position,
             is_preselected: oUpd.is_preselected || false,
+            is_available: oUpd.is_available !== false, // Default to true if undefined
           });
         }
       }
@@ -297,11 +303,14 @@ export function OptionGroupsModal({ item, onClose }: OptionGroupsModalProps) {
       // Refresh from server
       await fetchGroups();
 
+      // Show success toast
+      toastUtils.success('Options saved successfully');
+
       // Close
       onClose();
     } catch (err) {
       console.error(err);
-      alert('Something went wrong saving changes.');
+      toastUtils.error('Something went wrong saving changes.');
     }
   };
 
@@ -555,6 +564,20 @@ export function OptionGroupsModal({ item, onClose }: OptionGroupsModalProps) {
                           }
                         />
                         <span>Pre-selected</span>
+                      </label>
+                      
+                      {/* Availability toggle */}
+                      <label className="flex items-center space-x-1 text-xs mr-2">
+                        <input
+                          type="checkbox"
+                          checked={opt.is_available !== false} /* Default to true if undefined */
+                          onChange={(e) =>
+                            handleLocalUpdateOption(group.id, opt.id, {
+                              is_available: e.target.checked,
+                            })
+                          }
+                        />
+                        <span>Available</span>
                       </label>
                       {/* Delete option */}
                       <button
