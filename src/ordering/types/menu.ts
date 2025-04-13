@@ -23,6 +23,8 @@ export interface OptionGroup {
   max_select: number;
   free_option_count: number;
   options: MenuOption[];
+  has_available_options?: boolean;
+  required_but_unavailable?: boolean;
 }
 
 /**
@@ -49,6 +51,7 @@ export interface MenuItem {
   name: string;
   description: string;
   price: number;
+  has_required_unavailable_options?: boolean;
   cost_to_make?: number;
 
   /**

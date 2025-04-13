@@ -1,7 +1,7 @@
 // src/ordering/components/admin/OptionGroupsModal.tsx
 
 import React, { useState } from 'react';
-import { Trash2, X, Save } from 'lucide-react';
+import { Trash2, X, Save, CheckSquare, Square, AlertCircle } from 'lucide-react';
 import { api } from '../../lib/api';
 import type { MenuItem } from '../../types/menu';
 import toastUtils from '../../../shared/utils/toastUtils';
@@ -36,6 +36,11 @@ export function OptionGroupsModal({ item, onClose }: OptionGroupsModalProps) {
   const [originalOptionGroups, setOriginalOptionGroups] = useState<OptionGroup[]>([]);
   const [draftOptionGroups, setDraftOptionGroups] = useState<OptionGroup[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // State for bulk actions
+  const [selectedOptions, setSelectedOptions] = useState<Record<number, Set<number>>>({});
+  const [bulkActionVisible, setBulkActionVisible] = useState(false);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
   // New group form fields
   const [newGroupName, setNewGroupName] = useState('');
@@ -172,6 +177,34 @@ export function OptionGroupsModal({ item, onClose }: OptionGroupsModalProps) {
     optionId: number,
     changes: Partial<OptionRow>
   ) => {
+    // Check if we're updating availability and turning it off
+    if (changes.is_available === false) {
+      // Find the group
+      const group = draftOptionGroups.find(g => g.id === groupId);
+      if (group && group.min_select > 0) {
+        // Count how many options would still be available after this change
+        const availableOptionsCount = group.options.filter(o => {
+          // If this is the option we're updating, use the new value
+          if (o.id === optionId) return false;
+          // Otherwise use the existing value, defaulting to true if undefined
+          return o.is_available !== false;
+        }).length;
+        
+        // If this would make all options unavailable in a required group, show a warning
+        if (availableOptionsCount === 0) {
+          const confirmChange = window.confirm(
+            `Warning: This will make all options unavailable in the required group "${group.name}". ` +
+            `Customers won't be able to order this item until at least one option is available again. ` +
+            `Continue?`
+          );
+          
+          if (!confirmChange) {
+            return; // Don't make the change if the user cancels
+          }
+        }
+      }
+    }
+    
     setDraftOptionGroups((prev) =>
       prev.map((g) => {
         if (g.id === groupId) {
@@ -200,6 +233,132 @@ export function OptionGroupsModal({ item, onClose }: OptionGroupsModalProps) {
     );
   };
 
+  // -----------------------------
+  // Bulk action functions
+  // -----------------------------
+  const toggleOptionSelection = (groupId: number, optionId: number) => {
+    setSelectedOptions(prev => {
+      const newSelected = { ...prev };
+      
+      // Initialize set for this group if it doesn't exist
+      if (!newSelected[groupId]) {
+        newSelected[groupId] = new Set();
+      }
+      
+      // Toggle selection
+      if (newSelected[groupId].has(optionId)) {
+        newSelected[groupId].delete(optionId);
+      } else {
+        newSelected[groupId].add(optionId);
+      }
+      
+      // Remove empty sets
+      if (newSelected[groupId].size === 0) {
+        delete newSelected[groupId];
+      }
+      
+      // Show/hide bulk action bar based on whether any options are selected
+      const hasSelections = Object.values(newSelected).some(set => set.size > 0);
+      setBulkActionVisible(hasSelections);
+      
+      return newSelected;
+    });
+  };
+  
+  const toggleAllOptionsInGroup = (groupId: number, select: boolean) => {
+    const group = draftOptionGroups.find(g => g.id === groupId);
+    if (!group) return;
+    
+    setSelectedOptions(prev => {
+      const newSelected = { ...prev };
+      
+      if (select) {
+        // Select all options in the group
+        newSelected[groupId] = new Set(
+          group.options.map(opt => opt.id)
+        );
+      } else {
+        // Deselect all options in the group
+        delete newSelected[groupId];
+      }
+      
+      // Show/hide bulk action bar
+      const hasSelections = Object.values(newSelected).some(set => set.size > 0);
+      setBulkActionVisible(hasSelections);
+      
+      return newSelected;
+    });
+  };
+  
+  const isOptionSelected = (groupId: number, optionId: number) => {
+    return !!selectedOptions[groupId]?.has(optionId);
+  };
+  
+  const isAllGroupSelected = (groupId: number) => {
+    const group = draftOptionGroups.find(g => g.id === groupId);
+    if (!group || !selectedOptions[groupId]) return false;
+    
+    return group.options.every(opt => selectedOptions[groupId].has(opt.id));
+  };
+  
+  const getSelectedOptionsCount = () => {
+    return Object.values(selectedOptions).reduce(
+      (total, set) => total + set.size, 0
+    );
+  };
+  
+  const handleBulkUpdate = async (setAvailable: boolean) => {
+    setBulkActionLoading(true);
+    
+    try {
+      // Collect all selected option IDs
+      const optionIds: number[] = [];
+      Object.values(selectedOptions).forEach(set => {
+        set.forEach(id => {
+          // Only include positive IDs (existing options, not new ones)
+          if (id > 0) optionIds.push(id);
+        });
+      });
+      
+      if (optionIds.length === 0) {
+        toastUtils.error('No existing options selected');
+        setBulkActionLoading(false);
+        return;
+      }
+      
+      // Call the batch update API
+      await api.patch('/options/batch_update', {
+        option_ids: optionIds,
+        updates: { is_available: setAvailable }
+      });
+      
+      // Update local state
+      setDraftOptionGroups(prev => {
+        return prev.map(group => ({
+          ...group,
+          options: group.options.map(opt => {
+            if (selectedOptions[group.id]?.has(opt.id)) {
+              return { ...opt, is_available: setAvailable };
+            }
+            return opt;
+          })
+        }));
+      });
+      
+      // Clear selections
+      setSelectedOptions({});
+      setBulkActionVisible(false);
+      
+      // Show success message
+      toastUtils.success(`${optionIds.length} options ${setAvailable ? 'marked as available' : 'marked as unavailable'}`);
+    } catch (error) {
+      console.error('Bulk update failed:', error);
+      toastUtils.error('Failed to update options');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+  
   // -----------------------------
   // Save all changes at once
   // -----------------------------
@@ -510,12 +669,29 @@ export function OptionGroupsModal({ item, onClose }: OptionGroupsModalProps) {
 
                 {/* Options */}
                 <div className="mt-4 ml-2">
-                  <button
-                    onClick={() => handleLocalCreateOption(group.id)}
-                    className="flex items-center px-2 py-1 bg-gray-100 hover:bg-gray-200 text-sm rounded"
-                  >
-                    + Add Option
-                  </button>
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center">
+                      {/* Select All Checkbox */}
+                      {group.options.length > 0 && (
+                        <label className="flex items-center space-x-1 text-xs mr-2 cursor-pointer">
+                          <div onClick={() => toggleAllOptionsInGroup(group.id, !isAllGroupSelected(group.id))} className="cursor-pointer">
+                            {isAllGroupSelected(group.id) ? (
+                              <CheckSquare className="h-4 w-4 text-[#0078d4]" />
+                            ) : (
+                              <Square className="h-4 w-4 text-gray-400" />
+                            )}
+                          </div>
+                          <span>Select All</span>
+                        </label>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleLocalCreateOption(group.id)}
+                      className="flex items-center px-2 py-1 bg-gray-100 hover:bg-gray-200 text-sm rounded"
+                    >
+                      + Add Option
+                    </button>
+                  </div>
 
                   {group.options.length === 0 && (
                     <p className="text-sm text-gray-400 mt-2">No options yet.</p>
@@ -524,8 +700,19 @@ export function OptionGroupsModal({ item, onClose }: OptionGroupsModalProps) {
                   {group.options.map((opt) => (
                     <div
                       key={opt.id}
-                      className="flex items-center justify-between mt-2"
+                      className={`flex items-center justify-between mt-2 ${isOptionSelected(group.id, opt.id) ? 'bg-blue-50 rounded' : ''}`}
                     >
+                      {/* Selection checkbox */}
+                      <div 
+                        onClick={() => toggleOptionSelection(group.id, opt.id)}
+                        className="mr-2 cursor-pointer"
+                      >
+                        {isOptionSelected(group.id, opt.id) ? (
+                          <CheckSquare className="h-4 w-4 text-[#0078d4]" />
+                        ) : (
+                          <Square className="h-4 w-4 text-gray-400" />
+                        )}
+                      </div>
                       {/* Option name */}
                       <input
                         type="text"
@@ -611,6 +798,47 @@ export function OptionGroupsModal({ item, onClose }: OptionGroupsModalProps) {
           </button>
         </div>
       </div>
+      
+      {/* Floating action bar for bulk actions */}
+      {bulkActionVisible && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t p-4 flex justify-between items-center z-50">
+          <div className="flex items-center">
+            <span className="font-medium">{getSelectedOptionsCount()} options selected</span>
+            {bulkActionLoading && (
+              <div className="ml-4 flex items-center text-gray-500">
+                <AlertCircle className="h-4 w-4 mr-1" />
+                <span>Processing...</span>
+              </div>
+            )}
+          </div>
+          <div className="flex space-x-3">
+            <button
+              onClick={() => {
+                setSelectedOptions({});
+                setBulkActionVisible(false);
+              }}
+              className="px-4 py-2 border rounded-md hover:bg-gray-50 transition-colors duration-200"
+              disabled={bulkActionLoading}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => handleBulkUpdate(false)}
+              className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors duration-200"
+              disabled={bulkActionLoading}
+            >
+              Mark Unavailable
+            </button>
+            <button
+              onClick={() => handleBulkUpdate(true)}
+              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200"
+              disabled={bulkActionLoading}
+            >
+              Mark Available
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

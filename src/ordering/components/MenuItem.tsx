@@ -1,7 +1,7 @@
 // src/ordering/components/MenuItem.tsx
 
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, AlertCircle } from 'lucide-react';
 import { useOrderStore } from '../store/orderStore';
 import { CustomizationModal } from './CustomizationModal';
 import type { MenuItem as MenuItemType } from '../types/menu';
@@ -87,10 +87,18 @@ export function MenuItem({ item }: MenuItemProps) {
   const isLowStock = stockStatus === 'low_stock';
   // Calculate available quantity (used in low stock badge display and display it in the UI)
   const availableQuantity = calculateAvailableQuantity(item);
+  
+  // Check if the item has required option groups with all options unavailable
+  const hasUnavailableRequiredOptions = item.has_required_unavailable_options === true;
 
   function handleQuickAdd() {
     if (isOutOfStock) {
       alert('Sorry, this item is out of stock.');
+      return;
+    }
+    
+    if (hasUnavailableRequiredOptions) {
+      alert('Sorry, this item is currently unavailable due to required customization options being out of stock.');
       return;
     }
     // For quick add, quantity=1 and no customizations
@@ -113,6 +121,12 @@ export function MenuItem({ item }: MenuItemProps) {
       alert('Sorry, this item is out of stock.');
       return;
     }
+    
+    if (hasUnavailableRequiredOptions) {
+      alert('Sorry, this item is currently unavailable due to required customization options being out of stock.');
+      return;
+    }
+    
     setShowCustomization(true);
   }
 
@@ -142,7 +156,7 @@ export function MenuItem({ item }: MenuItemProps) {
     <>
       <div
         className={`bg-white rounded-lg shadow-md overflow-hidden flex flex-col min-h-[380px] animate-fadeIn
-          ${isOutOfStock ? 'opacity-70' : ''}
+          ${isOutOfStock || hasUnavailableRequiredOptions ? 'opacity-70' : ''}
         `}
       >
         <LazyMenuItemImage 
@@ -165,6 +179,17 @@ export function MenuItem({ item }: MenuItemProps) {
             {isLowStock && (
               <div className="mt-2 inline-block bg-orange-400 text-white text-xs font-bold rounded-full px-2 py-1">
                 Low Stock {availableQuantity > 0 && ` (${availableQuantity} left)`}
+              </div>
+            )}
+            {hasUnavailableRequiredOptions && (
+              <div className="mt-2 inline-block bg-orange-500 text-white text-xs font-bold rounded-full px-2 py-1 group relative">
+                <span className="flex items-center">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  <span>Unavailable Options</span>
+                </span>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                  This item has required options that are currently unavailable
+                </div>
               </div>
             )}
 
