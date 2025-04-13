@@ -139,6 +139,18 @@ export function AdminDashboard() {
   // WebSocket configuration for debugging
   // USE_WEBSOCKETS: true, WEBSOCKET_DEBUG: true
 
+  // Set WebSocketManager admin context when component mounts/unmounts
+  useEffect(() => {
+    // Set admin context to true when component mounts
+    webSocketManager.setAdminContext(true);
+    console.debug('[AdminDashboard] Set WebSocketManager admin context to true');
+    
+    return () => {
+      // Set admin context to false when component unmounts
+      webSocketManager.setAdminContext(false);
+      console.debug('[AdminDashboard] Set WebSocketManager admin context to false');
+    };
+  }, []);
 
   // Polling for new orders - track the highest order ID we've seen
   // Note: We no longer use localStorage to persist this value between sessions

@@ -64,6 +64,7 @@ class WebSocketManager {
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 10;
   private heartbeatInterval: NodeJS.Timeout | null = null;
+  private isAdminContext: boolean = false;
   // We no longer need these variables since we're using a simpler connection check
   // private lastHeartbeatResponse: number = 0;
   // private heartbeatTimeoutMs: number = 30000; // 30 seconds
@@ -221,6 +222,15 @@ class WebSocketManager {
    * @param data The notification data
    */
   private handleNotification(type: NotificationType, data: any): void {
+    // Skip order and low stock notifications if not in admin context
+    if (!this.isAdminContext && 
+        (type === NotificationType.NEW_ORDER || 
+         type === NotificationType.ORDER_UPDATED || 
+         type === NotificationType.LOW_STOCK)) {
+      console.debug(`[WebSocketManager] Skipping ${type} notification - not in admin context`);
+      return;
+    }
+    
     // Generate a unique ID for the notification
     const notificationId = this.generateNotificationId(type, data);
     
@@ -297,11 +307,34 @@ class WebSocketManager {
   }
   
   /**
+   * Set the admin context flag
+   * @param isAdmin Whether the current context is admin
+   */
+  public setAdminContext(isAdmin: boolean): void {
+    console.debug(`[WebSocketManager] Setting admin context to: ${isAdmin}`);
+    this.isAdminContext = isAdmin;
+  }
+
+  /**
+   * Get the current admin context
+   * @returns Whether the current context is admin
+   */
+  public getAdminContext(): boolean {
+    return this.isAdminContext;
+  }
+
+  /**
    * Fetch missed notifications since last connection
    */
   private async fetchMissedNotifications(): Promise<void> {
     console.debug('[WebSocketManager] Fetching missed notifications');
     this.logConnectionEvent('Fetching missed notifications');
+    
+    // Skip fetching missed notifications if not in admin context
+    if (!this.isAdminContext) {
+      console.debug('[WebSocketManager] Skipping missed notifications - not in admin context');
+      return;
+    }
     
     try {
       // Fetch missed notifications from the storage service
