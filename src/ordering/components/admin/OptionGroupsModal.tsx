@@ -5,6 +5,7 @@ import { Trash2, X, Save, CheckSquare, Square, AlertCircle } from 'lucide-react'
 import { api } from '../../lib/api';
 import type { MenuItem } from '../../types/menu';
 import toastUtils from '../../../shared/utils/toastUtils';
+import DraggableOptionList from './DraggableOptionList';
 
 interface OptionRow {
   id: number;
@@ -290,9 +291,6 @@ export function OptionGroupsModal({ item, onClose }: OptionGroupsModalProps) {
     });
   };
   
-  const isOptionSelected = (groupId: number, optionId: number) => {
-    return !!selectedOptions[groupId]?.has(optionId);
-  };
   
   const isAllGroupSelected = (groupId: number) => {
     const group = draftOptionGroups.find(g => g.id === groupId);
@@ -477,10 +475,35 @@ export function OptionGroupsModal({ item, onClose }: OptionGroupsModalProps) {
   const handleClose = () => {
     onClose();
   };
+  
+  // Handle batch position updates when options are reordered
+  const handleBatchPositionUpdate = async (_groupId: number, reorderedOptions: OptionRow[]) => {
+    try {
+      // Only update positions for existing options (positive IDs)
+      const positionsData = reorderedOptions
+        .filter(opt => opt.id > 0) // Only include existing options (positive IDs)
+        .map(opt => ({
+          id: opt.id,
+          position: opt.position
+        }));
+      
+      if (positionsData.length === 0) return; // No existing options to update
+      
+      // Call the batch update positions endpoint
+      await api.patch('/options/batch_update_positions', {
+        positions: positionsData
+      });
+      
+      // No need to refresh from server as we're already updating the local state
+    } catch (err) {
+      console.error('Failed to update positions:', err);
+      toastUtils.error('Failed to update option positions');
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn transition-all duration-300">
-      <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 animate-slideUp transform-gpu will-change-transform">
+      <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto p-6 animate-slideUp transform-gpu will-change-transform">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">
             Manage Option Groups for: {item.name}
@@ -697,85 +720,33 @@ export function OptionGroupsModal({ item, onClose }: OptionGroupsModalProps) {
                     <p className="text-sm text-gray-400 mt-2">No options yet.</p>
                   )}
 
-                  {group.options.map((opt) => (
-                    <div
-                      key={opt.id}
-                      className={`flex items-center justify-between mt-2 ${isOptionSelected(group.id, opt.id) ? 'bg-blue-50 rounded' : ''}`}
-                    >
-                      {/* Selection checkbox */}
-                      <div 
-                        onClick={() => toggleOptionSelection(group.id, opt.id)}
-                        className="mr-2 cursor-pointer"
-                      >
-                        {isOptionSelected(group.id, opt.id) ? (
-                          <CheckSquare className="h-4 w-4 text-[#0078d4]" />
-                        ) : (
-                          <Square className="h-4 w-4 text-gray-400" />
-                        )}
-                      </div>
-                      {/* Option name */}
-                      <input
-                        type="text"
-                        value={opt.name}
-                        onChange={(e) =>
-                          handleLocalUpdateOption(group.id, opt.id, {
-                            name: e.target.value,
-                          })
-                        }
-                        className="border-b text-sm flex-1 mr-2 focus:outline-none"
-                      />
-                      {/* Additional price */}
-                      <span className="mr-2 text-sm text-gray-600">
-                        $
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={opt.additional_price}
-                          onChange={(e) =>
-                            handleLocalUpdateOption(group.id, opt.id, {
-                              additional_price: parseFloat(e.target.value) || 0,
-                            })
+                  <DraggableOptionList
+                    options={group.options}
+                    onOptionsReorder={(reorderedOptions) => {
+                      // Update the group with the reordered options
+                      setDraftOptionGroups(prev =>
+                        prev.map(g => {
+                          if (g.id === group.id) {
+                            return { ...g, options: reorderedOptions };
                           }
-                          className="w-16 ml-1 border-b focus:outline-none text-sm"
-                        />
-                      </span>
-                      {/* Pre-selected checkbox */}
-                      <label className="flex items-center space-x-1 text-xs mr-2">
-                        <input
-                          type="checkbox"
-                          checked={opt.is_preselected || false}
-                          onChange={(e) =>
-                            handleLocalUpdateOption(group.id, opt.id, {
-                              is_preselected: e.target.checked,
-                            })
-                          }
-                        />
-                        <span>Pre-selected</span>
-                      </label>
+                          return g;
+                        })
+                      );
                       
-                      {/* Availability toggle */}
-                      <label className="flex items-center space-x-1 text-xs mr-2">
-                        <input
-                          type="checkbox"
-                          checked={opt.is_available !== false} /* Default to true if undefined */
-                          onChange={(e) =>
-                            handleLocalUpdateOption(group.id, opt.id, {
-                              is_available: e.target.checked,
-                            })
-                          }
-                        />
-                        <span>Available</span>
-                      </label>
-                      {/* Delete option */}
-                      <button
-                        onClick={() => handleLocalDeleteOption(group.id, opt.id)}
-                        className="p-1 text-gray-600 hover:text-red-600"
-                        title="Delete Option"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
+                      // Send batch position update to the server
+                      handleBatchPositionUpdate(group.id, reorderedOptions);
+                    }}
+                    onUpdateOption={(optionId, changes) => {
+                      handleLocalUpdateOption(group.id, optionId, changes);
+                    }}
+                    onDeleteOption={(optionId) => {
+                      handleLocalDeleteOption(group.id, optionId);
+                    }}
+                    selectedOptionIds={selectedOptions[group.id]}
+                    onToggleOptionSelect={(optionId) => {
+                      toggleOptionSelection(group.id, optionId);
+                    }}
+                  />
                 </div>
               </div>
             ))}
