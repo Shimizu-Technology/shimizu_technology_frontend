@@ -98,7 +98,7 @@ export function SettingsManager({ restaurantId }: SettingsManagerProps) {
       </div>
 
       {/* Mobile-friendly tab navigation similar to main admin dashboard */}
-      <div className="mb-6 border-b border-gray-200 overflow-x-auto">
+      <div className="mb-6 border-b border-gray-200 overflow-x-auto overflow-y-hidden whitespace-nowrap">
         <nav className="flex -mb-px" role="tablist">
           {tabs.map(({ id, label, icon: Icon }) => (
             <button

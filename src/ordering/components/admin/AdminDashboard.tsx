@@ -1344,7 +1344,7 @@ useEffect(() => {
 
         <div className="bg-white rounded-lg shadow">
           {/* Tab navigation */}
-          <div className="border-b border-gray-200 overflow-x-auto">
+          <div className="border-b border-gray-200 overflow-x-auto overflow-y-hidden whitespace-nowrap">
             <nav className="flex -mb-px" role="tablist">
               {/* For staff users, simplify the UI by only showing the Orders tab */}
               {isStaffOnly ? (
