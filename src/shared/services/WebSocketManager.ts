@@ -142,7 +142,12 @@ class WebSocketManager {
     const callbacks: WebSocketCallbacks = {
       onNewOrder: (order) => this.handleNotification(NotificationType.NEW_ORDER, order),
       onOrderUpdated: (order) => this.handleNotification(NotificationType.ORDER_UPDATED, order),
-      onLowStock: (item) => this.handleNotification(NotificationType.LOW_STOCK, item),
+      // Temporarily disabled low stock notifications
+      onLowStock: (item) => {
+        console.debug('[WebSocketManager] Low stock notification received but disabled:', item);
+        // Do not forward low stock notifications to handlers
+        return;
+      },
       onConnected: () => {
         console.debug('[WebSocketManager] Connected');
         this.logConnectionEvent('Connected successfully');
@@ -246,10 +251,23 @@ class WebSocketManager {
       
       // Handle different notification types differently
       if (type === NotificationType.LOW_STOCK) {
-        // For low stock notifications, check restaurant_id in the menu_item or in the data itself
+        // For low stock notifications, check restaurant_id in multiple possible locations
         notificationRestaurantId = data.restaurant_id || 
                                   (data.menu_item && data.menu_item.restaurant_id) || 
-                                  (data.metadata && data.metadata.restaurant_id);
+                                  (data.metadata && data.metadata.restaurant_id) ||
+                                  (data.id && data.id.toString().includes('_') && data.id.toString().split('_')[0]);
+        
+        // If it's a menu item with ID, check if it belongs to this restaurant
+        if (!notificationRestaurantId && data.id) {
+          console.debug(`[WebSocketManager] Low stock item ID: ${data.id}, checking if belongs to restaurant: ${this.restaurantId}`);
+          
+          // For direct menu item notifications, the item itself might be the data
+          if (typeof data.stock_quantity !== 'undefined' || typeof data.low_stock_threshold !== 'undefined') {
+            // This is likely a menu item object, check if it has a restaurant_id
+            notificationRestaurantId = data.restaurant_id;
+            console.debug(`[WebSocketManager] Direct menu item notification with restaurant_id: ${notificationRestaurantId}`);
+          }
+        }
       } else {
         // For other notifications (orders, etc.)
         notificationRestaurantId = data.restaurant_id || 
@@ -260,6 +278,15 @@ class WebSocketManager {
       // ignore the notification to maintain tenant isolation
       if (notificationRestaurantId && String(notificationRestaurantId) !== String(this.restaurantId)) {
         console.debug(`[WebSocketManager] Ignoring ${type} notification for different restaurant: ${notificationRestaurantId} (current: ${this.restaurantId})`);
+        return;
+      }
+      
+      // If we couldn't determine the restaurant_id for a low stock notification, log it and be cautious
+      if (type === NotificationType.LOW_STOCK && !notificationRestaurantId) {
+        console.warn(`[WebSocketManager] Could not determine restaurant_id for low stock notification:`, data);
+        // In production, you might want to skip notifications without a restaurant_id
+        // For safety, we'll assume this notification doesn't belong to the current restaurant
+        console.debug(`[WebSocketManager] Skipping low stock notification without restaurant_id for safety`);
         return;
       }
     }

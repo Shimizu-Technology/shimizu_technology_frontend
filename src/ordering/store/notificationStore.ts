@@ -536,16 +536,42 @@ const useNotificationStore = create<NotificationStoreState>((set, get) => ({
   // Get all merchandise stock-related notifications
   getStockAlerts: () => {
     const { notifications } = get();
+    const currentRestaurantId = useAuthStore.getState().user?.restaurant_id;
+    
     // Add safety check to ensure notifications is an array before filtering
     if (!Array.isArray(notifications)) {
       console.warn('Expected notifications to be an array but got:', typeof notifications);
       return [];
     }
-    return notifications.filter(n => 
-      n.notification_type === 'low_stock' || 
-      n.notification_type === 'out_of_stock' ||
-      n.notification_type === 'persistent_low_stock'
-    );
+    
+    return notifications.filter(n => {
+      // Temporarily filter out all low_stock notifications to prevent cross-restaurant issues
+      if (n.notification_type === 'low_stock' || n.notification_type === 'persistent_low_stock') {
+        console.debug(`[NotificationStore] Filtering out low stock notification: ${n.id}`);
+        return false;
+      }
+      
+      // Only include out_of_stock notifications
+      const isStockNotification = n.notification_type === 'out_of_stock';
+      
+      if (!isStockNotification) return false;
+      
+      // Then ensure restaurant_id matches the current user's restaurant
+      // Check in multiple possible locations where restaurant_id might be stored
+      const notificationRestaurantId = 
+        n.restaurant_id || 
+        (n.metadata && n.metadata.restaurant_id) ||
+        (n.metadata && n.metadata.menu_item && n.metadata.menu_item.restaurant_id);
+      
+      // If no restaurant ID is found in the notification, log a warning
+      if (!notificationRestaurantId) {
+        console.warn('Stock notification missing restaurant_id:', n);
+      }
+      
+      // Only include notifications for the current restaurant
+      return !currentRestaurantId || !notificationRestaurantId || 
+        String(notificationRestaurantId) === String(currentRestaurantId);
+    });
   },
   
   // Check if there are any unacknowledged notifications of a given type

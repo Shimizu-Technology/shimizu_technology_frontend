@@ -198,10 +198,15 @@ export function MenuManager({
     // Start WebSocket connection for real-time menu item updates instead of polling
     const restaurantId = localStorage.getItem('restaurantId');
     if (restaurantId) {
-      console.debug('[MenuManager] Starting WebSocket connection for menu items');
+      console.debug(`[MenuManager] Starting WebSocket connection for menu items with restaurant_id: ${restaurantId}`);
       // Explicitly stop any existing polling before starting WebSocket
       stopInventoryPolling();
-      useMenuStore.getState().startMenuItemsWebSocket();
+      
+      // Ensure the WebSocketManager is initialized with the current restaurant ID for proper tenant isolation
+      import('../../../shared/services/WebSocketManager').then(({ default: webSocketManager }) => {
+        webSocketManager.initialize(restaurantId);
+        useMenuStore.getState().startMenuItemsWebSocket();
+      });
       
       // Double-check that polling is stopped after WebSocket connection
       setTimeout(() => {

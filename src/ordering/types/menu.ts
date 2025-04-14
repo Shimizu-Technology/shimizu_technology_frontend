@@ -53,6 +53,9 @@ export interface MenuItem {
   price: number;
   has_required_unavailable_options?: boolean;
   cost_to_make?: number;
+  
+  // Restaurant identifier for tenant isolation
+  restaurant_id?: string | number;
 
   /**
    * Just numeric category IDs from your Rails model

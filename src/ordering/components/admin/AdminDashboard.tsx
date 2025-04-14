@@ -785,6 +785,13 @@ export function AdminDashboard() {
   const handleLowStock = useCallback((item: MenuItem) => {
     // Received low stock alert
     
+    // TENANT ISOLATION: Validate that the item belongs to the current restaurant
+    if (user?.restaurant_id && item.restaurant_id && 
+        String(user.restaurant_id) !== String(item.restaurant_id)) {
+      console.debug(`[AdminDashboard] Ignoring low stock notification for item ${item.id} from different restaurant: ${item.restaurant_id} (current: ${user.restaurant_id})`);
+      return;
+    }
+    
     const availableQty = calculateAvailableQuantity(item);
     const acknowledgedQty = acknowledgedLowStockItems[item.id];
     
@@ -794,7 +801,7 @@ export function AdminDashboard() {
     if (acknowledgedQty === undefined || availableQty < acknowledgedQty) {
       displayLowStockNotification(item);
     }
-  }, [acknowledgedLowStockItems, calculateAvailableQuantity, displayLowStockNotification]);
+  }, [acknowledgedLowStockItems, calculateAvailableQuantity, displayLowStockNotification, user?.restaurant_id]);
   
   // Initialize WebSocket connection
   const { isConnected, error: wsError, connect: connectWebSocket } = useWebSocket({
@@ -1025,37 +1032,21 @@ export function AdminDashboard() {
     };
   }, [user, USE_WEBSOCKETS, isConnected]);
   
-  // Effect to check for low stock items and display notifications
+  // Effect to check for low stock items and display notifications - TEMPORARILY DISABLED
   useEffect(() => {
-    // Only run for admin users
-    if (!user || (user.role !== 'admin' && user.role !== 'super_admin' && user.role !== 'staff')) {
-      return;
-    }
+    // Temporarily disabled low stock notifications
+    console.debug('[AdminDashboard] Low stock notifications are temporarily disabled');
     
-    // Check for low stock items
-    const lowStockItems = menuItems.filter(item => {
-      if (!item.enable_stock_tracking) return false;
-      
-      const availableQty = calculateAvailableQuantity(item);
-      const threshold = item.low_stock_threshold || 10;
-      
-      return availableQty > 0 && availableQty <= threshold;
-    });
-    
-    // Display notifications for low stock items that haven't been acknowledged
-    // or where the quantity has decreased since last acknowledgment
-    lowStockItems.forEach(item => {
-      const availableQty = calculateAvailableQuantity(item);
-      const acknowledgedQty = acknowledgedLowStockItems[item.id];
-      
-      // Show notification if:
-      // 1. Item has never been acknowledged, or
-      // 2. Current quantity is lower than when it was last acknowledged
-      if (acknowledgedQty === undefined || availableQty < acknowledgedQty) {
-        displayLowStockNotification(item);
+    // Clear any existing low stock notifications that might be displayed
+    menuItems.forEach(item => {
+      if (item.id) {
+        toastUtils.dismiss(`low_stock_${item.id}`);
       }
     });
-  }, [menuItems, acknowledgedLowStockItems, user, calculateAvailableQuantity, displayLowStockNotification]);
+    
+    // No-op for now - will be re-enabled when tenant isolation is fully implemented
+    return;
+  }, [menuItems]);
 
 // SIMPLIFIED POLLING IMPLEMENTATION WITH WEBSOCKET PRIORITY
 // Use a ref to track if the component is mounted and to store the polling interval

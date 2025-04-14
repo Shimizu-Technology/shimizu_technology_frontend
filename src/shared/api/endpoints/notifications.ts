@@ -12,6 +12,7 @@ export interface Notification {
   acknowledged: boolean;
   created_at: string;
   updated_at: string;
+  restaurant_id?: string | number; // Added for tenant isolation
   metadata?: {
     [key: string]: any;
     variant_id?: number;
@@ -23,6 +24,13 @@ export interface Notification {
     order_id?: number;
     customer_name?: string;
     total?: number;
+    restaurant_id?: string | number; // Also available in metadata
+    menu_item?: {
+      id: string;
+      name: string;
+      restaurant_id?: string | number;
+      [key: string]: any;
+    };
   };
 }
 
