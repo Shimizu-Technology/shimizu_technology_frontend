@@ -75,3 +75,21 @@ export const deleteCategory = async (menuId: number, categoryId: number, restaur
   
   return api.delete(url);
 };
+
+/**
+ * Batch update positions for multiple categories
+ */
+export const batchUpdateCategoryPositions = async (
+  menuId: number,
+  positionsData: { id: number; position: number }[],
+  restaurantId?: number
+): Promise<Category[]> => {
+  // Add restaurant_id to the URL as a query parameter
+  const url = restaurantId
+    ? `/menus/${menuId}/categories/batch_update_positions?restaurant_id=${restaurantId}`
+    : `/menus/${menuId}/categories/batch_update_positions`;
+  
+  return api.patch<Category[]>(url, {
+    positions: positionsData
+  });
+};
