@@ -1,7 +1,7 @@
 // src/ordering/components/admin/SettingsManager.tsx
 
-import React, { useState, lazy, Suspense, useEffect } from 'react';
-import { Store, List, Users, CreditCard, Book, Lock, Bell } from 'lucide-react';
+import { useState, lazy, Suspense, useEffect } from 'react';
+import { Store, Users, CreditCard, Book, Lock, Bell, MapPin } from 'lucide-react';
 
 // Lazy load the settings components to improve performance
 const RestaurantSettings = lazy(() => import('./settings/RestaurantSettings').then(module => ({ default: module.RestaurantSettings })));
@@ -11,8 +11,9 @@ const PaymentSettings = lazy(() => import('./settings/PaymentSettings').then(mod
 const NotificationSettings = lazy(() => import('./settings/NotificationSettings').then(module => ({ default: module.NotificationSettings })));
 const VipModeToggle = lazy(() => import('./settings/VipModeToggle').then(module => ({ default: module.VipModeToggle })));
 const VipCodesManager = lazy(() => import('./settings/VipCodesManager').then(module => ({ default: module.VipCodesManager })));
+const LocationManager = lazy(() => import('./settings/LocationManager').then(module => ({ default: module.LocationManager })));
 
-type SettingsTab = 'restaurant' | 'menus' | 'users' | 'payments' | 'notifications' | 'vip-access';
+type SettingsTab = 'restaurant' | 'menus' | 'users' | 'payments' | 'notifications' | 'vip-access' | 'locations';
 
 interface SettingsManagerProps {
   restaurantId?: string;
@@ -39,6 +40,7 @@ export function SettingsManager({ restaurantId }: SettingsManagerProps) {
     { id: 'payments', label: 'Payments', icon: CreditCard },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'vip-access', label: 'VIP Access', icon: Lock },
+    { id: 'locations', label: 'Locations', icon: MapPin },
   ];
 
   // Render a placeholder while the tab content is loading
@@ -82,6 +84,12 @@ export function SettingsManager({ restaurantId }: SettingsManagerProps) {
           <div className="space-y-6">
             <VipModeToggle className="mb-6" />
             <VipCodesManager />
+          </div>
+        );
+      case 'locations':
+        return (
+          <div>
+            <LocationManager restaurantId={restaurantId} />
           </div>
         );
       default:

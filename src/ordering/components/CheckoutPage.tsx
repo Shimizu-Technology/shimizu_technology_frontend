@@ -11,10 +11,13 @@ import { LoadingSpinner } from '../../shared/components/ui';
 import { FormSkeleton } from '../../shared/components/ui/SkeletonLoader';
 import { useRestaurantStore } from '../../shared/store/restaurantStore';
 import { validateVipCode } from '../../shared/api/endpoints/vipAccess';
+import { locationsApi } from '../../shared/api/endpoints/locations';
+// Location import removed as it's no longer needed
 import { PickupInfo } from './location/PickupInfo';
 import { VipCodeInput } from './VipCodeInput';
 import { PayPalCheckout, PayPalCheckoutRef } from './payment/PayPalCheckout';
 import { StripeCheckout, StripeCheckoutRef } from './payment/StripeCheckout';
+import LocationSelector from './customer/LocationSelector';
 
 interface CheckoutFormData {
   name: string;
@@ -62,6 +65,7 @@ export function CheckoutPage() {
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [paymentProcessed, setPaymentProcessed] = useState(false);
   const [paymentTransactionId, setPaymentTransactionId] = useState<string | null>(null);
+  const [locationId, setLocationId] = useState<number | undefined>(undefined);
   
   // Refs for payment components
   const paypalRef = useRef<PayPalCheckoutRef>(null);
@@ -99,6 +103,24 @@ export function CheckoutPage() {
     // Reset applied promo when cart changes
     setAppliedPromo(null);
   }, [rawTotal]);
+  
+  // Fetch default location on component mount
+  useEffect(() => {
+    // Fetch all locations to find the default one
+    locationsApi.getLocations({ active: true })
+      .then(locations => {
+        if (locations && locations.length > 0) {
+          // Find the default location or use the first one
+          const defaultLocation = locations.find(loc => loc.is_default) || locations[0];
+          setLocationId(defaultLocation.id);
+        }
+      })
+      .catch(err => {
+        console.error('Error fetching default location:', err);
+      });
+  }, []);
+  
+  // We don't need to fetch location details here as the PickupInfo component handles this
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, value } = e.target;
@@ -209,18 +231,35 @@ export function CheckoutPage() {
         actualPaymentMethod, // Use the correct payment method based on the processor
         formData.vipCode,
         false, // Not a staff order
-        paymentDetails // Include detailed payment information
+        paymentDetails, // Include detailed payment information
+        locationId // Include the selected location ID
       );
 
       toastUtils.success('Order placed successfully!');
 
       const estimatedTime = hasAny24hrItem ? '24 hours' : '20–25 min';
+      // Get location information if a location was selected
+      let locationName = '';
+      let locationAddress = '';
+      
+      if (locationId) {
+        try {
+          const location = await locationsApi.getLocation(locationId);
+          locationName = location.name;
+          locationAddress = location.address;
+        } catch (error) {
+          console.error('Error fetching location details for confirmation:', error);
+        }
+      }
+      
       navigate('/order-confirmation', {
         state: {
           orderId: newOrder.order_number || newOrder.id || '12345',
           total: finalTotal,
           estimatedTime,
           hasAny24hrItem,
+          locationName,
+          locationAddress,
         },
       });
     } catch (err: any) {
@@ -338,6 +377,15 @@ export function CheckoutPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Location Selection - Only shown when there are multiple locations */}
+            <LocationSelector 
+              onLocationChange={(id) => setLocationId(id)}
+              showOnlyActive={true}
+              className="mb-4"
+            />
+            
+            {/* Location information will be shown in the order summary */}
+            
             {/* Contact Info */}
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
@@ -522,6 +570,12 @@ export function CheckoutPage() {
           {/* Cart Items Summary */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
+            
+            {/* Location Details on the right side - always show if we have locations */}
+            <div className="mb-4 pb-4 border-b border-gray-200">
+              <h4 className="text-md font-medium mb-2">Location</h4>
+              <PickupInfo locationId={locationId} />
+            </div>
             {cartItems.length === 0 ? (
               <p className="text-gray-500">Your cart is empty</p>
             ) : (
@@ -539,7 +593,7 @@ export function CheckoutPage() {
                       {item.customizations && Object.keys(item.customizations).length > 0 && (
                         <p className="text-xs text-gray-500">
                           {Object.entries(item.customizations)
-                            .map(([group, options]) => `${options.join(', ')}`)
+                            .map(([_, options]) => `${options.join(', ')}`)
                             .join('; ')}
                         </p>
                       )}
@@ -550,9 +604,6 @@ export function CheckoutPage() {
               </div>
             )}
           </div>
-          
-          {/* Pickup Info */}
-          <PickupInfo />
         </div>
       </div>
     </div>

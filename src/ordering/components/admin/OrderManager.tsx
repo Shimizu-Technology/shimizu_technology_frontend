@@ -15,6 +15,7 @@ import { MultiSelectActionBar } from './MultiSelectActionBar';
 import { StaffOrderModal } from './StaffOrderModal';
 import { BulkInventoryActionDialog } from './BulkInventoryActionDialog';
 import { RefundModal } from './RefundModal';
+import { LocationFilter } from './LocationFilter';
 import { menuItemsApi } from '../../../shared/api/endpoints/menuItems';
 import { orderPaymentsApi } from '../../../shared/api/endpoints/orderPayments';
 import { orderPaymentOperationsApi } from '../../../shared/api/endpoints/orderPaymentOperations';
@@ -65,6 +66,9 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
   
   // user filter for admin users - keeping state but not using in UI
   const [userFilter] = useState<string | null>(null);
+  
+  // location filter for multi-location restaurants
+  const [locationFilter, setLocationFilter] = useState<number | null>(null);
   
   // pagination transition states
   const [isPageChanging, setIsPageChanging] = useState(false);
@@ -367,6 +371,7 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
       dateTo: end.toISOString(),
       searchQuery: searchQuery || null,
       restaurantId: restaurantId || null,
+      locationId: locationFilter, // Add location filter parameter
       _sourceId: sourceId // Add a unique ID to track this request
     };
     
@@ -422,7 +427,7 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
     
     return sourceId; // Return the source ID for potential future reference
   }, [/* deliberately NOT including currentPage to avoid stale closures */
-      ordersPerPage, selectedStatus, sortNewestFirst, getDateRange, searchQuery, restaurantId, staffFilter, onlineOrdersOnly, isSuperAdmin, isAdmin]);
+      ordersPerPage, selectedStatus, sortNewestFirst, getDateRange, searchQuery, locationFilter, restaurantId, staffFilter, onlineOrdersOnly, isSuperAdmin, isAdmin]);
 
   // Fetch orders quietly with current filter parameters (for background updates)
   const fetchOrdersWithParamsQuietly = useCallback(() => {
@@ -449,6 +454,7 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
       dateFrom: start.toISOString(),
       dateTo: end.toISOString(),
       searchQuery: searchQuery || null,
+      locationId: locationFilter, // Add location filter parameter
       restaurantId: restaurantId || null,
       _sourceId: sourceId // Add a unique ID to track this request
     };
@@ -700,7 +706,7 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
       // Cleanup - clearing timeout for fetch
       clearTimeout(timeoutId);
     };
-  }, [currentPage, ordersPerPage, selectedStatus, sortNewestFirst, dateFilter, searchQuery, fetchOrdersWithParams]);
+  }, [currentPage, ordersPerPage, selectedStatus, sortNewestFirst, dateFilter, searchQuery, locationFilter, fetchOrdersWithParams]);
   
   // Additional effect to force update WebSocket pagination params when page changes
   useEffect(() => {
@@ -1045,7 +1051,7 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
     }, 100);
     
     return () => clearTimeout(timeoutId);
-  }, [selectedStatus, sortNewestFirst, searchQuery, dateFilter, onlineOrdersOnly, fetchOrdersWithParams, ordersPerPage]);
+  }, [selectedStatus, sortNewestFirst, searchQuery, dateFilter, locationFilter, onlineOrdersOnly, fetchOrdersWithParams, ordersPerPage]);
 
   // If the parent sets a selectedOrderId => expand that order
   // (And scroll to it if it's in the list)
@@ -1373,8 +1379,8 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
           </div>
         </div>
         
-        {/* Second Row - Date Filter, Search, and Sort */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Second Row - Date Filter, Search, Location Filter (if available), and Sort */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Date Filter */}
           <div className="w-full">
             <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
@@ -1401,6 +1407,13 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
               className="w-full h-12 shadow-sm border-gray-300 rounded-md"
             />
           </div>
+
+          {/* Location Filter - Only rendered when there are multiple locations */}
+          <LocationFilter
+            selectedLocationId={locationFilter}
+            onLocationChange={setLocationFilter}
+            className="w-full"
+          />
 
           {/* Sort Dropdown */}
           <div className="w-full">

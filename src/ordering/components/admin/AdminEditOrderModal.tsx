@@ -2843,6 +2843,9 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
   }
 
   function renderDetailsTab() {
+    // Debug location data
+    console.log('Order in AdminEditOrderModal:', order);
+    console.log('Order location data:', order.location);
     return (
       <div className="space-y-5 p-4 sm:p-6">
         {/* Special instructions */}
@@ -2892,6 +2895,31 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
                     order.estimatedPickupTime || order.estimated_pickup_time
                   ).toLocaleString()}
                 </div>
+              </>
+            )}
+            
+            {order.location && (
+              <>
+                <div className="text-gray-500">Location</div>
+                <div className="text-gray-900 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  {order.location.name}
+                </div>
+                {order.location.address && (
+                  <>
+                    <div className="text-gray-500">Address</div>
+                    <div className="text-gray-900">{order.location.address}</div>
+                  </>
+                )}
+                {order.location.phone_number && (
+                  <>
+                    <div className="text-gray-500">Phone</div>
+                    <div className="text-gray-900">{order.location.phone_number}</div>
+                  </>
+                )}
               </>
             )}
           </div>

@@ -275,6 +275,10 @@ export function CollapsibleOrderCard({
   requiresAdvanceNotice
 }: CollapsibleOrderCardProps) {
   
+  // Debug location data
+  console.log('Order in CollapsibleOrderCard:', order);
+  console.log('Order location data:', order.location);
+  
   // Mobile optimization enhancements
   const mobileStyles = `
     @media (max-width: 640px) {
@@ -687,13 +691,37 @@ export function CollapsibleOrderCard({
                   Customer Order
                 </span>
               )}
-              <h3 className="text-base font-medium text-gray-900">Order #{order.order_number || order.id}</h3>
+              <div className="flex items-center">
+                <h3 className="text-base font-medium text-gray-900">Order #{order.order_number || order.id}</h3>
+                {order.location && (
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {order.location.name}
+                  </span>
+                )}
+              </div>
             </div>
             {order.createdAt && (
               <div>
                 <p className="text-xs text-gray-500">
                   {new Date(order.createdAt).toLocaleString()}
                 </p>
+                {/* Location Information */}
+                {order.location && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    <span className="inline-flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Location: <span className="font-medium">{order.location.name}</span>
+                    </span>
+                  </p>
+                )}
+                
                 {/* Order Creator Information */}
                 <p className="text-xs text-gray-500">
                   {order.created_by_user_id && (

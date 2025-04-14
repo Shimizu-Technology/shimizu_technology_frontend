@@ -38,6 +38,23 @@ export function OrderDetailsModal({
           Placed: {new Date(order.createdAt).toLocaleString()}
         </p>
         
+        {/* Location Information */}
+        {order.location && (
+          <div className="mb-3 p-2 bg-green-50 rounded-md border border-green-100">
+            <h4 className="text-sm font-medium text-green-800 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Location: {order.location.name}
+            </h4>
+            <div className="mt-1 text-xs text-green-700">
+              <p>{order.location.address}</p>
+              <p className="mt-1">Phone: {order.location.phone_number}</p>
+            </div>
+          </div>
+        )}
+        
         {/* Order Creator Information */}
         <div className="text-xs text-gray-500 mb-3">
           {order.created_by_user_id && (

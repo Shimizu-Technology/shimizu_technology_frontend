@@ -567,6 +567,19 @@ export function AdminDashboard() {
               <p className="text-xs text-gray-500 truncate">Customer</p>
             </div>
           </div>
+          
+          {/* Location info - only show if location exists */}
+          {order.location && (
+            <div className="flex items-center space-x-2 mt-2">
+              <div className="h-7 w-7 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-green-700 font-medium text-sm">L</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-gray-800 truncate w-full">{order.location.name}</p>
+                <p className="text-xs text-gray-500 truncate">Location</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Action buttons */}

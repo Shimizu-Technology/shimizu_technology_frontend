@@ -17,7 +17,8 @@ const ORDERING_RESTAURANT_CONTEXT_ENDPOINTS = [
   'option_groups',
   'options',
   'promo_codes',
-  'orders'
+  'orders',
+  'locations'
 ];
 
 // Endpoints that require restaurant_id parameter for reservations

@@ -1,7 +1,6 @@
 // src/ordering/components/OrderConfirmation.tsx
-import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, MapPin } from 'lucide-react';
 
 export function OrderConfirmation() {
   // Grab data from location state
@@ -10,12 +9,16 @@ export function OrderConfirmation() {
       orderId?: string;
       total?: number;
       hasAny24hrItem?: boolean;
+      locationName?: string;
+      locationAddress?: string;
     };
   };
 
   const orderId = state?.orderId || 'N/A';
   const total = state?.total ?? 0;
   const hasAny24hrItem = !!state?.hasAny24hrItem;
+  const locationName = state?.locationName;
+  const locationAddress = state?.locationAddress;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -42,6 +45,19 @@ export function OrderConfirmation() {
           <p className="text-gray-600 mb-4">
             We’ll send you an ETA as soon as the staff begins preparing your order.
           </p>
+          {locationName && (
+            <div className="flex flex-col items-center mb-4 p-4 bg-gray-50 rounded-md">
+              <div className="flex items-center justify-center mb-2">
+                <MapPin className="h-5 w-5 text-[#0078d4] mr-2" />
+                <p className="font-medium">Pickup Location</p>
+              </div>
+              <div className="text-center">
+                <p className="text-gray-800 font-medium">{locationName}</p>
+                {locationAddress && <p className="text-gray-600">{locationAddress}</p>}
+              </div>
+            </div>
+          )}
+          
           <p className="text-gray-600 mb-4">
             Please show your order number when picking up.
           </p>
