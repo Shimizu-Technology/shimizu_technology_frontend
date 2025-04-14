@@ -18,8 +18,8 @@ import ItemInventoryModal from './ItemInventoryModal';
 // Import the updated OptionGroupsModal (no "required" field)
 import OptionGroupsModal from './OptionGroupsModal';
 
-// Import the CopyMenuItemModal component
-import { CopyMenuItemModal } from './CopyMenuItemModal';
+// Import the unified modal component for cloning/copying
+import { UnifiedCloneMenuItemModal } from './UnifiedCloneMenuItemModal';
 
 // LazyMenuManagerImage component for lazy-loaded images in the admin menu manager
 interface LazyMenuManagerImageProps {
@@ -163,9 +163,9 @@ export function MenuManager({
   // Menu selector toggle state - closed by default
   const [menuSelectorOpen, setMenuSelectorOpen] = useState(false);
   
-  // Copy menu item modal state
-  const [copyModalOpen, setCopyModalOpen] = useState(false);
-  const [itemToCopy, setItemToCopy] = useState<MenuItem | null>(null);
+  // Unified clone/copy menu item modal state
+  const [cloneModalOpen, setCloneModalOpen] = useState(false);
+  const [itemToClone, setItemToClone] = useState<MenuItem | null>(null);
 
   // Additional filter checkboxes
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
@@ -1096,14 +1096,14 @@ export function MenuManager({
   <Package className="h-4 w-4 sm:h-5 sm:w-5" />
 </button>
 
-                      {/* Copy to Another Menu */}
+                      {/* Clone/Copy Menu Item */}
                       <button
                         onClick={() => {
-                          setItemToCopy(item);
-                          setCopyModalOpen(true);
+                          setItemToClone(item);
+                          setCloneModalOpen(true);
                         }}
-                        className="p-2 text-gray-600 hover:text-purple-600"
-                        title="Copy to Another Menu"
+                        className="p-2 text-gray-600 hover:text-green-600"
+                        title="Clone/Copy Menu Item"
                       >
                         <Copy className="h-4 w-4 sm:h-5 sm:w-5" />
                       </button>
@@ -1941,16 +1941,16 @@ export function MenuManager({
         />
       )}
       
-      {/* Copy Menu Item Modal */}
-      {copyModalOpen && itemToCopy && (
-        <CopyMenuItemModal
-          item={itemToCopy}
+      {/* Unified Clone/Copy Menu Item Modal */}
+      {cloneModalOpen && itemToClone && (
+        <UnifiedCloneMenuItemModal
+          item={itemToClone}
           menus={menus}
-          isOpen={copyModalOpen}
+          isOpen={cloneModalOpen}
           onClose={() => {
-            setCopyModalOpen(false);
-            setItemToCopy(null);
-            // Refresh menu items to show the newly copied item
+            setCloneModalOpen(false);
+            setItemToClone(null);
+            // Refresh menu items to show the newly cloned/copied item
             fetchAllMenuItemsForAdmin();
           }}
         />

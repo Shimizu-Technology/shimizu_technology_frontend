@@ -37,6 +37,7 @@ interface MenuState {
   // Menu item copy functionality
   fetchMenuItemsByMenu: (menuId: number) => Promise<MenuItem[]>;
   copyMenuItem: (itemId: string, targetMenuId: number, categoryIds: number[]) => Promise<MenuItem | null>;
+  cloneMenuItemInSameMenu: (itemId: string, newName: string, categoryIds: number[]) => Promise<MenuItem | null>;
   
   // Visibility actions
   hideMenuItem: (id: number | string) => Promise<MenuItem | null>;
@@ -772,6 +773,40 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       const response = await apiClient.post(`/menu_items/${itemId}/copy`, {
         target_menu_id: targetMenuId,
         category_ids: categoryIds
+      });
+      
+      const newItem = {
+        ...response.data,
+        image: response.data.image_url || '/placeholder-food.png'
+      };
+      
+      // Add the new item to our store
+      set(state => ({
+        menuItems: [...state.menuItems, newItem],
+        loading: false
+      }));
+      
+      return newItem;
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      set({ error: errorMessage, loading: false });
+      return null;
+    }
+  },
+
+  // Clone a menu item within the same menu
+  cloneMenuItemInSameMenu: async (itemId: string, newName: string, categoryIds: number[]) => {
+    set({ loading: true, error: null });
+    try {
+      const sourceItem = get().menuItems.find(item => item.id === itemId);
+      if (!sourceItem) {
+        throw new Error("Source item not found");
+      }
+      
+      const response = await apiClient.post(`/menu_items/${itemId}/copy`, {
+        target_menu_id: sourceItem.menu_id, // Same menu ID
+        category_ids: categoryIds,
+        new_name: newName
       });
       
       const newItem = {
