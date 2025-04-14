@@ -1,13 +1,11 @@
 // src/ordering/components/admin/DraggableOptionList.tsx
 
-// Import React hooks
-import { useState } from 'react';
+import React from 'react';
 import { 
   DndContext, 
   closestCenter,
   KeyboardSensor,
   PointerSensor,
-  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent
@@ -39,6 +37,8 @@ interface SortableOptionItemProps {
   onDeleteOption: (id: number) => void;
   isSelected?: boolean;
   onToggleSelect?: (id: number) => void;
+  options: DraggableOption[];
+  onOptionsReorder: (newOptions: DraggableOption[]) => void;
 }
 
 // Individual sortable option item
@@ -50,13 +50,7 @@ function SortableOptionItem({
   onToggleSelect,
   options,
   onOptionsReorder
-}: SortableOptionItemProps & {
-  options: DraggableOption[];
-  onOptionsReorder: (newOptions: DraggableOption[]) => void;
-}) {
-  // State for position change animation
-  const [moveDirection, setMoveDirection] = useState<'up' | 'down' | null>(null);
-  const [isAnimating, setIsAnimating] = useState(false);
+}: SortableOptionItemProps) {
   const {
     attributes,
     listeners,
@@ -64,49 +58,37 @@ function SortableOptionItem({
     transform,
     transition,
     isDragging
-  } = useSortable({ id: option.id });
+  } = useSortable({ 
+    id: option.id
+  });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
     opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 1000 : 1,
-    position: 'relative' as 'relative',
-    backgroundColor: isDragging ? '#f0f9ff' : 'white',
-    borderRadius: '0.375rem',
+    position: 'relative' as const,
+    transform: CSS.Transform.toString(transform),
+    transition
   };
 
-  // Animation helper function
-  const animatePositionChange = (direction: 'up' | 'down') => {
-    setMoveDirection(direction);
-    setIsAnimating(true);
-    
-    // Reset animation after it completes
-    setTimeout(() => {
-      setIsAnimating(false);
-      setMoveDirection(null);
-    }, 800); // Match this with the CSS animation duration
-  };
+
 
   return (
     <div 
       ref={setNodeRef} 
       style={style} 
-      className={`flex flex-wrap items-center p-2 border rounded mb-1.5 transition-all duration-800 
-        ${isDragging ? 'shadow-lg' : ''} 
+      className={`flex flex-wrap items-center p-2 border rounded mb-1.5 
+        ${isDragging ? 'shadow-lg bg-blue-50 border-blue-300' : ''} 
         ${isSelected ? 'bg-blue-50 border-blue-300' : ''}
-        ${isAnimating && moveDirection === 'up' ? 'translate-y-[-5px] bg-blue-100 shadow-md border-blue-400' : ''}
-        ${isAnimating && moveDirection === 'down' ? 'translate-y-[5px] bg-blue-100 shadow-md border-blue-400' : ''}
       `}
     >
       {/* Drag handle - make it larger for iPad touch targets */}
       <div 
         {...attributes} 
-        {...listeners} 
-        className="flex items-center justify-center w-9 h-9 mr-1.5 cursor-grab touch-manipulation"
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing p-2 rounded hover:bg-gray-100 inline-flex items-center justify-center touch-manipulation"
+        style={{ minHeight: '44px', minWidth: '44px' }}
         aria-label="Drag to reorder"
       >
-        <GripVertical size={20} className="text-gray-400" />
+        <GripVertical className="h-5 w-5 text-gray-400" />
       </div>
 
       {/* Checkbox for selection (if selection is enabled) */}
@@ -190,9 +172,6 @@ function SortableOptionItem({
             // Find the current index of this option
             const currentIndex = options.findIndex(opt => opt.id === option.id);
             if (currentIndex > 0) {
-              // Trigger animation first
-              animatePositionChange('up');
-              
               // Move the option up one position
               const newOptions = [...options];
               const temp = newOptions[currentIndex];
@@ -209,7 +188,8 @@ function SortableOptionItem({
             }
           }}
           disabled={options.findIndex(opt => opt.id === option.id) === 0}
-          className="p-1 text-gray-500 hover:text-blue-700 focus:outline-none disabled:opacity-30 disabled:cursor-not-allowed h-9 w-9 flex items-center justify-center"
+          className="p-1.5 rounded disabled:text-gray-300 disabled:cursor-not-allowed text-gray-600 hover:bg-gray-100 focus:outline-none"
+          style={{ minHeight: '44px', minWidth: '44px' }}
           aria-label="Move option up"
         >
           <ChevronUp size={16} />
@@ -219,9 +199,6 @@ function SortableOptionItem({
             // Find the current index of this option
             const currentIndex = options.findIndex(opt => opt.id === option.id);
             if (currentIndex < options.length - 1) {
-              // Trigger animation first
-              animatePositionChange('down');
-              
               // Move the option down one position
               const newOptions = [...options];
               const temp = newOptions[currentIndex];
@@ -238,7 +215,8 @@ function SortableOptionItem({
             }
           }}
           disabled={options.findIndex(opt => opt.id === option.id) === options.length - 1}
-          className="p-1 text-gray-500 hover:text-blue-700 focus:outline-none disabled:opacity-30 disabled:cursor-not-allowed h-9 w-9 flex items-center justify-center"
+          className="p-1.5 rounded disabled:text-gray-300 disabled:cursor-not-allowed text-gray-600 hover:bg-gray-100 focus:outline-none"
+          style={{ minHeight: '44px', minWidth: '44px' }}
           aria-label="Move option down"
         >
           <ChevronDown size={16} />
@@ -248,10 +226,12 @@ function SortableOptionItem({
       {/* Delete button */}
       <button
         onClick={() => onDeleteOption(option.id)}
-        className="p-1 text-red-500 hover:text-red-700 focus:outline-none h-9 w-9 flex items-center justify-center my-0.5"
+        className="px-3 py-1.5 text-red-600 border border-red-300 rounded-md text-sm hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+        style={{ minHeight: '44px' }}
         aria-label="Delete option"
       >
-        <Trash2 size={18} />
+        <Trash2 className="h-3.5 w-3.5 inline mr-1" />
+        Delete
       </button>
     </div>
   );
@@ -276,24 +256,13 @@ export function DraggableOptionList({
   selectedOptionIds,
   onToggleOptionSelect
 }: DraggableOptionListProps) {
-  // Configure sensors for different input methods
+  // Set up sensors for drag and drop with optimized settings
   const sensors = useSensors(
-    // Mouse/touch pointer
     useSensor(PointerSensor, {
-      // Require a small drag distance to avoid accidental drags
       activationConstraint: {
-        distance: 8,
+        distance: 3, // Reduced distance for quicker activation
       },
     }),
-    // Touch screen (better for iPad)
-    useSensor(TouchSensor, {
-      // Delay before activation to distinguish from taps
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      },
-    }),
-    // Keyboard accessibility
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })

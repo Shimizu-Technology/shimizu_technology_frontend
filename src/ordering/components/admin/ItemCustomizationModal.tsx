@@ -1,5 +1,5 @@
 // src/ordering/components/admin/ItemCustomizationModal.tsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MenuItem, OptionGroup, MenuOption } from '../../types/menu';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -21,19 +21,57 @@ export function ItemCustomizationModal({ item, onClose, onAddToCart }: ItemCusto
   
   // Force re-render when selections change to update price calculations
   const [, forceUpdate] = useState({});
+  
+  // Filter out unavailable options and sort option groups by position
+  const processedOptionGroups = useMemo(() => {
+    if (!item.option_groups) return [];
+    
+    return item.option_groups
+      // Sort option groups by position if available
+      .sort((a, b) => {
+        if ((a as any).position !== undefined && (b as any).position !== undefined) {
+          return (a as any).position - (b as any).position;
+        }
+        return 0;
+      })
+      .map((group: OptionGroup) => {
+        // Filter out unavailable options and sort by position
+        const availableOptions = group.options
+          .filter((option: MenuOption) => option.is_available !== false)
+          .sort((a: MenuOption, b: MenuOption) => {
+            if ((a as any).position !== undefined && (b as any).position !== undefined) {
+              return (a as any).position - (b as any).position;
+            }
+            return 0;
+          });
+        
+        // Check if this group has any available options
+        const hasAvailableOptions = availableOptions.length > 0;
+        
+        // Check if this is a required group with no available options
+        const requiredButUnavailable = group.min_select > 0 && !hasAvailableOptions;
+        
+        return {
+          ...group,
+          options: availableOptions,
+          has_available_options: hasAvailableOptions,
+          required_but_unavailable: requiredButUnavailable
+        };
+      });
+  }, [item.option_groups]);
 
   // This effect was previously used for debugging option groups
   // Now removed to clean up console logs
 
   // Initialize selected options for required option groups
   useEffect(() => {
-    if (item.option_groups && item.option_groups.length > 0) {
+    if (processedOptionGroups.length > 0) {
       const initialSelections: Record<string, MenuOption[]> = {};
       
-      item.option_groups.forEach(group => {
-        // For preselected options
+      processedOptionGroups.forEach((group: OptionGroup) => {
+        // For preselected options (only if they're available)
         const preselectedOptions = group.options
-          .filter(opt => opt.is_preselected)
+          .filter(opt => opt.is_preselected && opt.is_available !== false)
           .map(opt => opt);
         
         if (preselectedOptions.length > 0) {
@@ -50,12 +88,12 @@ export function ItemCustomizationModal({ item, onClose, onAddToCart }: ItemCusto
       setSelectedOptions(initialSelections);
       
       // Set the first group as expanded by default, or the first required group if any
-      if (item.option_groups.length > 0) {
-        const requiredGroup = item.option_groups.find(group => group.min_select > 0);
-        setExpandedGroupId(requiredGroup?.id || item.option_groups[0]?.id || null);
+      if (processedOptionGroups.length > 0) {
+        const requiredGroup = processedOptionGroups.find(group => group.min_select > 0);
+        setExpandedGroupId(requiredGroup?.id || processedOptionGroups[0]?.id || null);
       }
     }
-  }, [item]);
+  }, [processedOptionGroups]);
 
   // Handle option selection/deselection
   const toggleOption = (group: OptionGroup, option: MenuOption) => {
@@ -99,9 +137,12 @@ export function ItemCustomizationModal({ item, onClose, onAddToCart }: ItemCusto
 
   // Check if we've selected the minimum required options for each group
   const isValid = (): boolean => {
-    if (!item.option_groups) return true;
+    if (!processedOptionGroups.length) return true;
     
-    return item.option_groups.every(group => {
+    return processedOptionGroups.every((group: OptionGroup) => {
+      // Skip validation for required groups with no available options
+      if (group.required_but_unavailable) return true;
+      
       const selections = selectedOptions[group.id.toString()] || [];
       return selections.length >= group.min_select;
     });
@@ -198,9 +239,9 @@ export function ItemCustomizationModal({ item, onClose, onAddToCart }: ItemCusto
   const calculateAdditionalPrice = (): number => {
     let sum = 0;
     
-    if (!item.option_groups) return sum;
+    if (!processedOptionGroups.length) return sum;
     
-    for (const group of item.option_groups) {
+    for (const group of processedOptionGroups) {
       const chosenOptions = selectedOptions[group.id.toString()] || [];
       
       // Skip if no selections
@@ -253,11 +294,11 @@ export function ItemCustomizationModal({ item, onClose, onAddToCart }: ItemCusto
 
   // Convert selected options to the format expected by the cart
   const formatCustomizations = (): ProcessedOption[] => {
-    if (!item.option_groups) return [];
+    if (!processedOptionGroups.length) return [];
     
     // First, get all selected options with their group info
     const allSelectedOptions = Object.entries(selectedOptions).flatMap(([groupId, options]) => {
-      const group = item.option_groups?.find(g => g.id.toString() === groupId);
+      const group = processedOptionGroups.find((g: OptionGroup) => g.id.toString() === groupId);
       if (!group) return [];
       
       return options.map(option => ({
@@ -352,11 +393,11 @@ export function ItemCustomizationModal({ item, onClose, onAddToCart }: ItemCusto
     // Create an object where keys are option group names and values are arrays of option names
     const displayFormat: Record<string, string[]> = {};
     
-    if (!item.option_groups) return displayFormat;
+    if (!processedOptionGroups.length) return displayFormat;
     
     // Group selected options by their group name
     Object.entries(selectedOptions).forEach(([groupId, options]) => {
-      const group = item.option_groups?.find(g => g.id.toString() === groupId);
+      const group = processedOptionGroups.find((g: OptionGroup) => g.id.toString() === groupId);
       if (!group || options.length === 0) return;
       
       // Use the group name as the key
@@ -393,10 +434,10 @@ export function ItemCustomizationModal({ item, onClose, onAddToCart }: ItemCusto
         
         {/* Content - Option groups */}
         <div className="flex-1 overflow-y-auto p-6 pt-4">
-          {!item.option_groups || item.option_groups.length === 0 ? (
+          {!processedOptionGroups.length ? (
             <p>No customizations available.</p>
           ) : (
-            item.option_groups.map(group => {
+            processedOptionGroups.map((group: OptionGroup) => {
               const groupId = group.id;
               const selectedCount = (selectedOptions[groupId.toString()] || []).length;
               const isRequired = group.min_select > 0;
@@ -467,7 +508,10 @@ export function ItemCustomizationModal({ item, onClose, onAddToCart }: ItemCusto
                       )}
                       
                       <div className="space-y-2">
-                        {group.options.map((option) => {
+                        {group.options.map((option: MenuOption) => {
+                          // Skip unavailable options
+                          if (option.is_available === false) return null;
+                          
                           const isSelected = (selectedOptions[groupId.toString()] || [])
                             .some(opt => opt.id === option.id);
                           

@@ -96,18 +96,35 @@ function MenuItemsPanel({
       (item.category_ids && item.category_ids.includes(Number(selectedCategory)));
     return matchesSearch && matchesCat;
   });
+  
+  // Sort menu items by position within their categories
+  const sortedMenuItems = useMemo(() => {
+    // Create a copy of filtered items to sort
+    return [...filteredMenuItems].sort((a, b) => {
+      // If items are in the same category, sort by position
+      if (selectedCategory !== 'all' && 
+          a.category_ids?.includes(Number(selectedCategory)) && 
+          b.category_ids?.includes(Number(selectedCategory))) {
+        // Sort by position if available - using type assertion since position is added by the API
+        if ((a as any).position !== undefined && (b as any).position !== undefined) {
+          return (a as any).position - (b as any).position;
+        }
+      }
+      return 0; // Keep original order if no position or different categories
+    });
+  }, [filteredMenuItems, selectedCategory]);
 
   // Group items by category
   function groupedMenuItems() {
     if (selectedCategory !== 'all') {
       return {
-        [selectedCategory.toString()]: filteredMenuItems.filter(item =>
+        [selectedCategory.toString()]: sortedMenuItems.filter(item =>
           item.category_ids?.includes(Number(selectedCategory))
         ),
       };
     }
     const grouped: Record<string, MenuItem[]> = { uncategorized: [] };
-    filteredMenuItems.forEach(item => {
+    sortedMenuItems.forEach(item => {
       if (!item.category_ids?.length) {
         grouped.uncategorized.push(item);
       } else {
@@ -177,7 +194,16 @@ function MenuItemsPanel({
                   (catId === 'uncategorized' ? 'Uncategorized' : `Category ${catId}`)}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {items.map(item => {
+                {items
+                  // Sort items by position within category
+                  .sort((a, b) => {
+                    // Using type assertion since position is added by the API but not in the TypeScript interface
+                    if ((a as any).position !== undefined && (b as any).position !== undefined) {
+                      return (a as any).position - (b as any).position;
+                    }
+                    return 0;
+                  })
+                  .map(item => {
                   const cartItem = findCartItem(item.id);
                   const isInCart = !!cartItem;
                   const hasOptions = item.option_groups && item.option_groups.length > 0;
@@ -1703,12 +1729,20 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
     const catMap = new Map<number, string>();
     
     if (activeMenuId && allCategories.length > 0) {
-      // Filter categories by active menu ID
-      allCategories.forEach((c: any) => {
-        if (Number(c.menu_id) === Number(activeMenuId)) {
-          // Adding category that matches active menu
-          catMap.set(c.id, c.name);
-        }
+      // Filter categories by active menu ID and sort by position
+      const filteredCats = allCategories
+        .filter((c: any) => Number(c.menu_id) === Number(activeMenuId))
+        .sort((a: any, b: any) => {
+          // Sort by position if available, otherwise fallback to id
+          if (a.position !== undefined && b.position !== undefined) {
+            return a.position - b.position;
+          }
+          return a.id - b.id;
+        });
+      
+      // Add sorted categories to the map
+      filteredCats.forEach((c: any) => {
+        catMap.set(c.id, c.name);
       });
     } else if (allCategories.length > 0) {
       // Fallback: if no activeMenuId but we have categories, use menu item categories as fallback
