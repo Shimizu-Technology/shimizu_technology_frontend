@@ -9,7 +9,8 @@ import webSocketManager from './WebSocketManager';
 export enum PollingResourceType {
   ORDERS = 'orders',
   INVENTORY = 'inventory',
-  RESTAURANT = 'restaurant'
+  RESTAURANT = 'restaurant',
+  MENU_ITEMS = 'menu_items'
 }
 
 /**
@@ -27,6 +28,7 @@ export interface PollingOptions {
   resourceId?: string | number;
   params?: Record<string, any>;
   sourceId?: string;
+  silent?: boolean; // Whether to show loading indicators
 }
 
 /**
@@ -161,13 +163,63 @@ class PollingManager {
   }
   
   /**
-   * Check if WebSocket is connected and stop polling if it is
+   * Check if WebSocket is connected and manage polling accordingly
    */
   private checkWebSocketStatus(): void {
-    if (this.isWebSocketConnected() && this.pollingRegistry.size > 0) {
-      console.debug(`[PollingManager] WebSocket is connected, stopping all polling operations (${this.pollingRegistry.size} active)`);
-      this.stopAllPolling();
+    const isConnected = this.isWebSocketConnected();
+    const hasActivePolling = this.hasActivePolling();
+    
+    // Log the current status for debugging
+    console.debug(`[PollingManager] WebSocket status check: connected=${isConnected}, activePolling=${hasActivePolling}, registrySize=${this.pollingRegistry.size}`);
+    
+    if (isConnected && hasActivePolling) {
+      console.debug(`[PollingManager] WebSocket is connected, pausing all polling operations (${this.pollingRegistry.size} active)`);
+      // Instead of stopping, we'll just pause by clearing the intervals
+      this.pauseAllPolling();
+    } else if (!isConnected && !hasActivePolling && this.pollingRegistry.size > 0) {
+      console.debug(`[PollingManager] WebSocket is disconnected, resuming all polling operations (${this.pollingRegistry.size} registered)`);
+      // If WebSocket is disconnected, make sure polling is active for registered resources
+      this.resumeAllPolling();
     }
+  }
+  
+  /**
+   * Check if there are any active polling operations
+   * @returns True if there are active polling operations
+   */
+  private hasActivePolling(): boolean {
+    let activeCount = 0;
+    this.pollingRegistry.forEach(entry => {
+      if (entry.intervalId !== null) {
+        activeCount++;
+      }
+    });
+    return activeCount > 0;
+  }
+  
+  /**
+   * Pause all polling operations without removing them from the registry
+   * This allows us to resume polling if WebSocket disconnects
+   */
+  private pauseAllPolling(): void {
+    this.pollingRegistry.forEach((entry, id) => {
+      if (entry.intervalId !== null) {
+        clearInterval(entry.intervalId);
+        entry.intervalId = null;
+        this.pollingRegistry.set(id, entry);
+      }
+    });
+  }
+  
+  /**
+   * Resume all polling operations that were previously paused
+   */
+  private resumeAllPolling(): void {
+    this.pollingRegistry.forEach((entry, id) => {
+      if (entry.intervalId === null) {
+        this.startPollingInterval(id);
+      }
+    });
   }
   
   /**
@@ -175,7 +227,13 @@ class PollingManager {
    * @returns True if WebSocket is connected
    */
   private isWebSocketConnected(): boolean {
-    return webSocketManager.isConnected();
+    const isConnected = webSocketManager.isConnected();
+    
+    // Add a timestamp to the log to help track connection status over time
+    const timestamp = new Date().toISOString().substring(11, 23); // HH:MM:SS.sss
+    console.debug(`[PollingManager] [${timestamp}] WebSocket connection status: ${isConnected ? 'CONNECTED' : 'DISCONNECTED'}`);
+    
+    return isConnected;
   }
   
   /**
@@ -197,20 +255,32 @@ class PollingManager {
     const entry = this.pollingRegistry.get(pollingId);
     if (!entry) return;
     
-    // Execute the first poll immediately
-    this.executePoll(pollingId);
+    // If WebSocket is connected, don't start polling
+    if (this.isWebSocketConnected()) {
+      console.debug(`[PollingManager] WebSocket is connected, not starting polling for ${entry.type}`);
+      return;
+    }
+    
+    // Execute the first poll immediately but only if WebSocket is not connected
+    this.executePoll(pollingId, true); // true = silent mode (no loading indicators)
     
     // Set up the interval
     const interval = entry.options.interval || this.defaultIntervals.get(entry.type) || 30000;
     const intervalId = window.setInterval(() => {
       // Check if WebSocket is connected before polling
       if (this.isWebSocketConnected()) {
-        console.debug(`[PollingManager] WebSocket is connected, stopping polling for ${entry.type}`);
-        this.stopPolling(pollingId);
+        console.debug(`[PollingManager] WebSocket is connected, pausing polling for ${entry.type}`);
+        // Just clear the interval but keep the entry in the registry
+        if (entry.intervalId !== null) {
+          clearInterval(entry.intervalId);
+          entry.intervalId = null;
+          this.pollingRegistry.set(pollingId, entry);
+        }
         return;
       }
       
-      this.executePoll(pollingId);
+      // Execute poll in silent mode (no loading indicators)
+      this.executePoll(pollingId, true);
     }, interval);
     
     // Update the registry entry
@@ -221,8 +291,9 @@ class PollingManager {
   /**
    * Execute a poll for a specific polling ID
    * @param pollingId The polling ID
+   * @param silent If true, don't show loading indicators
    */
-  private async executePoll(pollingId: string): Promise<void> {
+  private async executePoll(pollingId: string, silent: boolean = false): Promise<void> {
     const entry = this.pollingRegistry.get(pollingId);
     if (!entry) return;
     
@@ -232,24 +303,30 @@ class PollingManager {
       return;
     }
     
-    console.debug(`[PollingManager] Executing poll for ${entry.type} with ID ${pollingId}`);
+    console.debug(`[PollingManager] Executing poll for ${entry.type} with ID ${pollingId} (silent: ${silent})`);
     
     try {
       // Update last poll time
       entry.lastPollTime = Date.now();
       this.pollingRegistry.set(pollingId, entry);
       
+      // Add silent flag to options to prevent loading indicators
+      const pollOptions = {
+        ...entry.options,
+        silent: silent
+      };
+      
       // Execute the appropriate polling request based on type
       let data;
       switch (entry.type) {
         case PollingResourceType.ORDERS:
-          data = await this.pollOrders(entry.options);
+          data = await this.pollOrders(pollOptions);
           break;
         case PollingResourceType.INVENTORY:
-          data = await this.pollInventory(entry.options);
+          data = await this.pollInventory(pollOptions);
           break;
         case PollingResourceType.RESTAURANT:
-          data = await this.pollRestaurant(entry.options);
+          data = await this.pollRestaurant(pollOptions);
           break;
         default:
           console.error(`[PollingManager] Unknown polling type: ${entry.type}`);
@@ -273,20 +350,24 @@ class PollingManager {
   private async pollOrders(options: PollingOptions): Promise<any> {
     const { params = {} } = options;
     
-    // Build query string
-    const queryParams = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
-        queryParams.append(key, String(value));
-      }
-    });
+    // Create params object with source ID
+    const apiParams = {
+      ...params,
+      _sourceId: options.sourceId || 'polling'
+    };
     
-    // Add source ID to identify this as a polling request
-    queryParams.append('_sourceId', options.sourceId || 'polling');
-    
-    // Make the API request
-    const response = await api.get(`/orders?${queryParams.toString()}`);
-    return response;
+    try {
+      // Use the updated API with silent option
+      const response = await api.get(
+        '/orders',
+        apiParams,
+        { silent: true } // Always use silent mode for polling
+      );
+      return response;
+    } catch (error) {
+      console.error('[PollingManager] Error polling orders:', error);
+      return null;
+    }
   }
   
   /**
@@ -297,20 +378,24 @@ class PollingManager {
   private async pollInventory(options: PollingOptions): Promise<any> {
     const { params = {} } = options;
     
-    // Build query string
-    const queryParams = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
-        queryParams.append(key, String(value));
-      }
-    });
+    // Create params object with source ID
+    const apiParams = {
+      ...params,
+      _sourceId: options.sourceId || 'polling'
+    };
     
-    // Add source ID to identify this as a polling request
-    queryParams.append('_sourceId', options.sourceId || 'polling');
-    
-    // Make the API request
-    const response = await api.get(`/menu_items?${queryParams.toString()}`);
-    return response;
+    try {
+      // Use the updated API with silent option
+      const response = await api.get(
+        '/menu_items',
+        apiParams,
+        { silent: true } // Always use silent mode for polling
+      );
+      return response;
+    } catch (error) {
+      console.error('[PollingManager] Error polling inventory:', error);
+      return null;
+    }
   }
   
   /**
@@ -326,9 +411,19 @@ class PollingManager {
       return null;
     }
     
-    // Make the API request
-    const response = await api.get(`/restaurants/${resourceId}`);
-    return response;
+    // Use the updated API with silent option
+    try {
+      // Make the API request with silent flag
+      const response = await api.get(
+        `/restaurants/${resourceId}`,
+        { _sourceId: options.sourceId || 'polling' },
+        { silent: true } // Always use silent mode for polling
+      );
+      return response;
+    } catch (error) {
+      console.error(`[PollingManager] Error polling restaurant ${resourceId}:`, error);
+      return null;
+    }
   }
   
   /**

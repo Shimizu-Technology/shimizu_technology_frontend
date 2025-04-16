@@ -523,7 +523,17 @@ class WebSocketManager {
    * @returns True if connected
    */
   public isConnected(): boolean {
-    return this.connectionStatus === ConnectionStatus.CONNECTED;
+    // Check both our internal status and the actual websocket connection
+    const internalStatus = this.connectionStatus === ConnectionStatus.CONNECTED;
+    const websocketStatus = websocketService.isConnected();
+    
+    // Log any discrepancies for debugging
+    if (internalStatus !== websocketStatus) {
+      console.debug(`[WebSocketManager] Connection status mismatch: internal=${internalStatus}, websocket=${websocketStatus}`);
+    }
+    
+    // Use the most conservative approach - only report connected if both agree
+    return internalStatus && websocketStatus;
   }
   
   /**

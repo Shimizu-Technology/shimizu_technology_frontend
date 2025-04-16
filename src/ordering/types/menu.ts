@@ -6,6 +6,25 @@ import { Category } from '../../shared/api/endpoints/categories';
 // Re-export the Category type
 export type { Category };
 
+/**
+ * Interface for menu item filtering parameters
+ * Used for optimized backend filtering instead of frontend filtering
+ */
+export interface MenuItemFilterParams {
+  restaurant_id?: number;
+  category_id?: number;
+  menu_id?: number;
+  featured?: boolean;
+  seasonal?: boolean;
+  hidden?: boolean;
+  available_on_day?: number | string; // 0-6 for days of week (can be string for API compatibility)
+  search_query?: string;
+  view_type?: 'list' | 'detail' | 'admin'; // Optimize response size
+  include_stock?: boolean;
+  page?: number;
+  per_page?: number;
+}
+
 export interface MenuOption {
   id: number;
   name: string;

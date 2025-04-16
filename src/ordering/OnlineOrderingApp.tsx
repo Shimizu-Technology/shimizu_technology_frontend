@@ -1,7 +1,7 @@
 // src/ordering/OnlineOrderingApp.tsx
 
-import React, { useEffect, Suspense } from 'react';
-import { Routes, Route, Navigate, Outlet, Link } from 'react-router-dom';
+import React, { useEffect, Suspense, useState } from 'react';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 
 import { Hero } from './components/Hero';
 import { MenuPage } from './components/MenuPage';
@@ -16,12 +16,15 @@ import { LoginForm, SignUpForm, ForgotPasswordForm, ResetPasswordForm, VerifyPho
 import { OrderHistory } from './components/profile/OrderHistory';
 import { ProfilePage } from '../shared/components/profile';
 
-import { useAuthStore } from '../shared/auth';
 import { useMenuStore } from './store/menuStore';
+import { useCategoryStore } from './store/categoryStore';
 import { useLoadingStore } from './store/loadingStore';
 import { useMerchandiseStore } from './store/merchandiseStore';
 import { MenuItem as MenuItemCard } from './components/MenuItem';
 import { useSiteSettingsStore } from './store/siteSettingsStore'; // <-- IMPORTANT
+import { useRestaurantStore } from '../shared/store/restaurantStore';
+import { validateRestaurantContext } from '../shared/utils/tenantUtils';
+import { MenuItem } from './types/menu';
 
 import { ProtectedRoute, AnonymousRoute, PhoneVerificationRoute } from '../shared';
 
@@ -78,18 +81,102 @@ function OrderingLayout() {
 }
 
 export default function OnlineOrderingApp() {
-  const { menuItems, fetchMenuItems } = useMenuStore();
+  const { fetchFeaturedItems } = useMenuStore();
   const { fetchSiteSettings } = useSiteSettingsStore(); // <-- destructure the store method
   const { fetchCollections } = useMerchandiseStore();
+  const { restaurant } = useRestaurantStore();
+  
+  // State for featured items and loading state
+  const [featuredItems, setFeaturedItems] = useState<MenuItem[]>([]);
+  const [featuredItemsLoading, setFeaturedItemsLoading] = useState(false);
 
   useEffect(() => {
-    fetchMenuItems();        // load menu items
+    // Initialize WebSocket connection as soon as the app loads
+    if (validateRestaurantContext(restaurant)) {
+      console.debug('OnlineOrderingApp: Initializing WebSocket connection for menu items');
+      const { startMenuItemsWebSocket } = useMenuStore.getState();
+      startMenuItemsWebSocket();
+      
+      // Prefetch all menu items data when the app initializes
+      prefetchMenuData();
+    }
+  }, [restaurant]);
+  
+  // Function to prefetch menu data at app initialization
+  const prefetchMenuData = async () => {
+    if (!validateRestaurantContext(restaurant)) {
+      console.warn('OnlineOrderingApp: Restaurant context missing, cannot prefetch menu data');
+      return;
+    }
+    
+    try {
+      console.debug('OnlineOrderingApp: Prefetching menu data at app initialization');
+      
+      // Get menu store methods
+      const { fetchVisibleMenuItems, fetchMenus } = useMenuStore.getState();
+      const { fetchCategoriesForMenu } = useCategoryStore.getState();
+      
+      // 1. Fetch menus first to get the current menu ID
+      await fetchMenus();
+      
+      // 2. Get the current menu ID after fetching menus
+      const { currentMenuId } = useMenuStore.getState();
+      
+      if (currentMenuId) {
+        // 3. Fetch categories for the current menu
+        await fetchCategoriesForMenu(currentMenuId, restaurant?.id);
+        
+        // 4. Prefetch "All Items" view (no category filter)
+        console.debug('OnlineOrderingApp: Prefetching "All Items" view');
+        await fetchVisibleMenuItems(undefined, restaurant?.id, false, false);
+        
+        // 5. Get categories after they've been fetched
+        const { categories } = useCategoryStore.getState();
+        const menuCategories = categories.filter((cat: { menu_id: number; id: number; name: string }) => cat.menu_id === currentMenuId);
+        
+        // 6. Prefetch first few categories (limit to 3 to avoid too many requests)
+        const categoriesToPrefetch = menuCategories.slice(0, 3);
+        
+        for (const category of categoriesToPrefetch) {
+          console.debug(`OnlineOrderingApp: Prefetching data for category ${category.name}`);
+          await fetchVisibleMenuItems(category.id, restaurant?.id, false, false);
+        }
+        
+        console.debug('OnlineOrderingApp: Menu data prefetching complete');
+      }
+    } catch (error) {
+      console.error('Error prefetching menu data:', error);
+    }
+  };
+
+  useEffect(() => {
+    // Load featured items with optimized backend filtering
+    const loadFeaturedItems = async () => {
+      // Validate restaurant context for tenant isolation
+      if (!validateRestaurantContext(restaurant)) {
+        console.warn('OnlineOrderingApp: Restaurant context missing, cannot fetch featured items');
+        return;
+      }
+      
+      setFeaturedItemsLoading(true);
+      try {
+        // Use optimized backend filtering instead of loading all items
+        // Pass the restaurant ID if available, otherwise the utility will try to get it from localStorage
+        const items = await fetchFeaturedItems(restaurant?.id);
+        setFeaturedItems(items);
+      } catch (error) {
+        console.error('Error fetching featured items:', error);
+      } finally {
+        setFeaturedItemsLoading(false);
+      }
+    };
+    
+    loadFeaturedItems();
     fetchSiteSettings();     // load hero/spinner image URLs
     fetchCollections();      // load merchandise collections
-  }, [fetchMenuItems, fetchSiteSettings, fetchCollections]);
+  }, [fetchFeaturedItems, fetchSiteSettings, fetchCollections, restaurant]);
 
-  // Filter for featured items
-  const featuredItems = menuItems.filter((item) => item.featured);
+  // Take only the first 4 featured items for display
   const featuredSlice = featuredItems.slice(0, 4);
 
   return (
@@ -102,7 +189,12 @@ export default function OnlineOrderingApp() {
             <>
               <Hero />
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                {featuredItems.length > 0 ? (
+                {featuredItemsLoading ? (
+                  // Show loading spinner while featured items are loading
+                  <div className="flex justify-center items-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#c1902f]"></div>
+                  </div>
+                ) : featuredItems.length > 0 ? (
                   // Show Popular Items with heading outside the grid
                   <div>
                     <h2 className="text-2xl sm:text-3xl font-display text-gray-900 mb-8">

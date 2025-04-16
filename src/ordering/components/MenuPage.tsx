@@ -1,16 +1,21 @@
 // src/ordering/components/MenuPage.tsx
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { MenuItem } from './MenuItem';
+import { MenuItem as MenuItemCard } from './MenuItem';
 import { useMenuStore } from '../store/menuStore';
 import { useCategoryStore } from '../store/categoryStore';
 import { useRestaurantStore } from '../../shared/store/restaurantStore';
-// import { deriveStockStatus, calculateAvailableQuantity } from '../utils/inventoryUtils';
+import { validateRestaurantContext, logTenantIsolationWarning } from '../../shared/utils/tenantUtils';
+import { MenuItem } from '../types/menu';
 
 export function MenuPage() {
-  const { menuItems, fetchMenuItems, fetchMenus, error, currentMenuId, websocketConnected: menuWebsocketConnected } = useMenuStore();
-  const { categories, fetchCategoriesForMenu, websocketConnected: categoriesWebsocketConnected } = useCategoryStore();
+  const { fetchVisibleMenuItems, fetchMenus, error, currentMenuId } = useMenuStore();
+  const { categories, fetchCategoriesForMenu } = useCategoryStore();
   const { restaurant } = useRestaurantStore();
+  
+  // State for menu items and loading state
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(false);
   
   // Reference to track if data has been loaded at least once
   const initialLoadComplete = useRef(false);
@@ -27,84 +32,187 @@ export function MenuPage() {
     fetchMenus();
   }, [fetchMenus]);
 
-  // Second useEffect to fetch menu items and categories once we have currentMenuId
+  // WebSocket connection is now initialized at the app level in OnlineOrderingApp
+  // This improves performance by ensuring real-time updates are available immediately
+
+  // Separate useEffect to fetch categories when menu changes
   useEffect(() => {
-    const loadData = async () => {
-      console.debug('MenuPage: Loading data with WebSocket status:', { 
-        menuWebsocketConnected, 
-        categoriesWebsocketConnected,
-        hasMenuItems: menuItems.length > 0,
-        currentMenuId
-      });
-      
-      // Fetch menu items - the fetchMenuItems function now checks if we already have data and WebSocket is connected
-      await fetchMenuItems();
-      
-      // If this is the first load, mark as complete
-      if (!initialLoadComplete.current && menuItems.length > 0) {
-        initialLoadComplete.current = true;
+    const loadCategories = async () => {
+      // Validate restaurant context for tenant isolation
+      if (!validateRestaurantContext(restaurant) || !currentMenuId) {
+        return;
       }
       
-      // Fetch categories if we have a menu ID - the function now checks if we already have data and WebSocket is connected
-      if (currentMenuId) {
+      try {
+        // Fetch categories for the current menu
         await fetchCategoriesForMenu(currentMenuId, restaurant?.id);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
       }
     };
     
-    loadData();
-    
-    // Create a cleanup function to handle component unmounting
-    return () => {
-      console.debug('MenuPage: Cleaning up');
-    };
-    
-    // Add the WebSocket connection status to the dependency array to prevent unnecessary fetches
-  }, [fetchMenuItems, currentMenuId, fetchCategoriesForMenu, restaurant, menuWebsocketConnected, categoriesWebsocketConnected]);
-
-  // Combine filters: category, featured, seasonal, day-specific availability, and hidden status
-  const filteredItems = useMemo(() => {
-    let list = menuItems;
-
-    // Filter out hidden items for customer-facing menu
-    list = list.filter((item) => !item.hidden);
-
-    // If a category is selected, filter by that
-    if (selectedCategoryId) {
-      list = list.filter((item) =>
-        item.category_ids?.includes(selectedCategoryId)
-      );
-    }
-    if (showFeaturedOnly) {
-      list = list.filter((item) => item.featured);
-    }
-    if (showSeasonalOnly) {
-      list = list.filter((item) => item.seasonal);
-    }
-
-    // Filter by day-specific availability
-    const currentDayOfWeek = new Date().getDay(); // 0 = Sunday, 1 = Monday, etc.
-    list = list.filter((item) => {
-      // If available_days is empty or not set, item is available every day
-      if (!item.available_days || item.available_days.length === 0) {
-        return true;
-      }
-      
-      // Otherwise, check if the current day is in the available_days array
-      // Convert all values to numbers for comparison since they might be stored as strings
-      const availableDaysAsNumbers = item.available_days.map(day => 
-        typeof day === 'string' ? parseInt(day, 10) : day
-      );
-      
-      return availableDaysAsNumbers.includes(currentDayOfWeek);
-    });
-
-    return list;
-  }, [menuItems, selectedCategoryId, showFeaturedOnly, showSeasonalOnly]);
-
+    loadCategories();
+  }, [fetchCategoriesForMenu, currentMenuId, restaurant]);
+  
+  // Use a ref to track the last data refresh time to prevent too frequent updates
+  const lastRefreshTime = useRef<number>(Date.now());
+  const MIN_REFRESH_INTERVAL = 5000; // 5 seconds minimum between visible refreshes
+  
+  // Reference to track categories that have been prefetched
+  const prefetchedCategories = useRef<Set<number | null>>(new Set([null])); // Start with 'All Items' (null) prefetched
+  
   // Filter categories to only show those for the current menu
   const activeCategories = useMemo(() => {
     return currentMenuId ? categories.filter(cat => cat.menu_id === currentMenuId) : [];
   }, [categories, currentMenuId]);
+  
+  // Separate useEffect to fetch menu items with backend filtering
+  useEffect(() => {
+    // Function to prefetch adjacent categories
+    const prefetchAdjacentCategories = async () => {
+      if (!validateRestaurantContext(restaurant)) return;
+      
+      // Get the current category index
+      const allCategoryIds = [null, ...activeCategories.map(cat => cat.id)];
+      const currentIndex = allCategoryIds.findIndex(id => id === selectedCategoryId);
+      
+      // Determine which adjacent categories to prefetch
+      const categoriesToPrefetch: (number | null)[] = [];
+      
+      // Add the next category if it exists
+      if (currentIndex < allCategoryIds.length - 1) {
+        categoriesToPrefetch.push(allCategoryIds[currentIndex + 1]);
+      }
+      
+      // Add the previous category if it exists
+      if (currentIndex > 0) {
+        categoriesToPrefetch.push(allCategoryIds[currentIndex - 1]);
+      }
+      
+      // Prefetch data for adjacent categories in the background
+      for (const categoryId of categoriesToPrefetch) {
+        // Skip if already prefetched
+        if (prefetchedCategories.current.has(categoryId)) continue;
+        
+        console.debug(`MenuPage: Prefetching data for category ${categoryId === null ? 'All Items' : categoryId}`);
+        
+        try {
+          await fetchVisibleMenuItems(
+            categoryId || undefined,
+            restaurant?.id,
+            showFeaturedOnly,
+            showSeasonalOnly
+          );
+          
+          // Mark as prefetched
+          prefetchedCategories.current.add(categoryId);
+        } catch (error) {
+          console.error(`Error prefetching data for category ${categoryId}:`, error);
+        }
+      }
+    };
+    
+    const loadMenuItems = async (forceShowLoading = false) => {
+      // Validate restaurant context for tenant isolation
+      if (!validateRestaurantContext(restaurant)) {
+        logTenantIsolationWarning('MenuPage', 'Restaurant context missing, cannot fetch menu items');
+        return;
+      }
+      
+      // Only show loading indicator if this is a user-initiated refresh or first load
+      const shouldShowLoading = forceShowLoading || !initialLoadComplete.current;
+      
+      if (shouldShowLoading) {
+        console.debug('MenuPage: Loading menu items with visible indicator');
+        setLoading(true);
+      } else {
+        console.debug('MenuPage: Background refresh of menu items');
+      }
+      
+      try {
+        // Call the enhanced method with all filter parameters
+        // The backend will now handle all filtering including featured and seasonal
+        const items = await fetchVisibleMenuItems(
+          selectedCategoryId || undefined, 
+          restaurant?.id,
+          showFeaturedOnly,
+          showSeasonalOnly
+        );
+        
+        // Mark this category as prefetched
+        prefetchedCategories.current.add(selectedCategoryId);
+        
+        // Check if data has actually changed before updating state
+        const hasDataChanged = JSON.stringify(items) !== JSON.stringify(menuItems);
+        
+        // Only update the UI if data changed and enough time has passed since last update
+        const now = Date.now();
+        const timeSinceLastRefresh = now - lastRefreshTime.current;
+        
+        if (hasDataChanged && (shouldShowLoading || timeSinceLastRefresh > MIN_REFRESH_INTERVAL)) {
+          console.debug('MenuPage: Data changed, updating UI');
+          setMenuItems(items);
+          lastRefreshTime.current = now;
+        } else if (hasDataChanged) {
+          console.debug('MenuPage: Data changed but skipping UI update (too soon)');
+        } else {
+          console.debug('MenuPage: No data changes detected');
+        }
+        
+        // If this is the first load, mark as complete
+        if (!initialLoadComplete.current && items.length > 0) {
+          initialLoadComplete.current = true;
+          
+          // After initial load, prefetch data for adjacent categories
+          prefetchAdjacentCategories();
+        }
+      } catch (error) {
+        console.error('Error fetching menu items:', error);
+      } finally {
+        if (shouldShowLoading) {
+          setLoading(false);
+        }
+      }
+    };
+    
+    // Check if WebSocket is connected before loading items
+    const { websocketConnected } = useMenuStore.getState();
+    
+    if (websocketConnected) {
+      console.debug('MenuPage: WebSocket connected, checking if data needs to be loaded');
+      // If this category hasn't been prefetched yet, load it even with WebSocket connected
+      if (!prefetchedCategories.current.has(selectedCategoryId)) {
+        console.debug(`MenuPage: Category ${selectedCategoryId === null ? 'All Items' : selectedCategoryId} not prefetched, loading data`);
+        loadMenuItems(true);
+      } else if (!initialLoadComplete.current) {
+        // Still need to show loading indicator until WebSocket provides data
+        setLoading(true);
+        // Set a timeout to hide loading indicator if WebSocket doesn't deliver data quickly
+        const loadingTimeout = setTimeout(() => {
+          if (loading) {
+            console.debug('MenuPage: WebSocket data taking too long, falling back to API');
+            loadMenuItems(true);
+          }
+        }, 3000); // Wait 3 seconds for WebSocket data before falling back
+        
+        return () => clearTimeout(loadingTimeout);
+      }
+    } else {
+      // WebSocket not connected, fall back to API call
+      console.debug('MenuPage: WebSocket not connected, using API fallback');
+      loadMenuItems(true);
+    }
+    
+    // Create a cleanup function to handle component unmounting
+    return () => {
+      console.debug('MenuPage: Cleaning up menu items effect');
+    };
+    
+    // Only trigger refetch when filters or restaurant context changes
+    // The polling will handle regular updates
+  }, [fetchVisibleMenuItems, restaurant, selectedCategoryId, showFeaturedOnly, showSeasonalOnly, activeCategories]);
+
+  // No need for frontend filtering anymore as we're using backend filtering
 
   // Memoize the selected category description to avoid redundant lookups
   const selectedCategoryDescription = useMemo(() => {
@@ -205,11 +313,17 @@ export function MenuPage() {
 
       {/* Menu Items Grid with min-height to prevent layout shift */}
       <div className="min-h-[300px] transition-opacity duration-300 ease-in-out">
-        <div className="animate-fadeIn transition-opacity duration-300">
-          {filteredItems.length > 0 ? (
+        {loading ? (
+          // Show loading spinner while menu items are loading
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#c1902f]"></div>
+          </div>
+        ) : (
+          <div className="animate-fadeIn transition-opacity duration-300">
+            {menuItems.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-                {filteredItems.map((item) => (
-                  <MenuItem key={item.id} item={item} />
+                {menuItems.map((item) => (
+                  <MenuItemCard key={item.id} item={item} />
                 ))}
               </div>
             ) : (
@@ -233,6 +347,7 @@ export function MenuPage() {
               </div>
             )}
           </div>
+        )}
       </div>
     </div>
   );

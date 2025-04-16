@@ -1,6 +1,6 @@
 // src/shared/api/apiClient.ts
 
-import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig, AxiosRequestConfig } from 'axios';
 import { isTokenExpired } from '../utils/jwt';
 import { config } from '../config';
 import { useAuthStore } from '../auth/authStore';
@@ -46,8 +46,22 @@ const axiosInstance: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
 });
 
+// We'll use a simple approach without the loading store
+// This prevents the need for additional dependencies
+let silentRequestsCount = 0;
+
 // Add request interceptor to handle authentication and restaurant context
 axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  // Check if this is a silent request (background polling)
+  const isSilentRequest = config.headers?.['X-Silent-Request'] === 'true' || 
+                          config.url?.includes('_silent=true');
+  
+  // Track silent requests for debugging
+  if (isSilentRequest) {
+    silentRequestsCount++;
+    console.debug(`[API] Silent request started (${silentRequestsCount} active)`);
+  }
+  
   // Identify this frontend and send the configured restaurant ID
   config.headers.set('X-Frontend-ID', 'shimizu_technology');
   config.headers.set('X-Frontend-Restaurant-ID', import.meta.env.VITE_RESTAURANT_ID || '2');
@@ -117,10 +131,33 @@ axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
-// Add response interceptor to handle errors
+// Add response interceptor to handle errors and manage loading state
 axiosInstance.interceptors.response.use(
-  (response: AxiosResponse) => response,
+  (response: AxiosResponse) => {
+    // Check if this was a silent request
+    const isSilentRequest = response.config.headers?.['X-Silent-Request'] === 'true' || 
+                           response.config.url?.includes('_silent=true');
+    
+    // Track silent requests for debugging
+    if (isSilentRequest) {
+      silentRequestsCount--;
+      if (silentRequestsCount < 0) silentRequestsCount = 0;
+      console.debug(`[API] Silent request completed (${silentRequestsCount} active)`);
+    }
+    
+    return response;
+  },
   (error) => {
+    // Check if this was a silent request
+    const isSilentRequest = error.config?.headers?.['X-Silent-Request'] === 'true' || 
+                           error.config?.url?.includes('_silent=true');
+    
+    // Track silent requests for debugging
+    if (isSilentRequest) {
+      silentRequestsCount--;
+      if (silentRequestsCount < 0) silentRequestsCount = 0;
+      console.debug(`[API] Silent request completed (${silentRequestsCount} active)`);
+    }
     // Handle 401 Unauthorized (expired token)
     if (error.response && error.response.status === 401) {
       // Check if this is a VIP validation request
@@ -175,6 +212,8 @@ export const extractData = <T>(response: AxiosResponse<T>): T => {
   return response.data;
 };
 
+// This API object will be replaced by the one below
+
 /**
  * Switch to a different restaurant context
  * @param restaurantId The restaurant ID to switch to
@@ -201,37 +240,76 @@ export const switchRestaurantContext = async (restaurantId: string | number): Pr
   }
 };
 
-// Generic API functions
+// Generic API functions with support for silent requests
 export const api = {
   /**
    * GET request
+   * @param endpoint API endpoint
+   * @param params Query parameters
+   * @param options Additional options like silent mode
    */
-  async get<T>(endpoint: string, params?: any): Promise<T> {
-    const response = await apiClient.get<T>(endpoint, { params });
+  async get<T>(endpoint: string, params?: any, options?: { silent?: boolean }): Promise<T> {
+    const config: AxiosRequestConfig = { params };
+    
+    // Add silent flag to prevent loading indicators
+    if (options?.silent) {
+      config.headers = { 'X-Silent-Request': 'true' };
+    }
+    
+    const response = await apiClient.get<T>(endpoint, config);
     return response.data;
   },
   
   /**
    * POST request
+   * @param endpoint API endpoint
+   * @param data Request body
+   * @param options Additional options like silent mode
    */
-  async post<T>(endpoint: string, data?: any): Promise<T> {
-    const response = await apiClient.post<T>(endpoint, data);
+  async post<T>(endpoint: string, data?: any, options?: { silent?: boolean }): Promise<T> {
+    const config: AxiosRequestConfig = {};
+    
+    // Add silent flag to prevent loading indicators
+    if (options?.silent) {
+      config.headers = { 'X-Silent-Request': 'true' };
+    }
+    
+    const response = await apiClient.post<T>(endpoint, data, config);
     return response.data;
   },
   
   /**
    * PATCH request
+   * @param endpoint API endpoint
+   * @param data Request body
+   * @param options Additional options like silent mode
    */
-  async patch<T>(endpoint: string, data?: any): Promise<T> {
-    const response = await apiClient.patch<T>(endpoint, data);
+  async patch<T>(endpoint: string, data?: any, options?: { silent?: boolean }): Promise<T> {
+    const config: AxiosRequestConfig = {};
+    
+    // Add silent flag to prevent loading indicators
+    if (options?.silent) {
+      config.headers = { 'X-Silent-Request': 'true' };
+    }
+    
+    const response = await apiClient.patch<T>(endpoint, data, config);
     return response.data;
   },
   
   /**
    * DELETE request
+   * @param endpoint API endpoint
+   * @param options Additional options like silent mode
    */
-  async delete<T>(endpoint: string): Promise<T> {
-    const response = await apiClient.delete<T>(endpoint);
+  async delete<T>(endpoint: string, options?: { silent?: boolean }): Promise<T> {
+    const config: AxiosRequestConfig = {};
+    
+    // Add silent flag to prevent loading indicators
+    if (options?.silent) {
+      config.headers = { 'X-Silent-Request': 'true' };
+    }
+    
+    const response = await apiClient.delete<T>(endpoint, config);
     return response.data;
   },
   

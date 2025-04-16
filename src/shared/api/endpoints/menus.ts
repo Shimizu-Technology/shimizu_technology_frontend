@@ -13,9 +13,11 @@ export interface Menu {
 export const menusApi = {
   /**
    * Get all menus for the current restaurant
+   * @param params Optional parameters for filtering menus
+   * @param params.active If true, only returns active menus; if false, only returns inactive menus
    */
-  getAll: async (): Promise<Menu[]> => {
-    const response = await apiClient.get('/menus');
+  getAll: async (params?: { active?: boolean; restaurant_id?: number }): Promise<Menu[]> => {
+    const response = await apiClient.get('/menus', { params });
     return response.data;
   },
 

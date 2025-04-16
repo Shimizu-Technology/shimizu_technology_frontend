@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Edit2, Trash2, X, Save, BookOpen, Package, Eye, EyeOff, Copy } from 'lucide-react';
 import toastUtils from '../../../shared/utils/toastUtils';
 import { useMenuStore } from '../../store/menuStore';
-import type { MenuItem } from '../../types/menu';
+import type { MenuItem, MenuItemFilterParams } from '../../types/menu';
 import { useCategoryStore } from '../../store/categoryStore'; // to fetch real categories
 import { api, uploadMenuItemImage } from '../../lib/api';
 import { useLoadingOverlay } from '../../../shared/components/ui/LoadingOverlay';
@@ -12,6 +12,8 @@ import { Tooltip } from '../../../shared/components/ui';
 import { deriveStockStatus, calculateAvailableQuantity } from '../../utils/inventoryUtils';
 import OptimizedImage from '../../../shared/components/ui/OptimizedImage';
 import useIntersectionObserver from '../../../shared/hooks/useIntersectionObserver';
+import { validateRestaurantContext, logTenantIsolationWarning } from '../../../shared/utils/tenantUtils';
+import { useRestaurantStore } from '../../../shared/store/restaurantStore';
 
 // Import the Inventory Modal
 import ItemInventoryModal from './ItemInventoryModal';
@@ -91,25 +93,27 @@ interface MenuItemFormData {
  * Kept for future use and type consistency with backend models
  * @deprecated Currently not used directly but maintained for API compatibility
  */
-interface OptionGroup {
-  id: number;
-  name: string;
-  min_select: number;
-  max_select: number;
-  position: number;
-  options: OptionRow[];
-}
+// Commented out to avoid lint warnings, uncomment when needed
+// interface OptionGroup {
+//   id: number;
+//   name: string;
+//   min_select: number;
+//   max_select: number;
+//   position: number;
+//   options: OptionRow[];
+// }
 
-interface OptionRow {
-  id: number;
-  name: string;
-  additional_price: number;
-  position: number;
-  /**
-   * We now allow pre-selected options in the admin UI
-   */
-  is_preselected?: boolean;
-}
+// Commented out to avoid lint warnings, uncomment when needed
+// interface OptionRow {
+//   id: number;
+//   name: string;
+//   additional_price: number;
+//   position: number;
+//   /**
+//    * We now allow pre-selected options in the admin UI
+//    */
+//   is_preselected?: boolean;
+// }
 
 /** Helper to format a date for display. */
 function formatDate(dateStr?: string | null) {
@@ -140,10 +144,9 @@ export function MenuManager({
 }: MenuManagerProps) {
   const {
     menus,
-    menuItems,
     currentMenuId,
     fetchMenus,
-    fetchAllMenuItemsForAdmin,
+    fetchMenuItemsForAdmin,
     addMenuItem,
     updateMenuItem,
     deleteMenuItem,
@@ -153,6 +156,11 @@ export function MenuManager({
   } = useMenuStore();
 
   const { categories, fetchCategoriesForMenu } = useCategoryStore();
+  const { restaurant } = useRestaurantStore();
+  
+  // State for menu items and loading state
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(false);
 
   // The currently selected menu ID for filtering
   const [selectedMenuId, setSelectedMenuId] = useState<number | null>(null);
@@ -192,8 +200,62 @@ export function MenuManager({
 
   // On mount => fetch items (admin) + categories + menus and start WebSocket connection
   useEffect(() => {
-    fetchAllMenuItemsForAdmin();
+    // Fetch menus first
     fetchMenus();
+    
+    // Load menu items with optimized backend filtering
+    const loadMenuItems = async () => {
+      // Validate restaurant context for tenant isolation
+      if (!validateRestaurantContext(restaurant)) {
+        logTenantIsolationWarning('MenuManager', 'Restaurant context missing, cannot fetch menu items');
+        return;
+      }
+      
+      setLoading(true);
+      try {
+        // Create filter params for backend filtering
+        const filterParams: MenuItemFilterParams = {
+          view_type: 'admin', // Always use admin view for this method
+          include_stock: true, // Always include stock information
+          restaurant_id: restaurant?.id
+        };
+        
+        // Add menu filter if selected
+        if (selectedMenuId) {
+          filterParams.menu_id = selectedMenuId;
+        }
+        
+        // Add category filter if selected
+        if (selectedCategory) {
+          filterParams.category_id = selectedCategory;
+        }
+        
+        // Add visibility filter
+        if (visibilityFilter === 'active') {
+          filterParams.hidden = false;
+        } else if (visibilityFilter === 'hidden') {
+          filterParams.hidden = true;
+        }
+        
+        // Add featured/seasonal filters if selected
+        if (showFeaturedOnly) {
+          filterParams.featured = true;
+        }
+        if (showSeasonalOnly) {
+          filterParams.seasonal = true;
+        }
+        
+        // Use optimized backend filtering instead of frontend filtering
+        const items = await fetchMenuItemsForAdmin(filterParams);
+        setMenuItems(items);
+      } catch (error) {
+        console.error('Error fetching menu items:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadMenuItems();
     
     // Start WebSocket connection for real-time menu item updates instead of polling
     const restaurantId = localStorage.getItem('restaurantId');
@@ -225,9 +287,15 @@ export function MenuManager({
       stopInventoryPolling();
     };
   }, [
-    fetchAllMenuItemsForAdmin,
+    fetchMenuItemsForAdmin,
     fetchMenus,
-    stopInventoryPolling
+    stopInventoryPolling,
+    restaurant,
+    selectedMenuId,
+    selectedCategory,
+    visibilityFilter,
+    showFeaturedOnly,
+    showSeasonalOnly
   ]);
   
   // Handle selectedMenuItemId from props (for opening edit modal from e.g. notifications)
@@ -271,11 +339,32 @@ export function MenuManager({
   // Refresh menu items when selected menu changes
   useEffect(() => {
     if (selectedMenuId) {
-      fetchAllMenuItemsForAdmin();
+      // Create filter params for backend filtering
+      const filterParams: MenuItemFilterParams = {
+        menu_id: selectedMenuId,
+        view_type: 'admin',
+        include_stock: true,
+        restaurant_id: restaurant?.id
+      };
+      
+      // Add existing filters
+      if (selectedCategory) filterParams.category_id = selectedCategory;
+      if (visibilityFilter === 'active') filterParams.hidden = false;
+      if (visibilityFilter === 'hidden') filterParams.hidden = true;
+      if (showFeaturedOnly) filterParams.featured = true;
+      if (showSeasonalOnly) filterParams.seasonal = true;
+      
+      // Fetch with current filters
+      setLoading(true);
+      fetchMenuItemsForAdmin(filterParams)
+        .then(items => setMenuItems(items))
+        .catch(error => console.error('Error fetching menu items for selected menu:', error))
+        .finally(() => setLoading(false));
+      
       // Fetch categories specific to the selected menu
       fetchCategoriesForMenu(selectedMenuId, restaurantId ? Number(restaurantId) : undefined);
     }
-  }, [selectedMenuId, restaurantId, fetchAllMenuItemsForAdmin, fetchCategoriesForMenu]);
+  }, [selectedMenuId, restaurantId, fetchMenuItemsForAdmin, fetchCategoriesForMenu, restaurant, selectedCategory, visibilityFilter, showFeaturedOnly, showSeasonalOnly]);
 
   // Filter categories by selected menu
   const filteredCategories = useMemo(() => {
@@ -283,43 +372,8 @@ export function MenuManager({
     return categories.filter(cat => cat.menu_id === selectedMenuId);
   }, [categories, selectedMenuId]);
 
-  // Filter the items in memory
-  const filteredItems = useMemo(() => {
-    let list = menuItems;
-
-    // Filter by menu if selected
-    if (selectedMenuId) {
-      list = list.filter(item => Number(item.menu_id) === selectedMenuId);
-    }
-
-    // If a category is selected, only show items that have that category
-    if (selectedCategory && categories?.length) {
-      list = list.filter(item => item.category_ids?.includes(selectedCategory));
-    }
-    
-    // Apply visibility filter
-    if (visibilityFilter === 'active') {
-      list = list.filter(item => !item.hidden);
-    } else if (visibilityFilter === 'hidden') {
-      list = list.filter(item => item.hidden);
-    }
-    // 'all' shows everything, so no filtering needed
-    
-    if (showFeaturedOnly) {
-      list = list.filter(item => item.featured);
-    }
-    if (showSeasonalOnly) {
-      list = list.filter(item => item.seasonal);
-    }
-    return list;
-  }, [
-    menuItems,
-    selectedMenuId,
-    selectedCategory,
-    visibilityFilter,
-    showFeaturedOnly,
-    showSeasonalOnly
-  ]);
+  // No need for frontend filtering anymore as we're using backend filtering
+  // We'll just use the menuItems state directly
 
   // Default form data for a new item
   const initialFormData: MenuItemFormData = {
@@ -349,7 +403,27 @@ export function MenuManager({
 
   /** Refresh data after inventory changes (e.g. from the Inventory Modal) */
   const refreshAfterInventoryChanges = () => {
-    fetchAllMenuItemsForAdmin();
+    // Create filter params for backend filtering
+    const filterParams: MenuItemFilterParams = {
+      view_type: 'admin',
+      include_stock: true,
+      restaurant_id: restaurant?.id
+    };
+    
+    // Add existing filters
+    if (selectedMenuId) filterParams.menu_id = selectedMenuId;
+    if (selectedCategory) filterParams.category_id = selectedCategory;
+    if (visibilityFilter === 'active') filterParams.hidden = false;
+    if (visibilityFilter === 'hidden') filterParams.hidden = true;
+    if (showFeaturedOnly) filterParams.featured = true;
+    if (showSeasonalOnly) filterParams.seasonal = true;
+    
+    // Fetch with current filters
+    setLoading(true);
+    fetchMenuItemsForAdmin(filterParams)
+      .then(items => setMenuItems(items))
+      .catch(error => console.error('Error refreshing menu items:', error))
+      .finally(() => setLoading(false));
   };
 
   /** Utility: enforce max 4 featured items. */
@@ -509,7 +583,7 @@ export function MenuManager({
   };
   const handleCloseInventoryModal = () => {
     setInventoryModalOpen(false);
-    const itemBeforeClosing = inventoryModalItem;
+    // Store reference removed as it was unused
     setInventoryModalItem(null);
 
     // Ensure polling is stopped when modal is closed
@@ -527,10 +601,10 @@ export function MenuManager({
     if (useMenuStore.getState().websocketConnected) {
       console.debug('[MenuManager] Using WebSocket for inventory refresh');
       // The WebSocket will handle updates, but we'll fetch once to ensure we have the latest data
-      fetchAllMenuItemsForAdmin();
+      refreshAfterInventoryChanges();
     } else {
       console.debug('[MenuManager] Using API call for inventory refresh');
-      fetchAllMenuItemsForAdmin();
+      refreshAfterInventoryChanges();
     }
   };
 
@@ -550,7 +624,7 @@ export function MenuManager({
   /** Mark a menu as active. */
   const handleSetActiveMenu = async (id: number) => {
     await setActiveMenu(id);
-    await fetchAllMenuItemsForAdmin();
+    await refreshAfterInventoryChanges();
   };
 
   /** Submit the form => create/update item. */
@@ -703,7 +777,7 @@ export function MenuManager({
       console.error('Failed to save menu item:', err);
     } finally {
       // Refresh items after any change
-      fetchAllMenuItemsForAdmin();
+      refreshAfterInventoryChanges();
     }
   };
 
@@ -820,7 +894,7 @@ export function MenuManager({
                       onClick={async () => {
                         setSelectedMenuId(menu.id);
                         setMenuSelectorOpen(false);
-                        await fetchAllMenuItemsForAdmin();
+                        await refreshAfterInventoryChanges();
                       }}
                       className={`
                         w-full text-left px-3 py-2 text-sm flex items-center justify-between
@@ -980,9 +1054,14 @@ export function MenuManager({
             Please select a menu from the options above to view and manage its items.
           </p>
         </div>
-      ) : filteredItems.length > 0 ? (
+      ) : loading ? (
+        // Show loading spinner while menu items are loading
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#c1902f]"></div>
+        </div>
+      ) : menuItems.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredItems.map((item) => {
+          {menuItems.map((item) => {
             const fromDate = formatDate(item.available_from);
             const untilDate = formatDate(item.available_until);
 
@@ -1951,7 +2030,7 @@ export function MenuManager({
             setCloneModalOpen(false);
             setItemToClone(null);
             // Refresh menu items to show the newly cloned/copied item
-            fetchAllMenuItemsForAdmin();
+            refreshAfterInventoryChanges();
           }}
         />
       )}

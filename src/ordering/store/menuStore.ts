@@ -2,10 +2,12 @@
 import { create } from 'zustand';
 import { menusApi, Menu } from '../../shared/api/endpoints/menus';
 import { handleApiError } from '../../shared/utils/errorHandler';
-import { MenuItem, Category } from '../types/menu';
+import { MenuItem, Category, MenuItemFilterParams } from '../types/menu';
 import { apiClient } from '../../shared/api/apiClient';
 import { menuItemsApi } from '../../shared/api/endpoints/menuItems';
 import { websocketService } from '../../shared/services/websocketService';
+import { getCurrentRestaurantId, addRestaurantIdToParams } from '../../shared/utils/tenantUtils';
+import { pollingManager, PollingResourceType } from '../../shared/services/PollingManager';
 
 interface MenuState {
   menus: Menu[];
@@ -52,6 +54,12 @@ interface MenuState {
   
   // Get individual menu item with fresh data
   getMenuItemById: (id: number | string) => Promise<MenuItem | null>;
+  
+  // New optimized methods for backend filtering
+  fetchMenuItemsWithFilters: (params: MenuItemFilterParams) => Promise<MenuItem[]>;
+  fetchFeaturedItems: (restaurantId?: number) => Promise<MenuItem[]>;
+  fetchVisibleMenuItems: (categoryId?: number, restaurantId?: number, featured?: boolean, seasonal?: boolean) => Promise<MenuItem[]>;
+  fetchMenuItemsForAdmin: (filters: MenuItemFilterParams) => Promise<MenuItem[]>;
 }
 
 export const useMenuStore = create<MenuState>((set, get) => ({
@@ -70,16 +78,29 @@ export const useMenuStore = create<MenuState>((set, get) => ({
   fetchMenus: async () => {
     set({ loading: true, error: null });
     try {
-      const menus = await menusApi.getAll();
+      // Only fetch the active menu for the current restaurant
+      const restaurantId = getCurrentRestaurantId();
+      const params: { active: boolean; restaurant_id?: number } = { active: true };
       
-      // Find the current menu (if any)
-      const currentMenu = menus.find(menu => menu.active);
+      // Only add restaurant_id if it's available
+      if (restaurantId) {
+        params.restaurant_id = restaurantId;
+      }
+      
+      const activeMenus = await menusApi.getAll(params);
+      
+      // Get the current active menu
+      const currentMenu = activeMenus.length > 0 ? activeMenus[0] : null;
       const currentMenuId = currentMenu ? currentMenu.id : null;
       
-      set({ menus, currentMenuId, loading: false });
+      // Set the active menu in the store
+      set({ menus: activeMenus, currentMenuId, loading: false });
+      
+      console.debug('[MenuStore] Fetched active menu:', currentMenuId);
     } catch (error) {
       const errorMessage = handleApiError(error);
       set({ error: errorMessage, loading: false });
+      console.error('[MenuStore] Error fetching active menu:', error);
     }
   },
 
@@ -282,7 +303,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
           // Special handling for arrays
           if (Array.isArray(value)) {
             // For arrays like available_days, append each value individually
-            value.forEach((item, index) => {
+            value.forEach(item => {
               formData.append(`menu_item[${key}][]`, String(item));
             });
           } else {
@@ -332,7 +353,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
           // Special handling for arrays
           if (Array.isArray(value)) {
             // For arrays like available_days, append each value individually
-            value.forEach((item, index) => {
+            value.forEach(item => {
               formData.append(`menu_item[${key}][]`, String(item));
             });
           } else {
@@ -571,6 +592,27 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       websocketService.subscribe({
         channel: 'MenuItemsChannel',
         params: { restaurant_id: restaurantId },
+        connected: () => {
+          console.debug('[MenuStore] WebSocket connected to menu items channel');
+          set({ websocketConnected: true });
+          
+          // Stop polling when WebSocket is connected
+          get().stopInventoryPolling();
+        },
+        disconnected: () => {
+          console.debug('[MenuStore] WebSocket disconnected from menu items channel');
+          set({ websocketConnected: false });
+          
+          // Start polling as fallback when WebSocket disconnects
+          get().startInventoryPollingFallback();
+        },
+        rejected: () => {
+          console.debug('[MenuStore] WebSocket connection rejected');
+          set({ websocketConnected: false });
+          
+          // Start polling as fallback when WebSocket connection is rejected
+          get().startInventoryPollingFallback();
+        },
         received: (data) => {
           console.debug('[MenuStore] Received menu items update via WebSocket', data.type);
           // Handle menu item updates
@@ -602,38 +644,6 @@ export const useMenuStore = create<MenuState>((set, get) => ({
             }));
             console.debug(`[MenuStore] Removed menu item ${deletedItemId} via WebSocket`);
           }
-        },
-        connected: () => {
-          console.debug('[MenuStore] Connected to menu items channel');
-          set({ websocketConnected: true });
-          
-          // Ensure polling is stopped when WebSocket is connected
-          if (get().inventoryPollingInterval !== null) {
-            console.debug('[MenuStore] Stopping inventory polling after WebSocket connection');
-            get().stopInventoryPolling();
-          }
-          
-          // Double-check that polling is stopped after connection
-          setTimeout(() => {
-            if (get().inventoryPollingInterval !== null) {
-              console.debug('[MenuStore] Stopping lingering inventory polling after WebSocket connection');
-              get().stopInventoryPolling();
-            }
-          }, 1000);
-        },
-        disconnected: () => {
-          console.debug('[MenuStore] Disconnected from menu items channel');
-          set({ websocketConnected: false });
-          
-          // Try to reconnect before falling back to polling
-          console.debug('[MenuStore] Attempting to reconnect WebSocket before falling back to polling');
-          setTimeout(() => {
-            // Check if we're still disconnected before starting polling
-            if (!get().websocketConnected && get().inventoryPollingInterval === null) {
-              console.debug('[MenuStore] WebSocket reconnection failed, falling back to polling');
-              get().startInventoryPollingFallback();
-            }
-          }, 3000);
         }
       });
     } catch (error) {
@@ -653,6 +663,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
   },
   
   // Fallback to traditional polling if WebSockets aren't available
+  // Uses PollingManager instead of direct setInterval calls
   startInventoryPollingFallback: (menuItemId?: number | string) => {
     console.debug('[MenuStore] Considering fallback to inventory polling');
     
@@ -671,7 +682,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
           } else {
             console.debug('[MenuStore] WebSocket connection attempt failed, proceeding with polling');
             // Continue with polling setup below if the WebSocket didn't connect
-            setupPolling();
+            setupPollingWithManager();
           }
         }, 2000); // Wait 2 seconds for WebSocket to connect
         
@@ -686,7 +697,8 @@ export const useMenuStore = create<MenuState>((set, get) => ({
     }
     
     // Setup polling function that will be called if WebSocket fails
-    function setupPolling() {
+    // Uses PollingManager instead of direct setInterval
+    function setupPollingWithManager() {
       // Double-check WebSocket status before setting up polling
       if (get().websocketConnected) {
         console.debug('[MenuStore] WebSocket is now connected, not starting polling');
@@ -694,16 +706,16 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       }
       
       // Check if polling is already active
-      if (get().inventoryPollingInterval !== null) {
-        console.debug('[MenuStore] Polling already active, not starting another interval');
+      if (get().inventoryPolling) {
+        console.debug('[MenuStore] Polling already active, not starting another poller');
         return;
       }
       
       // Set polling flag to true
       set({ inventoryPolling: true });
       
-      // Start a new polling interval
-      const intervalId = window.setInterval(async () => {
+      // Define the polling handler function
+      const pollingHandler = async () => {
         // Double-check WebSocket status before each poll
         if (get().websocketConnected) {
           console.debug('[MenuStore] WebSocket is now connected, stopping polling');
@@ -717,8 +729,14 @@ export const useMenuStore = create<MenuState>((set, get) => ({
         if (menuItemId) {
           await get().getMenuItemById(menuItemId);
         } else {
-          // Otherwise refresh all menu items
-          await get().fetchAllMenuItemsForAdmin();
+          // Otherwise refresh all menu items - use silent mode to prevent loading indicators
+          try {
+            // Use the optimized backend filtering with silent mode
+            const params = addRestaurantIdToParams({ view_type: 'admin', silent: true });
+            await menuItemsApi.getAll(params);
+          } catch (error) {
+            console.error('[MenuStore] Error during silent polling:', error);
+          }
         }
         
         // Check WebSocket status after polling
@@ -732,15 +750,27 @@ export const useMenuStore = create<MenuState>((set, get) => ({
           console.debug('[MenuStore] Attempting to re-establish WebSocket connection during polling cycle');
           get().startMenuItemsWebSocket();
         }
-      }, 10000); // Poll every 10 seconds
+      };
       
-      // Store the interval ID so we can clear it later
-      set({ inventoryPollingInterval: intervalId });
+      // Use the PollingManager to handle polling instead of direct setInterval
+      // This will automatically handle WebSocket status and prevent duplicate polling
+      const pollingId = pollingManager.startPolling(
+        PollingResourceType.MENU_ITEMS, // Resource type
+        pollingHandler, // Handler function
+        {
+          interval: 30000, // Poll every 30 seconds instead of 10 to reduce server load
+          silent: true // Use silent mode to prevent loading indicators
+        }
+      );
+      
+      // Store the polling ID as a string in the inventoryPollingInterval field
+      // We're repurposing this field to store the polling ID instead of the interval ID
+      set({ inventoryPollingInterval: pollingId as unknown as number });
     }
     
     // Call setupPolling immediately if we didn't try WebSocket connection
     if (!get().websocketConnected) {
-      setupPolling();
+      setupPollingWithManager();
     }
   },
   
@@ -837,10 +867,17 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       websocketConnected
     });
     
-    // Clear any polling interval
+    // Check if we're using the PollingManager (string ID) or legacy interval (number)
     if (inventoryPollingInterval !== null) {
-      console.debug('[MenuStore] Clearing inventory polling interval');
-      window.clearInterval(inventoryPollingInterval);
+      if (typeof inventoryPollingInterval === 'string') {
+        // Use PollingManager to stop polling
+        console.debug('[MenuStore] Stopping polling via PollingManager');
+        pollingManager.stopPolling(inventoryPollingInterval);
+      } else {
+        // Legacy cleanup for any direct intervals
+        console.debug('[MenuStore] Clearing inventory polling interval');
+        window.clearInterval(inventoryPollingInterval);
+      }
       
       set({
         inventoryPollingInterval: null,
@@ -854,11 +891,140 @@ export const useMenuStore = create<MenuState>((set, get) => ({
     // and we're not connected to the WebSocket
     if (!websocketConnected) {
       try {
-        console.debug('[MenuStore] Unsubscribing from inventory channel');
-        websocketService.unsubscribe('InventoryChannel');
+        // Get the current restaurant ID for tenant isolation
+        const restaurantId = getCurrentRestaurantId();
+        if (restaurantId) {
+          const channelName = `menu_items:${restaurantId}`;
+          console.debug(`[MenuStore] Unsubscribing from WebSocket channel: ${channelName}`);
+          websocketService.unsubscribe(channelName);
+        } else {
+          console.debug('[MenuStore] Unsubscribing from inventory channel');
+          websocketService.unsubscribe('InventoryChannel');
+        }
       } catch (error) {
-        console.error('[MenuStore] Error unsubscribing from inventory channel:', error);
+        console.error('[MenuStore] Error unsubscribing from WebSocket channel:', error);
       }
+    }
+  },
+
+  // New optimized methods for backend filtering
+  fetchMenuItemsWithFilters: async (params: MenuItemFilterParams) => {
+    try {
+      // Ensure restaurant_id is included in params for tenant isolation
+      const enhancedParams = addRestaurantIdToParams(params);
+      
+      // Log the request for debugging
+      console.debug('[menuStore] Fetching menu items with filters:', enhancedParams);
+      
+      // Make the API request with the enhanced params
+      const response = await apiClient.get('/menu_items', { params: enhancedParams });
+      
+      // Process the items to ensure image property is set
+      const processedItems = response.data.map((item: any) => ({
+        ...item,
+        image: item.image_url || '/placeholder-food.png'
+      }));
+      
+      return processedItems;
+    } catch (error) {
+      console.error('[menuStore] Error fetching filtered menu items:', error);
+      const errorMessage = handleApiError(error);
+      set({ error: errorMessage });
+      return [];
+    }
+  },
+  
+  fetchFeaturedItems: async (restaurantId?: number) => {
+    try {
+      // Create filter params for featured items
+      const params: MenuItemFilterParams = {
+        featured: true,
+        hidden: false, // Only show visible items
+        view_type: 'list', // Optimize response size
+        restaurant_id: restaurantId || getCurrentRestaurantId() || undefined
+      };
+      
+      // Use the base filtering method
+      const featuredItems = await get().fetchMenuItemsWithFilters(params);
+      
+      // Update the store with the featured items
+      // Note: We don't update the full menuItems array to avoid overwriting other items
+      return featuredItems;
+    } catch (error) {
+      console.error('[menuStore] Error fetching featured items:', error);
+      const errorMessage = handleApiError(error);
+      set({ error: errorMessage });
+      return [];
+    }
+  },
+  
+  fetchVisibleMenuItems: async (categoryId?: number, restaurantId?: number, featured?: boolean, seasonal?: boolean) => {
+    try {
+      // Get the current day of week (0-6, where 0 is Sunday)
+      const currentDayOfWeek = new Date().getDay();
+      
+      // Create filter params for visible menu items
+      const params: MenuItemFilterParams = {
+        hidden: false, // Only show visible items
+        view_type: 'list', // Optimize response size
+        available_on_day: currentDayOfWeek.toString(), // Convert to string for API compatibility
+        restaurant_id: restaurantId || getCurrentRestaurantId() || undefined
+      };
+      
+      // Add category filter if provided
+      if (categoryId) {
+        params.category_id = categoryId;
+      }
+      
+      // Add featured/seasonal filters if provided
+      if (featured) {
+        params.featured = true;
+      }
+      if (seasonal) {
+        params.seasonal = true;
+      }
+      
+      console.debug('[menuStore] Fetching visible menu items with params:', params);
+      
+      // Use the base filtering method
+      const visibleItems = await get().fetchMenuItemsWithFilters(params);
+      
+      // Update the store with the visible items
+      set({ menuItems: visibleItems });
+      
+      return visibleItems;
+    } catch (error) {
+      console.error('[menuStore] Error fetching visible menu items:', error);
+      const errorMessage = handleApiError(error);
+      set({ error: errorMessage });
+      return [];
+    }
+  },
+  
+  fetchMenuItemsForAdmin: async (filters: MenuItemFilterParams) => {
+    try {
+      // Ensure admin view type is set
+      const adminFilters: MenuItemFilterParams = {
+        ...filters,
+        view_type: 'admin', // Always use admin view for this method
+        include_stock: true // Always include stock information
+      };
+      
+      // Ensure restaurant_id is included
+      const enhancedParams = addRestaurantIdToParams(adminFilters);
+      
+      // Use the base filtering method
+      const adminItems = await get().fetchMenuItemsWithFilters(enhancedParams);
+      
+      // Update the store with the admin items
+      set({ menuItems: adminItems });
+      
+      return adminItems;
+    } catch (error) {
+      console.error('[menuStore] Error fetching admin menu items:', error);
+      const errorMessage = handleApiError(error);
+      set({ error: errorMessage });
+      return [];
     }
   }
 }));

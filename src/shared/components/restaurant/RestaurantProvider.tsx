@@ -206,7 +206,7 @@ export function RestaurantProvider({ children }: RestaurantProviderProps) {
     };
   }, [restaurant, pollingActive]); // Remove fetchRestaurant from dependencies to prevent unnecessary re-renders
   
-  // Fallback polling functions
+  // Fallback polling functions using PollingManager instead of direct intervals
   const startPollingFallback = () => {
     // Don't start polling if it's already active or if WebSocket is connected and subscribed
     if (pollingActive || (websocketService.isConnected() && hasSubscribedRef.current)) {
@@ -214,18 +214,17 @@ export function RestaurantProvider({ children }: RestaurantProviderProps) {
       return;
     }
     
-    console.debug('Starting restaurant polling fallback');
+    console.debug('Starting restaurant polling fallback via PollingManager');
     setPollingActive(true);
     
-    // Set up an interval to refresh restaurant data every 30 seconds
+    // Clean up any existing interval (shouldn't be necessary but just to be safe)
     if (pollingIntervalRef.current !== null) {
       window.clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
     }
     
-    pollingIntervalRef.current = window.setInterval(() => {
-      console.debug('Polling: fetching restaurant data');
-      fetchRestaurant();
-    }, 30000);
+    // We're not setting up a direct interval anymore - PollingManager will handle this
+    // The actual polling will be managed by the WebSocketManager and PollingManager
   };
   
   const stopPollingFallback = () => {
@@ -235,11 +234,8 @@ export function RestaurantProvider({ children }: RestaurantProviderProps) {
     }
     
     console.debug('Stopping restaurant polling fallback');
-    if (pollingIntervalRef.current !== null) {
-      window.clearInterval(pollingIntervalRef.current);
-      pollingIntervalRef.current = null;
-    }
-    
+    // No need to clear intervals as we're using PollingManager
+    // Just update our state
     setPollingActive(false);
   };
   

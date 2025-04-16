@@ -1,5 +1,5 @@
 // src/shared/components/ui/OptimizedImage.tsx
-import React from 'react';
+import React, { memo } from 'react';
 import ResponsiveImage from './ResponsiveImage';
 import { ImgixImageOptions } from '../../utils/imageUtils';
 
@@ -16,13 +16,16 @@ interface OptimizedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElem
   priority?: boolean;
   fetchPriority?: 'high' | 'low' | 'auto';
   fallbackSrc?: string;
+  // For LCP optimization
+  isLCP?: boolean;
+  preload?: boolean;
 }
 
 /**
  * OptimizedImage component that uses Imgix and responsive images
  * for optimal image loading and performance
  */
-const OptimizedImage: React.FC<OptimizedImageProps> = ({
+const OptimizedImage: React.FC<OptimizedImageProps> = memo(({
   src: sourceUrl,
   fallbackSrc = '/placeholder-food.png',
   alt = '',
@@ -32,6 +35,8 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   context,
   widths: explicitWidths,
   sizes: explicitSizes,
+  isLCP = false,
+  preload = false,
   ...imgProps // Pass down className, style etc.
 }) => {
   // Determine responsive widths based on context or explicit prop
@@ -40,14 +45,21 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     responsiveWidths = explicitWidths;
   } else if (context) {
     switch (context) {
-      case 'menuItem': responsiveWidths = [200, 400, 600]; break;
-      case 'hero': responsiveWidths = [768, 1280, 1920, 2400]; break; // Added larger size
-      case 'cart': responsiveWidths = [100, 200]; break; // Simplified cart
-      case 'featured': responsiveWidths = [300, 600, 900, 1200]; break;
-      default: responsiveWidths = [400, 800, 1200]; // Default set
+      // Optimize menu item images - reduce sizes for better performance
+      case 'menuItem': responsiveWidths = [160, 320, 480]; break;
+      case 'hero': responsiveWidths = [768, 1280, 1920]; break;
+      case 'cart': responsiveWidths = [80, 160]; break; // Further reduced cart images
+      case 'featured': responsiveWidths = [240, 480, 720]; break; // Reduced featured sizes
+      default: responsiveWidths = [320, 640, 960]; // Reduced default sizes
     }
   } else {
-    responsiveWidths = [400, 800, 1200]; // Fallback default
+    responsiveWidths = [320, 640, 960]; // Reduced fallback default
+  }
+  
+  // If this is an LCP image, prioritize it
+  if (isLCP) {
+    priority = true;
+    fetchPriority = 'high';
   }
   
   // Determine sizes attribute based on context or explicit prop
@@ -56,14 +68,15 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     sizes = explicitSizes;
   } else if (context) {
     switch (context) {
-      case 'menuItem': sizes = '(max-width: 500px) 90vw, (max-width: 768px) 45vw, 300px'; break; // Example sizes
+      // More precise sizing for menu items to avoid loading unnecessarily large images
+      case 'menuItem': sizes = '(max-width: 500px) 90vw, (max-width: 768px) 45vw, (max-width: 1024px) 30vw, 25vw'; break;
       case 'hero': sizes = '100vw'; break; // Hero usually full width
-      case 'cart': sizes = '100px'; break; // Fixed small size
-      case 'featured': sizes = '(max-width: 768px) 90vw, 600px'; break; // Example sizes
-      default: sizes = '(max-width: 768px) 90vw, 50vw'; // Default sizes
+      case 'cart': sizes = '80px'; break; // Reduced fixed size
+      case 'featured': sizes = '(max-width: 640px) 90vw, (max-width: 1024px) 50vw, 33vw'; break;
+      default: sizes = '(max-width: 640px) 90vw, (max-width: 1024px) 50vw, 33vw'; // More precise default
     }
   } else {
-    sizes = '(max-width: 768px) 90vw, 50vw'; // Fallback default sizes
+    sizes = '(max-width: 640px) 90vw, (max-width: 1024px) 50vw, 33vw'; // More precise fallback
   }
   
   // Special case for 'cart' context where fixed size might be better than responsive
@@ -86,8 +99,8 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
           const imgixOptions = {
             auto: 'format,compress',
             fit: 'clip', // Use clip instead of crop to preserve the entire image
-            quality: 85,
-            dpr: 2,
+            quality: 75, // Reduced quality for cart images
+            dpr: window.devicePixelRatio || 2,
             ...explicitImgixOptions
           };
           
@@ -98,8 +111,8 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
           });
           
           // Set width and height based on the display size (doubled for retina)
-          params.append('w', '200');
-          params.append('h', '200');
+          params.append('w', '160'); // Reduced from 200
+          params.append('h', '160'); // Reduced from 200
           
           // Construct the final Imgix URL
           optimizedUrl = `https://${imgixDomain}${path}?${params.toString()}`;
@@ -114,10 +127,11 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
       <img
         src={optimizedUrl}
         alt={alt}
-        width={imgProps.width || 100} // Use provided width or default
-        height={imgProps.height || 100} // Use provided height or default
-        loading="eager" // Load cart images eagerly since they're important on mobile
-        {...(fetchPriority ? { fetchpriority: fetchPriority } : { fetchpriority: 'high' })} // Prioritize cart images
+        width={imgProps.width || 80} // Reduced from 100
+        height={imgProps.height || 80} // Reduced from 100
+        loading="lazy" // Changed to lazy for cart images
+        decoding="async"
+        {...(fetchPriority ? { fetchpriority: fetchPriority } : {})} // Only add if specified
         onError={(e) => { if ((e.target as HTMLImageElement).src !== fallbackSrc) { (e.target as HTMLImageElement).src = fallbackSrc; }}}
         {...imgProps}
       />
@@ -128,7 +142,8 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   const baseImgixOptions: Omit<ImgixImageOptions, 'width' | 'height'> = {
     auto: 'format,compress', // Default optimization
     fit: 'cover',             // Default fit
-    quality: 75,              // Default quality
+    quality: context === 'featured' || isLCP ? 80 : 70, // Higher quality for featured/LCP images, lower for others
+    dpr: window.devicePixelRatio || 2, // Respect device pixel ratio
     ...explicitImgixOptions,  // Allow user overrides
   };
 
@@ -143,9 +158,11 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
       fallbackSrc={fallbackSrc}
       priority={priority}
       fetchPriority={fetchPriority}
+      preload={preload}
+      isLCP={isLCP}
       {...imgProps} // Pass down className, style etc.
     />
   );
-};
+});
 
 export default OptimizedImage;

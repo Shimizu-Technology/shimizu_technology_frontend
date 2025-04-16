@@ -1,5 +1,5 @@
 // src/shared/components/ui/ResponsiveImage.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { getImgixImageUrl, ImgixImageOptions } from '../../utils/imageUtils';
 
 interface ResponsiveImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src' | 'srcSet' | 'sizes'> {
@@ -12,13 +12,15 @@ interface ResponsiveImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageEle
   fallbackSrc?: string; // Local path for placeholder
   priority?: boolean; // For loading="eager" vs "lazy"
   fetchPriority?: 'high' | 'low' | 'auto'; // Browser resource loading priority
+  isLCP?: boolean; // Is this a Largest Contentful Paint image
+  preload?: boolean; // Should this image be preloaded in the head
 }
 
 /**
  * ResponsiveImage component that uses srcset and sizes attributes for optimal image loading
  * Leverages Imgix for on-the-fly image transformations
  */
-const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
+const ResponsiveImage: React.FC<ResponsiveImageProps> = memo(({
   src: sourceUrl,
   widths,
   sizes,
@@ -27,10 +29,15 @@ const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
   fallbackSrc = '/placeholder-food.png', // Use a valid local placeholder
   priority = false,
   fetchPriority,
+  isLCP = false,
+  preload = false,
   ...imgProps // Pass other img attributes like className, style, etc.
 }) => {
-  // Set loading attribute based on priority
-  const loadingAttribute = priority ? 'eager' : 'lazy';
+  // Set loading attribute based on priority or LCP status
+  const loadingAttribute = priority || isLCP ? 'eager' : 'lazy';
+  
+  // If this is an LCP image, we want to make sure it loads with high priority
+  const effectiveFetchPriority = isLCP ? 'high' : fetchPriority;
 
   // Handle missing source URL
   if (!sourceUrl || !widths || widths.length === 0) {
@@ -56,6 +63,8 @@ const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
       const url = getImgixImageUrl(sourceUrl, {
         ...imgixOptions,
         width: width,
+        // Ensure fit is a valid value from the enum
+        fit: (imgixOptions?.fit as ImgixImageOptions['fit']) || 'cover',
       });
       // Format: url widthDescriptor (e.g., "image.jpg?w=400 400w")
       return url ? `${url} ${width}w` : '';
@@ -67,7 +76,26 @@ const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
   const defaultSrc = getImgixImageUrl(sourceUrl, {
     ...imgixOptions,
     width: sortedWidths[0], // Use the smallest width
+    // Ensure fit is a valid value from the enum
+    fit: (imgixOptions?.fit as ImgixImageOptions['fit']) || 'cover',
   });
+  
+  // Preload the image if specified
+  useEffect(() => {
+    if (preload && defaultSrc && srcset) {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = defaultSrc;
+      link.setAttribute('imagesrcset', srcset);
+      link.setAttribute('imagesizes', sizes);
+      document.head.appendChild(link);
+      
+      return () => {
+        document.head.removeChild(link);
+      };
+    }
+  }, [preload, defaultSrc, srcset, sizes]);
 
   // If essential URLs couldn't be generated, fallback
   if (!srcset || !defaultSrc) {
@@ -91,13 +119,15 @@ const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
     ...imgixOptions,
     width: 20,
     blur: 15,
-    quality: 30
+    quality: 30,
+    // Ensure fit is a valid value from the enum
+    fit: (imgixOptions?.fit as ImgixImageOptions['fit']) || 'cover',
   });
 
   return (
     <div className="relative overflow-hidden" style={{ width: '100%', height: '100%' }}>
-      {/* Tiny blurred image that loads immediately */}
-      {placeholderSrc && (
+      {/* Only show placeholder for non-LCP images to avoid competing with main image */}
+      {placeholderSrc && !isLCP && (
         <img
           src={placeholderSrc}
           alt=""
@@ -118,13 +148,14 @@ const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
         sizes={sizes}     // How image relates to viewport
         alt={alt}
         loading={loadingAttribute} // Handle lazy/eager loading
+        decoding={isLCP ? 'sync' : 'async'} // Use sync decoding for LCP images
         className={`${imgProps.className || ''} relative z-10`}
         style={{
           ...imgProps.style,
-          opacity: isLoaded ? 1 : 0,
-          transition: 'opacity 0.4s ease-in-out'
+          opacity: isLCP ? 1 : (isLoaded ? 1 : 0), // Always show LCP images immediately
+          transition: isLCP ? 'none' : 'opacity 0.4s ease-in-out'
         }}
-        {...(fetchPriority ? { fetchpriority: fetchPriority } : {})} // Add fetchpriority as a custom attribute
+        {...(effectiveFetchPriority ? { fetchpriority: effectiveFetchPriority } : {})} // Add fetchpriority as a custom attribute
         onLoad={() => setIsLoaded(true)}
         // Simple onError fallback to placeholder
         onError={(e) => {
@@ -143,6 +174,6 @@ const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
       />
     </div>
   );
-};
+});
 
 export default ResponsiveImage;

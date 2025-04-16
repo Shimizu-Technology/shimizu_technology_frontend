@@ -9,7 +9,7 @@ import {
 
 /**
  * This is an example component demonstrating how to use PostHog analytics
- * in the Hafaloha application. This component is for demonstration purposes only
+ * in this application. This component is for demonstration purposes only
  * and is not meant to be used in production.
  */
 const AnalyticsExample: React.FC = () => {

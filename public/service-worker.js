@@ -1,7 +1,7 @@
-// Service Worker for Hafaloha Web App
+// Service Worker for Shimizu Technology Web App
 // Handles push notifications and offline functionality
 
-const CACHE_NAME = 'hafaloha-cache-v1';
+const CACHE_NAME = 'shimizu-technology-cache-v1';
 const OFFLINE_URL = '/offline.html';
 const VERSION = '1.0.1'; // Increment this when you update the service worker
 
@@ -174,17 +174,17 @@ self.addEventListener('push', event => {
     console.error('[Service Worker] Error parsing push data:', error);
     data = {
       title: 'New Notification',
-      body: 'Something new happened in Hafaloha.',
+      body: 'Something new happened in Shimizu Technology.',
       icon: '/icons/icon-192.png'
     };
   }
   
-  const title = data.title || 'Hafaloha';
+  const title = data.title || 'Shimizu Technology';
   const options = {
-    body: data.body || 'New notification from Hafaloha',
+    body: data.body || 'New notification from Shimizu Technology',
     icon: data.icon || '/icons/icon-192.png',
     badge: data.badge || '/icons/badge-96.png',
-    tag: data.tag || 'hafaloha-notification',
+    tag: data.tag || 'shimizu-technology-notification',
     data: data.data || {},
     actions: data.actions || [],
     vibrate: [100, 50, 100],

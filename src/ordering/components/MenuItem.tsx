@@ -1,6 +1,6 @@
 // src/ordering/components/MenuItem.tsx
 
-import { useState } from 'react';
+import { useState, memo, Fragment } from 'react';
 import { Plus, AlertCircle } from 'lucide-react';
 import { useOrderStore } from '../store/orderStore';
 import { CustomizationModal } from './CustomizationModal';
@@ -14,33 +14,62 @@ interface LazyMenuItemImageProps {
   image: string | undefined | null;
   name: string;
   featured?: boolean;
+  isFirstVisible?: boolean; // Flag to identify the first visible item (potential LCP)
+  index?: number; // Item index for prioritization
 }
 
-function LazyMenuItemImage({ image, name, featured }: LazyMenuItemImageProps) {
+const LazyMenuItemImage = memo(function LazyMenuItemImage({ 
+  image, 
+  name, 
+  featured, 
+  isFirstVisible = false,
+  index = 0 
+}: LazyMenuItemImageProps) {
   const [ref, isVisible] = useIntersectionObserver({
-    rootMargin: '200px', // Load images 200px before they enter the viewport
-    triggerOnce: true // Only trigger once
+    rootMargin: '300px', // Increased from 200px to load images earlier
+    triggerOnce: true, // Only trigger once
+    threshold: 0.1 // Trigger when 10% of the element is visible
   });
 
+  // Determine if this image is critical for LCP
+  // First 6 items or featured items are considered important
+  const isImportantForLCP = isFirstVisible || featured || index < 6;
+  
+  // Calculate optimal dimensions
+  const imageWidth = 320; // Reduced from 400
+  const imageHeight = 160; // Reduced from 192
+
   return (
-    <div ref={ref as React.RefObject<HTMLDivElement>} className="w-full h-48 bg-gray-100">
+    <div 
+      ref={ref as React.RefObject<HTMLDivElement>} 
+      className="w-full h-48 bg-gray-100 overflow-hidden"
+      style={{ contain: 'paint layout' }} // Add content-visibility optimization
+    >
       {isVisible ? (
         <OptimizedImage
           src={image}
           alt={name}
           className="w-full h-full object-cover"
-          width="400"
-          height="192"
-          priority={featured} // Priority loading for featured items
-          fetchPriority={featured ? 'high' : 'auto'} // High priority for featured items
+          width={imageWidth.toString()}
+          height={imageHeight.toString()}
+          priority={isImportantForLCP} // Priority loading for important items
+          fetchPriority={isImportantForLCP ? 'high' : 'auto'} // High priority for important items
           context={featured ? 'featured' : 'menuItem'}
+          isLCP={isFirstVisible} // Mark first visible item as LCP
+          preload={isFirstVisible || featured} // Preload first visible and featured items
         />
       ) : (
-        <div className="w-full h-full bg-gray-200 animate-pulse" />
+        <div 
+          className="w-full h-full bg-gray-200 animate-pulse" 
+          style={{ 
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}
+        />
       )}
     </div>
   );
-}
+});
 
 // Helper function to format available days for display
 function formatAvailableDays(days?: (number | string)[]): string {
@@ -75,12 +104,12 @@ interface MenuItemProps {
   index?: number;
 }
 
-export function MenuItem({ item }: MenuItemProps) {
+export const MenuItem = memo(function MenuItem({ item, index = 0 }: MenuItemProps) {
   const addToCart = useOrderStore((state) => state.addToCart);
 
   const [showCustomization, setShowCustomization] = useState(false);
   const [buttonClicked, setButtonClicked] = useState(false);
-
+  
   // Check status using utility function for consistency
   const stockStatus = deriveStockStatus(item);
   const isOutOfStock = stockStatus === 'out_of_stock';
@@ -88,7 +117,7 @@ export function MenuItem({ item }: MenuItemProps) {
   // Calculate available quantity (used in low stock badge display and display it in the UI)
   const availableQuantity = calculateAvailableQuantity(item);
   
-  // Check if the item has required option groups with all options unavailable
+  // Check if this item has required option groups with all options unavailable
   const hasUnavailableRequiredOptions = item.has_required_unavailable_options === true;
 
   function handleQuickAdd() {
@@ -98,9 +127,10 @@ export function MenuItem({ item }: MenuItemProps) {
     }
     
     if (hasUnavailableRequiredOptions) {
-      alert('Sorry, this item is currently unavailable due to required customization options being out of stock.');
+      alert('Sorry, this item has required options that are currently unavailable.');
       return;
     }
+    
     // For quick add, quantity=1 and no customizations
     addToCart(
       {
@@ -123,7 +153,7 @@ export function MenuItem({ item }: MenuItemProps) {
     }
     
     if (hasUnavailableRequiredOptions) {
-      alert('Sorry, this item is currently unavailable due to required customization options being out of stock.');
+      alert('Sorry, this item has required options that are currently unavailable.');
       return;
     }
     
@@ -153,7 +183,7 @@ export function MenuItem({ item }: MenuItemProps) {
   }
 
   return (
-    <>
+    <Fragment>
       <div
         className={`bg-white rounded-lg shadow-md overflow-hidden flex flex-col min-h-[380px] animate-fadeIn
           ${isOutOfStock || hasUnavailableRequiredOptions ? 'opacity-70' : ''}
@@ -163,6 +193,8 @@ export function MenuItem({ item }: MenuItemProps) {
           image={item.image}
           name={item.name}
           featured={item.featured}
+          isFirstVisible={index === 0} // Mark first item as potential LCP element
+          index={index}
         />
 
         <div className="p-4 flex flex-col flex-1">
@@ -275,6 +307,8 @@ export function MenuItem({ item }: MenuItemProps) {
           onClose={() => setShowCustomization(false)}
         />
       )}
-    </>
+    </Fragment>
   );
-}
+});
+
+export default MenuItem;
