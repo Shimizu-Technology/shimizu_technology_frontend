@@ -24,7 +24,7 @@ import { MenuItem as MenuItemCard } from './components/MenuItem';
 import { useSiteSettingsStore } from './store/siteSettingsStore'; // <-- IMPORTANT
 import { useRestaurantStore } from '../shared/store/restaurantStore';
 import { validateRestaurantContext } from '../shared/utils/tenantUtils';
-import { MenuItem } from './types/menu';
+import type { MenuItem, MenuItemFilterParams } from './types/menu';
 
 import { ProtectedRoute, AnonymousRoute, PhoneVerificationRoute } from '../shared';
 
@@ -94,11 +94,34 @@ export default function OnlineOrderingApp() {
     // Initialize WebSocket connection as soon as the app loads
     if (validateRestaurantContext(restaurant)) {
       console.debug('OnlineOrderingApp: Initializing WebSocket connection for menu items');
-      const { startMenuItemsWebSocket } = useMenuStore.getState();
-      startMenuItemsWebSocket();
+      const { startMenuItemsWebSocket, stopInventoryPolling } = useMenuStore.getState();
+      
+      // Ensure any existing polling is stopped before starting WebSocket
+      stopInventoryPolling();
+      
+      // Initialize WebSocketManager with restaurant ID for proper tenant isolation
+      import('../shared/services/WebSocketManager').then(({ default: webSocketManager }) => {
+        if (restaurant && restaurant.id) {
+          webSocketManager.initialize(restaurant.id.toString());
+          startMenuItemsWebSocket();
+        }
+      });
       
       // Prefetch all menu items data when the app initializes
       prefetchMenuData();
+      
+      // Double-check that polling is stopped after WebSocket connection
+      setTimeout(() => {
+        if (useMenuStore.getState().inventoryPollingInterval !== null) {
+          console.debug('OnlineOrderingApp: Stopping lingering inventory polling after WebSocket connection');
+          stopInventoryPolling();
+        }
+      }, 1000);
+      
+      return () => {
+        console.debug('OnlineOrderingApp: Cleaning up WebSocket connection');
+        stopInventoryPolling();
+      };
     }
   }, [restaurant]);
   
@@ -113,7 +136,11 @@ export default function OnlineOrderingApp() {
       console.debug('OnlineOrderingApp: Prefetching menu data at app initialization');
       
       // Get menu store methods
-      const { fetchVisibleMenuItems, fetchMenus } = useMenuStore.getState();
+      const { 
+        fetchVisibleMenuItems, 
+        fetchMenus, 
+        fetchMenuItemsForAdmin 
+      } = useMenuStore.getState();
       const { fetchCategoriesForMenu } = useCategoryStore.getState();
       
       // 1. Fetch menus first to get the current menu ID
@@ -126,20 +153,49 @@ export default function OnlineOrderingApp() {
         // 3. Fetch categories for the current menu
         await fetchCategoriesForMenu(currentMenuId, restaurant?.id);
         
-        // 4. Prefetch "All Items" view (no category filter)
-        console.debug('OnlineOrderingApp: Prefetching "All Items" view');
+        // 4. Prefetch data for customer-facing menu page
+        console.debug('OnlineOrderingApp: Prefetching customer-facing menu data');
+        
+        // 4a. Prefetch "All Items" view (no category filter)
         await fetchVisibleMenuItems(undefined, restaurant?.id, false, false);
         
-        // 5. Get categories after they've been fetched
+        // 4b. Get categories after they've been fetched
         const { categories } = useCategoryStore.getState();
-        const menuCategories = categories.filter((cat: { menu_id: number; id: number; name: string }) => cat.menu_id === currentMenuId);
+        const menuCategories = categories.filter((cat: { menu_id: number; id: number; name: string }) => 
+          cat.menu_id === currentMenuId
+        );
         
-        // 6. Prefetch first few categories (limit to 3 to avoid too many requests)
+        // 4c. Prefetch first few categories (limit to 3 to avoid too many requests)
         const categoriesToPrefetch = menuCategories.slice(0, 3);
         
         for (const category of categoriesToPrefetch) {
-          console.debug(`OnlineOrderingApp: Prefetching data for category ${category.name}`);
+          console.debug(`OnlineOrderingApp: Prefetching customer data for category ${category.name}`);
           await fetchVisibleMenuItems(category.id, restaurant?.id, false, false);
+        }
+        
+        // 5. Prefetch data for admin components (MenuManager and StaffOrderModal)
+        console.debug('OnlineOrderingApp: Prefetching admin menu data');
+        
+        // 5a. Prefetch admin "All Items" view with stock information
+        const adminFilterParams: MenuItemFilterParams = {
+          view_type: 'admin' as 'admin',
+          include_stock: true,
+          restaurant_id: restaurant?.id,
+          menu_id: currentMenuId
+        };
+        
+        await fetchMenuItemsForAdmin(adminFilterParams);
+        
+        // 5b. Prefetch first category for admin view
+        if (categoriesToPrefetch.length > 0) {
+          const firstCategory = categoriesToPrefetch[0];
+          const adminCategoryParams = {
+            ...adminFilterParams,
+            category_id: firstCategory.id
+          };
+          
+          console.debug(`OnlineOrderingApp: Prefetching admin data for category ${firstCategory.name}`);
+          await fetchMenuItemsForAdmin(adminCategoryParams);
         }
         
         console.debug('OnlineOrderingApp: Menu data prefetching complete');

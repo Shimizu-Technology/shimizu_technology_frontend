@@ -1,9 +1,11 @@
 // src/ordering/componenets/admin/StaffOrderModal.tsx
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, memo } from 'react';
 import toastUtils from '../../../shared/utils/toastUtils';
 import { useMenuStore } from '../../store/menuStore';
 import { useOrderStore } from '../../store/orderStore';
 import { useRestaurantStore } from '../../../shared/store/restaurantStore';
+import OptimizedImage from '../../../shared/components/ui/OptimizedImage';
+import useIntersectionObserver from '../../../shared/hooks/useIntersectionObserver';
 import { useAuthStore } from '../../store/authStore';
 import { MenuItem } from '../../types/menu';
 import { apiClient } from '../../../shared/api/apiClient';
@@ -29,6 +31,48 @@ interface StaffOrderModalProps {
 /** --------------------------------------------------------------------
  * UTILITY FUNCTIONS
  * -------------------------------------------------------------------*/
+
+/** LazyStaffOrderImage component for optimized image loading */
+interface LazyStaffOrderImageProps {
+  image: string | undefined | null;
+  name: string;
+  className?: string;
+}
+
+const LazyStaffOrderImage = memo(function LazyStaffOrderImage({ 
+  image, 
+  name,
+  className = 'w-full h-full object-cover'
+}: LazyStaffOrderImageProps) {
+  const [ref, isVisible] = useIntersectionObserver({
+    rootMargin: '300px', // Increased to load images earlier
+    triggerOnce: true, // Only trigger once
+    threshold: 0.1 // Trigger when 10% of the element is visible
+  });
+
+  return (
+    <div 
+      ref={ref as React.RefObject<HTMLDivElement>} 
+      className="w-full h-full"
+      style={{ contain: 'paint layout' }} // Add content-visibility optimization
+    >
+      {isVisible ? (
+        <OptimizedImage
+          src={image}
+          alt={name}
+          className={className}
+          width="160"
+          height="160"
+          context="menuItem"
+          fallbackSrc="/placeholder-food.png"
+          fetchPriority="high" // Prioritize loading these images
+        />
+      ) : (
+        <div className="w-full h-full bg-gray-200 animate-pulse" />
+      )}
+    </div>
+  );
+});
 
 /** Validate phone e.g. +16711234567 */
 function isValidPhone(phoneStr: string) {
@@ -218,15 +262,11 @@ function MenuItemsPanel({
                         }`}
                     >
                       <div className="flex h-full w-full">
-                        {/* Item image */}
+                        {/* Item image with optimized loading */}
                         <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 overflow-hidden rounded-l-lg">
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                            onError={e => {
-                              (e.target as HTMLImageElement).src = '/placeholder-food.png';
-                            }}
+                          <LazyStaffOrderImage
+                            image={item.image}
+                            name={item.name}
                           />
                         </div>
                         
@@ -1687,31 +1727,94 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
     return rawTotal;
   }, [rawTotal, isStaffOrder, staffMemberId, staffOnDuty]);
 
-  // On mount, fetch menu items
+  // Reference to track loaded data
+  const dataLoadingState = useRef({
+    menuItemsLoaded: false,
+    categoriesLoaded: false,
+    prefetchedCategories: new Set<number>()
+  });
+
+  // On mount, fetch menu items with optimized loading
   useEffect(() => {
-    fetchMenuItems();
+    const { restaurant } = useRestaurantStore.getState();
+    
+    // Optimized menu items loading with tenant validation
+    const loadMenuItems = async () => {
+      // Skip if already loaded (prevents duplicate loading)
+      if (dataLoadingState.current.menuItemsLoaded) {
+        console.debug('[StaffOrderModal] Menu items already loaded, skipping fetch');
+        return;
+      }
+      
+      // Validate restaurant context
+      if (!restaurant || !restaurant.id) {
+        console.error('[StaffOrderModal] Restaurant context missing, cannot fetch menu items');
+        return;
+      }
+      
+      try {
+        console.debug('[StaffOrderModal] Loading menu items');
+        // Use optimized backend filtering with list view for better performance
+        await fetchMenuItems();
+        dataLoadingState.current.menuItemsLoaded = true;
+      } catch (error) {
+        console.error('Error fetching menu items:', error);
+      }
+    };
+    
+    loadMenuItems();
+    
     return () => {
       clearCart();
+      // Reset loading state on unmount
+      dataLoadingState.current = {
+        menuItemsLoaded: false,
+        categoriesLoaded: false,
+        prefetchedCategories: new Set<number>()
+      };
     };
   }, [fetchMenuItems, clearCart]);
 
   // Store all categories from API
   const [allCategories, setAllCategories] = useState<any[]>([]);
   
-  // Load all categories once menuItems is present
+  // Load all categories once menuItems is present with tenant validation
   useEffect(() => {
     async function fetchCats() {
+      // Skip if categories already loaded (prevents duplicate loading)
+      if (dataLoadingState.current.categoriesLoaded) {
+        console.debug('[StaffOrderModal] Categories already loaded, skipping fetch');
+        return;
+      }
+      
+      const { restaurant } = useRestaurantStore.getState();
+      
+      // Validate restaurant context
+      if (!restaurant || !restaurant.id) {
+        console.error('[StaffOrderModal] Restaurant context missing, cannot fetch categories');
+        return;
+      }
+      
       try {
-        // Fetching all categories
-        const res = await apiClient.get('/categories');
+        console.debug('[StaffOrderModal] Loading categories');
+        // Fetching all categories with proper tenant isolation
+        const res = await apiClient.get('/categories', {
+          params: { restaurant_id: restaurant.id }
+        });
         
         // Store all categories in state
         setAllCategories(res.data);
+        dataLoadingState.current.categoriesLoaded = true;
+        
+        // We don't need to prefetch category items here anymore
+        // App-level prefetching in OnlineOrderingApp handles this
+        // This prevents duplicate data loading
       } catch (error) {
         console.error('Error fetching categories:', error);
         setAllCategories([]);
       }
     }
+    
     if (menuItems.length > 0) {
       fetchCats();
     }

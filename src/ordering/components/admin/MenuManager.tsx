@@ -1,6 +1,6 @@
 // src/ordering/components/admin/MenuManager.tsx
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Plus, Edit2, Trash2, X, Save, BookOpen, Package, Eye, EyeOff, Copy } from 'lucide-react';
 import toastUtils from '../../../shared/utils/toastUtils';
 import { useMenuStore } from '../../store/menuStore';
@@ -198,7 +198,11 @@ export function MenuManager({
   // For item-specific polling when editing
   const [editItemPollingActive, setEditItemPollingActive] = useState(false);
 
-  // On mount => fetch items (admin) + categories + menus and start WebSocket connection
+  // Reference to track prefetched categories
+  const prefetchedCategories = useRef<Set<number>>(new Set());
+  
+  // On mount => fetch items (admin) + categories + menus
+  // WebSocket connection is now initialized at the app level in OnlineOrderingApp
   useEffect(() => {
     // Fetch menus first
     fetchMenus();
@@ -248,6 +252,11 @@ export function MenuManager({
         // Use optimized backend filtering instead of frontend filtering
         const items = await fetchMenuItemsForAdmin(filterParams);
         setMenuItems(items);
+        
+        // If we have a category filter, mark it as prefetched
+        if (selectedCategory && typeof selectedCategory === 'number') {
+          prefetchedCategories.current.add(selectedCategory);
+        }
       } catch (error) {
         console.error('Error fetching menu items:', error);
       } finally {
@@ -256,30 +265,6 @@ export function MenuManager({
     };
     
     loadMenuItems();
-    
-    // Start WebSocket connection for real-time menu item updates instead of polling
-    const restaurantId = localStorage.getItem('restaurantId');
-    if (restaurantId) {
-      console.debug(`[MenuManager] Starting WebSocket connection for menu items with restaurant_id: ${restaurantId}`);
-      // Explicitly stop any existing polling before starting WebSocket
-      stopInventoryPolling();
-      
-      // Ensure the WebSocketManager is initialized with the current restaurant ID for proper tenant isolation
-      import('../../../shared/services/WebSocketManager').then(({ default: webSocketManager }) => {
-        webSocketManager.initialize(restaurantId);
-        useMenuStore.getState().startMenuItemsWebSocket();
-      });
-      
-      // Double-check that polling is stopped after WebSocket connection
-      setTimeout(() => {
-        if (useMenuStore.getState().inventoryPollingInterval !== null) {
-          console.debug('[MenuManager] Stopping lingering inventory polling after WebSocket connection');
-          stopInventoryPolling();
-        }
-      }, 1000);
-    } else {
-      console.debug('[MenuManager] No restaurant ID available, will connect to WebSocket when available');
-    }
     
     // Clean up when the component unmounts
     return () => {
@@ -328,6 +313,90 @@ export function MenuManager({
     }
   }, [openInventoryForItem, menuItems, stopInventoryPolling]);
 
+  // Prefetch adjacent categories when a category is selected
+  useEffect(() => {
+    const prefetchAdjacentCategories = async () => {
+      if (!validateRestaurantContext(restaurant) || !selectedMenuId || !selectedCategory || typeof selectedCategory !== 'number') {
+        return;
+      }
+      
+      // Get all category IDs for the current menu
+      const categoryIds = Array.from(categories.keys());
+      if (categoryIds.length === 0) return;
+      
+      // Find the index of the currently selected category
+      const currentIndex = categoryIds.indexOf(selectedCategory);
+      if (currentIndex === -1) return;
+      
+      // Determine adjacent categories to prefetch (previous and next)
+      const adjacentIndices = [
+        currentIndex > 0 ? currentIndex - 1 : null,
+        currentIndex < categoryIds.length - 1 ? currentIndex + 1 : null
+      ].filter((index): index is number => index !== null);
+      
+      // Prefetch each adjacent category if not already prefetched
+      for (const index of adjacentIndices) {
+        const categoryId = categoryIds[index];
+        
+        // Skip if already prefetched
+        if (prefetchedCategories.current.has(categoryId)) {
+          continue;
+        }
+        
+        // Mark as prefetched to avoid duplicate requests
+        prefetchedCategories.current.add(categoryId);
+        
+        // Prefetch this category's items
+        try {
+          const filterParams: MenuItemFilterParams = {
+            view_type: 'admin',
+            include_stock: true,
+            restaurant_id: restaurant?.id,
+            menu_id: selectedMenuId,
+            category_id: categoryId
+          };
+          
+          // Apply current visibility and feature filters
+          if (visibilityFilter === 'active') {
+            filterParams.hidden = false;
+          } else if (visibilityFilter === 'hidden') {
+            filterParams.hidden = true;
+          }
+          
+          if (showFeaturedOnly) {
+            filterParams.featured = true;
+          }
+          
+          if (showSeasonalOnly) {
+            filterParams.seasonal = true;
+          }
+          
+          // Prefetch in background without updating UI
+          await fetchMenuItemsForAdmin(filterParams);
+          console.debug(`[MenuManager] Prefetched items for category ID ${categoryId}`);
+        } catch (error) {
+          console.error(`Error prefetching items for category ${categoryId}:`, error);
+        }
+      }
+    };
+    
+    // Start prefetching after a short delay to prioritize the current view
+    const prefetchTimer = setTimeout(prefetchAdjacentCategories, 300);
+    
+    return () => {
+      clearTimeout(prefetchTimer);
+    };
+  }, [
+    selectedCategory,
+    categories,
+    selectedMenuId,
+    restaurant,
+    fetchMenuItemsForAdmin,
+    visibilityFilter,
+    showFeaturedOnly,
+    showSeasonalOnly
+  ]);
+  
   // Set the current menu as the default selected menu
   useEffect(() => {
     if (currentMenuId && !selectedMenuId) {
