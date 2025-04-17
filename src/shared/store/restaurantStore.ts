@@ -9,6 +9,12 @@ import {
 } from '../api/endpoints/restaurants';
 import { config } from '../config';
 
+// Menu layout preferences interface
+export interface MenuLayoutPreferences {
+  default_layout?: 'gallery' | 'list';
+  allow_layout_switching?: boolean;
+}
+
 export interface Restaurant {
   id: number;
   name: string;
@@ -18,7 +24,9 @@ export interface Restaurant {
   time_zone: string;
   time_slot_interval: number;
   default_reservation_length: number;
-  admin_settings: Record<string, any>;
+  admin_settings: Record<string, any> & {
+    menu_layout_preferences?: MenuLayoutPreferences;
+  };
   allowed_origins: string[];
   primary_frontend_url?: string;
   custom_pickup_location?: string;

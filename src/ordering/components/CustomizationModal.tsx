@@ -502,8 +502,8 @@ export function CustomizationModal({ item, onClose }: CustomizationModalProps) {
                               className={`block w-full text-left px-4 py-2 border rounded-md 
                                 ${
                                   selected
-                                    ? 'border-[#c1902f] bg-[#c1902f]/10'
-                                    : 'border-gray-200 hover:border-[#c1902f]'
+                                    ? 'border-shimizu-blue bg-shimizu-blue/10'
+                                    : 'border-gray-200 hover:border-shimizu-blue'
                                 }
                               `}
                             >
@@ -630,7 +630,7 @@ export function CustomizationModal({ item, onClose }: CustomizationModalProps) {
                   // Force update to recalculate prices
                   forceUpdate({});
                 }}
-                className="px-3 py-1 border rounded"
+                className="px-3 py-1 border rounded hover:border-shimizu-blue"
               >
                 -
               </button>
@@ -641,7 +641,7 @@ export function CustomizationModal({ item, onClose }: CustomizationModalProps) {
                   // Force update to recalculate prices
                   forceUpdate({});
                 }}
-                className="px-3 py-1 border rounded"
+                className="px-3 py-1 border rounded hover:border-shimizu-blue"
               >
                 +
               </button>
@@ -663,7 +663,7 @@ export function CustomizationModal({ item, onClose }: CustomizationModalProps) {
               onClick={handleAddToCart}
               className={`px-4 py-2 text-white rounded-md ${
                 isValid 
-                  ? 'bg-[#c1902f] hover:bg-[#d4a43f]' 
+                  ? 'bg-shimizu-blue hover:bg-shimizu-light-blue' 
                   : 'bg-gray-400 cursor-not-allowed'
               }`}
               disabled={!isValid}

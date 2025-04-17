@@ -19,6 +19,7 @@ import { ProfilePage } from '../shared/components/profile';
 import { useMenuStore } from './store/menuStore';
 import { useCategoryStore } from './store/categoryStore';
 import { useLoadingStore } from './store/loadingStore';
+import { useAuthStore } from './store/authStore';
 import { useMerchandiseStore } from './store/merchandiseStore';
 import { MenuItem as MenuItemCard } from './components/MenuItem';
 import { useSiteSettingsStore } from './store/siteSettingsStore'; // <-- IMPORTANT
@@ -92,20 +93,30 @@ export default function OnlineOrderingApp() {
 
   useEffect(() => {
     // Initialize WebSocket connection as soon as the app loads
-    if (validateRestaurantContext(restaurant)) {
+    // Use silent mode during initial load to reduce console noise
+    const isInitialLoad = !restaurant;
+    if (validateRestaurantContext(restaurant, isInitialLoad)) {
       console.debug('OnlineOrderingApp: Initializing WebSocket connection for menu items');
       const { startMenuItemsWebSocket, stopInventoryPolling } = useMenuStore.getState();
       
       // Ensure any existing polling is stopped before starting WebSocket
       stopInventoryPolling();
       
-      // Initialize WebSocketManager with restaurant ID for proper tenant isolation
-      import('../shared/services/WebSocketManager').then(({ default: webSocketManager }) => {
-        if (restaurant && restaurant.id) {
-          webSocketManager.initialize(restaurant.id.toString());
-          startMenuItemsWebSocket();
-        }
-      });
+      // Only initialize WebSocket if user is authenticated
+      const user = useAuthStore.getState().user;
+      const isAuthenticated = !!user;
+      
+      if (isAuthenticated) {
+        // Initialize WebSocketManager with restaurant ID for proper tenant isolation
+        import('../shared/services/WebSocketManager').then(({ default: webSocketManager }) => {
+          if (restaurant && restaurant.id) {
+            webSocketManager.initialize(restaurant.id.toString());
+            startMenuItemsWebSocket();
+          }
+        });
+      } else {
+        console.debug('OnlineOrderingApp: Skipping WebSocket initialization for unauthenticated user');
+      }
       
       // Prefetch all menu items data when the app initializes
       prefetchMenuData();
@@ -142,6 +153,10 @@ export default function OnlineOrderingApp() {
         fetchMenuItemsForAdmin 
       } = useMenuStore.getState();
       const { fetchCategoriesForMenu } = useCategoryStore.getState();
+      const { user } = useAuthStore.getState();
+      
+      // Check if user has admin privileges
+      const isAdmin = user && (user.role === 'admin' || user.role === 'super_admin');
       
       // 1. Fetch menus first to get the current menu ID
       await fetchMenus();
@@ -173,29 +188,31 @@ export default function OnlineOrderingApp() {
           await fetchVisibleMenuItems(category.id, restaurant?.id, false, false);
         }
         
-        // 5. Prefetch data for admin components (MenuManager and StaffOrderModal)
-        console.debug('OnlineOrderingApp: Prefetching admin menu data');
-        
-        // 5a. Prefetch admin "All Items" view with stock information
-        const adminFilterParams: MenuItemFilterParams = {
-          view_type: 'admin' as 'admin',
-          include_stock: true,
-          restaurant_id: restaurant?.id,
-          menu_id: currentMenuId
-        };
-        
-        await fetchMenuItemsForAdmin(adminFilterParams);
-        
-        // 5b. Prefetch first category for admin view
-        if (categoriesToPrefetch.length > 0) {
-          const firstCategory = categoriesToPrefetch[0];
-          const adminCategoryParams = {
-            ...adminFilterParams,
-            category_id: firstCategory.id
+        // 5. Only prefetch admin data if the user has admin privileges
+        if (isAdmin) {
+          console.debug('OnlineOrderingApp: Prefetching admin menu data');
+          
+          // 5a. Prefetch admin "All Items" view with stock information
+          const adminFilterParams: MenuItemFilterParams = {
+            view_type: 'admin' as 'admin',
+            include_stock: true,
+            restaurant_id: restaurant?.id,
+            menu_id: currentMenuId
           };
           
-          console.debug(`OnlineOrderingApp: Prefetching admin data for category ${firstCategory.name}`);
-          await fetchMenuItemsForAdmin(adminCategoryParams);
+          await fetchMenuItemsForAdmin(adminFilterParams);
+          
+          // 5b. Prefetch first category for admin view
+          if (categoriesToPrefetch.length > 0) {
+            const firstCategory = categoriesToPrefetch[0];
+            const adminCategoryParams = {
+              ...adminFilterParams,
+              category_id: firstCategory.id
+            };
+            
+            console.debug(`OnlineOrderingApp: Prefetching admin data for category ${firstCategory.name}`);
+            await fetchMenuItemsForAdmin(adminCategoryParams);
+          }
         }
         
         console.debug('OnlineOrderingApp: Menu data prefetching complete');
@@ -209,8 +226,13 @@ export default function OnlineOrderingApp() {
     // Load featured items with optimized backend filtering
     const loadFeaturedItems = async () => {
       // Validate restaurant context for tenant isolation
-      if (!validateRestaurantContext(restaurant)) {
-        console.warn('OnlineOrderingApp: Restaurant context missing, cannot fetch featured items');
+      // Use silent mode during initial load to reduce console noise
+      const isInitialLoad = !restaurant;
+      if (!validateRestaurantContext(restaurant, isInitialLoad)) {
+        // Only log warning if not in initial load
+        if (!isInitialLoad) {
+          console.warn('OnlineOrderingApp: Restaurant context missing, cannot fetch featured items');
+        }
         return;
       }
       

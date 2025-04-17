@@ -20,7 +20,9 @@ export interface MenuItemFilterParams {
   available_on_day?: number | string; // 0-6 for days of week (can be string for API compatibility)
   search_query?: string;
   view_type?: 'list' | 'detail' | 'admin'; // Optimize response size
+  layout_type?: 'gallery' | 'list'; // For layout-specific responses
   include_stock?: boolean;
+  include_option_groups?: boolean; // Always include option groups info even in list view
   page?: number;
   per_page?: number;
 }
@@ -44,6 +46,7 @@ export interface OptionGroup {
   options: MenuOption[];
   has_available_options?: boolean;
   required_but_unavailable?: boolean;
+  required?: boolean; // Whether this option group is required
 }
 
 /**
@@ -92,6 +95,9 @@ export interface MenuItem {
   // Option groups
   option_groups?: OptionGroup[];
   
+  // Flag indicating if the item has options (used in list view when option_groups aren't included)
+  has_options?: boolean;
+  
   // Availability
   advance_notice_hours?: number;
   seasonal?: boolean;
@@ -130,6 +136,14 @@ export interface MenuItem {
   // For inventory tracking when removing items
   inventoryAction?: 'return_to_inventory' | 'mark_as_damaged';
   damageReason?: string;
+  
+  // Dietary preferences
+  vegetarian?: boolean;
+  vegan?: boolean;
+  gluten_free?: boolean;
+  dairy_free?: boolean;
+  nut_free?: boolean;
+  spicy?: boolean;
 }
 
 /**

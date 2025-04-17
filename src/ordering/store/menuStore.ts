@@ -8,6 +8,7 @@ import { menuItemsApi } from '../../shared/api/endpoints/menuItems';
 import { websocketService } from '../../shared/services/websocketService';
 import { getCurrentRestaurantId, addRestaurantIdToParams } from '../../shared/utils/tenantUtils';
 import { pollingManager, PollingResourceType } from '../../shared/services/PollingManager';
+import { useMenuLayoutStore } from './menuLayoutStore';
 
 interface MenuState {
   menus: Menu[];
@@ -910,8 +911,24 @@ export const useMenuStore = create<MenuState>((set, get) => ({
   // New optimized methods for backend filtering
   fetchMenuItemsWithFilters: async (params: MenuItemFilterParams) => {
     try {
+      // Get current layout type from the imported store
+      const { layoutType } = useMenuLayoutStore.getState();
+      
       // Ensure restaurant_id is included in params for tenant isolation
-      const enhancedParams = addRestaurantIdToParams(params);
+      const enhancedParams = addRestaurantIdToParams({
+        ...params,
+        // Add layout_type parameter for layout-specific responses
+        layout_type: layoutType
+      });
+      
+      // Don't use list view optimization to ensure we get complete data including option groups
+      // if (layoutType === 'list' && !enhancedParams.view_type) {
+      //   enhancedParams.view_type = 'list';
+      //   enhancedParams.include_option_groups = true;
+      // }
+      
+      // Always include option groups information
+      enhancedParams.include_option_groups = true;
       
       // Log the request for debugging
       console.debug('[menuStore] Fetching menu items with filters:', enhancedParams);
@@ -940,10 +957,12 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       const params: MenuItemFilterParams = {
         featured: true,
         hidden: false, // Only show visible items
-        view_type: 'list', // Optimize response size
+        // Don't use view_type: 'list' to ensure we get complete data including option groups
+        // This ensures the customize button works properly on the home page
         restaurant_id: restaurantId || getCurrentRestaurantId() || undefined
       };
       
+      console.debug('[menuStore] Fetching featured items with complete data');
       // Use the base filtering method
       const featuredItems = await get().fetchMenuItemsWithFilters(params);
       
@@ -966,7 +985,8 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       // Create filter params for visible menu items
       const params: MenuItemFilterParams = {
         hidden: false, // Only show visible items
-        view_type: 'list', // Optimize response size
+        // Don't use list view optimization to ensure we get all option groups
+        // view_type: 'list', 
         available_on_day: currentDayOfWeek.toString(), // Convert to string for API compatibility
         restaurant_id: restaurantId || getCurrentRestaurantId() || undefined
       };

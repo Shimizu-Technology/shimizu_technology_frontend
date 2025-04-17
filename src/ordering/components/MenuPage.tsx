@@ -5,13 +5,17 @@ import { MenuItem as MenuItemCard } from './MenuItem';
 import { useMenuStore } from '../store/menuStore';
 import { useCategoryStore } from '../store/categoryStore';
 import { useRestaurantStore } from '../../shared/store/restaurantStore';
+import { useMenuLayoutStore } from '../store/menuLayoutStore';
 import { validateRestaurantContext, logTenantIsolationWarning } from '../../shared/utils/tenantUtils';
 import { MenuItem } from '../types/menu';
+import LayoutToggle from './layouts/LayoutToggle';
+import ListView from './layouts/ListView';
 
 export function MenuPage() {
   const { fetchVisibleMenuItems, fetchMenus, error, currentMenuId } = useMenuStore();
   const { categories, fetchCategoriesForMenu } = useCategoryStore();
   const { restaurant } = useRestaurantStore();
+  const { layoutType } = useMenuLayoutStore();
   
   // State for menu items and loading state
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -39,7 +43,9 @@ export function MenuPage() {
   useEffect(() => {
     const loadCategories = async () => {
       // Validate restaurant context for tenant isolation
-      if (!validateRestaurantContext(restaurant) || !currentMenuId) {
+      // Use silent mode during initial load to reduce console noise
+      const isInitialLoad = !restaurant;
+      if (!validateRestaurantContext(restaurant, isInitialLoad) || !currentMenuId) {
         return;
       }
       
@@ -114,8 +120,13 @@ export function MenuPage() {
     
     const loadMenuItems = async (forceShowLoading = false) => {
       // Validate restaurant context for tenant isolation
-      if (!validateRestaurantContext(restaurant)) {
-        logTenantIsolationWarning('MenuPage', 'Restaurant context missing, cannot fetch menu items');
+      // Use silent mode during initial load to reduce console noise
+      const isInitialLoad = !restaurant;
+      if (!validateRestaurantContext(restaurant, isInitialLoad)) {
+        // Only log detailed warning if not in initial load
+        if (!isInitialLoad) {
+          logTenantIsolationWarning('MenuPage', 'Restaurant context missing, cannot fetch menu items');
+        }
         return;
       }
       
@@ -290,8 +301,9 @@ export function MenuPage() {
         </div>
       )}
 
-      {/* Featured/Seasonal checkboxes */}
-      <div className="mb-6 flex flex-wrap items-center gap-4">
+      {/* Layout Toggle and Filter Controls */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-4">
         <label className="inline-flex items-center space-x-2">
           <input
             type="checkbox"
@@ -309,6 +321,10 @@ export function MenuPage() {
           />
           <span>Seasonal Items</span>
         </label>
+        </div>
+        
+        {/* Layout Toggle */}
+        <LayoutToggle className="ml-auto" />
       </div>
 
       {/* Menu Items Grid with min-height to prevent layout shift */}
@@ -321,11 +337,21 @@ export function MenuPage() {
         ) : (
           <div className="animate-fadeIn transition-opacity duration-300">
             {menuItems.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-                {menuItems.map((item) => (
-                  <MenuItemCard key={item.id} item={item} />
-                ))}
-              </div>
+              layoutType === 'gallery' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+                  {menuItems.map((item) => (
+                    <MenuItemCard key={item.id} item={item} />
+                  ))}
+                </div>
+              ) : (
+                <ListView 
+                  menuItems={menuItems}
+                  loading={false}
+                  selectedCategoryId={selectedCategoryId}
+                  showFeaturedOnly={showFeaturedOnly}
+                  showSeasonalOnly={showSeasonalOnly}
+                />
+              )
             ) : (
               <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                 <div className="bg-gray-100 rounded-full p-4 mb-4">

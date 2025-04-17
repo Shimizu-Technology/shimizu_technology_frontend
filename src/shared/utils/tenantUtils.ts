@@ -9,9 +9,12 @@
  * @param restaurant The restaurant object from useRestaurantStore
  * @returns boolean indicating if the context is valid
  */
-export function validateRestaurantContext(restaurant: any): boolean {
+export function validateRestaurantContext(restaurant: any, silent: boolean = false): boolean {
   if (!restaurant || !restaurant.id) {
-    console.warn('Tenant Isolation Warning: Restaurant context missing or invalid');
+    if (!silent) {
+      // Only log warning if not in silent mode
+      console.warn('Tenant Isolation Warning: Restaurant context missing or invalid');
+    }
     return false;
   }
   return true;
