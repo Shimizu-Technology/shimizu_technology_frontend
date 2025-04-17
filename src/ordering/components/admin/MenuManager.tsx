@@ -145,7 +145,7 @@ export function MenuManager({
   const {
     menus,
     currentMenuId,
-    fetchMenus,
+    fetchAllMenus,
     fetchMenuItemsForAdmin,
     addMenuItem,
     updateMenuItem,
@@ -204,8 +204,8 @@ export function MenuManager({
   // On mount => fetch items (admin) + categories + menus
   // WebSocket connection is now initialized at the app level in OnlineOrderingApp
   useEffect(() => {
-    // Fetch menus first
-    fetchMenus();
+    // Fetch all menus for the restaurant (not just active ones)
+    fetchAllMenus(restaurant?.id);
     
     // Load menu items with optimized backend filtering
     const loadMenuItems = async () => {
@@ -273,7 +273,7 @@ export function MenuManager({
     };
   }, [
     fetchMenuItemsForAdmin,
-    fetchMenus,
+    fetchAllMenus,
     stopInventoryPolling,
     restaurant,
     selectedMenuId,

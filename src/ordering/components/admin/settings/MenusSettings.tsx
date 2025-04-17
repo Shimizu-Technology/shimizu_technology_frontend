@@ -45,7 +45,7 @@ export function MenusSettings({ restaurantId }: MenusSettingsProps) {
     currentMenuId,
     loading,
     error,
-    fetchMenus,
+    fetchAllMenus,
     fetchAllMenuItemsForAdmin,
     createMenu,
     updateMenu,
@@ -70,7 +70,8 @@ export function MenusSettings({ restaurantId }: MenusSettingsProps) {
   // On mount, fetch menus & items
   useEffect(() => {
     async function initializeData() {
-      await fetchMenus();
+      // Fetch all menus for the restaurant (not just active ones)
+      await fetchAllMenus(restaurant?.id);
       await fetchAllMenuItemsForAdmin();
     }
     initializeData();
@@ -152,12 +153,12 @@ export function MenusSettings({ restaurantId }: MenusSettingsProps) {
   useEffect(() => {
     if (refreshTrigger > 0) {
       const refreshTimeout = setTimeout(() => {
-        fetchMenus();
+        fetchAllMenus(restaurant?.id);
         fetchAllMenuItemsForAdmin();
       }, 1000);
       return () => clearTimeout(refreshTimeout);
     }
-  }, [refreshTrigger, fetchMenus, fetchAllMenuItemsForAdmin]);
+  }, [refreshTrigger, fetchAllMenus, fetchAllMenuItemsForAdmin, restaurant]);
 
   const handleCloneMenu = async (id: number) => {
     if (
@@ -174,7 +175,7 @@ export function MenusSettings({ restaurantId }: MenusSettingsProps) {
       const clonedMenu = await cloneMenu(id);
       if (clonedMenu) {
         // Refresh immediately
-        await fetchMenus();
+        await fetchAllMenus(restaurant?.id);
         await fetchAllMenuItemsForAdmin();
         setRefreshTrigger(prev => prev + 1);
       }
@@ -183,7 +184,7 @@ export function MenusSettings({ restaurantId }: MenusSettingsProps) {
         setCloneError('Failed to clone menu. Please try again.');
       } else {
         // For 422, attempt silent refresh
-        await fetchMenus();
+        await fetchAllMenus(restaurant?.id);
         await fetchAllMenuItemsForAdmin();
         setRefreshTrigger(prev => prev + 1);
       }

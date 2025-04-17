@@ -25,6 +25,7 @@ interface MenuState {
   
   // Actions
   fetchMenus: () => Promise<void>;
+  fetchAllMenus: (restaurantId?: number) => Promise<Menu[]>; // New function to fetch all menus
   fetchMenuItems: () => Promise<void>;
   fetchAllMenuItemsForAdmin: () => Promise<void>;
   fetchCategories: () => Promise<void>;
@@ -102,6 +103,36 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       const errorMessage = handleApiError(error);
       set({ error: errorMessage, loading: false });
       console.error('[MenuStore] Error fetching active menu:', error);
+    }
+  },
+
+  // New function to fetch all menus for a restaurant (for admin use)
+  fetchAllMenus: async (restaurantId?: number) => {
+    try {
+      // Ensure tenant isolation by getting restaurant ID
+      const restId = restaurantId || getCurrentRestaurantId();
+      
+      if (!restId) {
+        console.warn('[MenuStore] Restaurant ID not available, cannot fetch all menus');
+        return [];
+      }
+      
+      // Create params with restaurant_id but without active flag
+      const params: { restaurant_id: number } = { restaurant_id: restId };
+      
+      // Fetch all menus for the restaurant
+      const allMenus = await menusApi.getAll(params);
+      
+      // Update the menus in the store, but keep the currentMenuId as is
+      // This ensures we don't disrupt the active menu for customer-facing components
+      set({ menus: allMenus });
+      
+      console.debug(`[MenuStore] Fetched all ${allMenus.length} menus for restaurant ${restId}`);
+      return allMenus;
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      console.error('[MenuStore] Error fetching all menus:', error);
+      return [];
     }
   },
 
