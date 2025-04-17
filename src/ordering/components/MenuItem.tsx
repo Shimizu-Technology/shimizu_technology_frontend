@@ -129,7 +129,6 @@ export const MenuItem = memo(function MenuItem({ item, index = 0, layout = 'gall
   // Check if this item has customization options
   // Since we're now fetching complete data with option_groups, we can simply check if option_groups exists and has items
   const hasCustomizations = Boolean(item.option_groups && item.option_groups.length > 0);
-  
 
   function handleQuickAdd() {
     if (isOutOfStock) {
@@ -196,11 +195,14 @@ export const MenuItem = memo(function MenuItem({ item, index = 0, layout = 'gall
   return (
     <Fragment>
       {layout === 'gallery' ? (
-        // Gallery view layout
+        // Gallery view layout - Enhanced design
         <div
-          className={`bg-white rounded-lg shadow-md overflow-hidden flex flex-col min-h-[380px] animate-fadeIn
+          className={`bg-white rounded-lg shadow-sm hover:shadow-md overflow-hidden flex flex-col min-h-[380px] animate-fadeIn
+            border border-gray-100 hover:border-gray-200 transition-all duration-300
             ${isOutOfStock || hasUnavailableRequiredOptions ? 'opacity-70' : ''}
-          `}
+            ${isOutOfStock || hasUnavailableRequiredOptions ? 'cursor-not-allowed' : 'cursor-pointer'}`
+          }
+          onClick={isOutOfStock || hasUnavailableRequiredOptions ? undefined : handleOpenCustomization}
         >
           <LazyMenuItemImage 
             image={item.image}
@@ -210,10 +212,10 @@ export const MenuItem = memo(function MenuItem({ item, index = 0, layout = 'gall
             index={index}
           />
 
-          <div className="p-4 flex flex-col flex-1">
+          <div className="p-5 flex flex-col flex-1">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
-              <p className="mt-1 text-sm text-gray-500">{item.description}</p>
+              <h3 className="text-lg font-semibold text-gray-900 group-hover:text-shimizu-blue transition-colors">{item.name}</h3>
+              <p className="mt-1 text-sm text-gray-600 line-clamp-2">{item.description}</p>
 
               {/* Badges and notices */}
               <div className="flex flex-wrap gap-1.5 mt-2">
@@ -228,7 +230,7 @@ export const MenuItem = memo(function MenuItem({ item, index = 0, layout = 'gall
                 
                 {/* Seasonal badge */}
                 {item.seasonal ? (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-shimizu-blue/10 text-shimizu-blue">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
                     {specialLabel || 'Seasonal'}
                   </span>
                 ) : null}
@@ -279,20 +281,20 @@ export const MenuItem = memo(function MenuItem({ item, index = 0, layout = 'gall
             </div>
 
             <div className="mt-auto pt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <span className="text-lg font-semibold text-gray-900">
+              <span className="text-lg font-semibold text-shimizu-blue">
                 ${item.price.toFixed(2)}
               </span>
               {hasCustomizations ? (
                 <button
-                  onClick={handleOpenCustomization}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenCustomization();
+                  }}
+                  className="w-full md:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent
+                             text-sm font-medium rounded-md shadow-sm text-white bg-shimizu-blue hover:bg-shimizu-light-blue
+                             focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-shimizu-blue
+                             transform hover:-translate-y-0.5 transition-all duration-200"
                   disabled={isOutOfStock || hasUnavailableRequiredOptions}
-                  className={`w-full md:w-auto flex items-center justify-center px-4 py-2
-                    border border-transparent rounded-md shadow-sm text-sm font-medium
-                    text-white ${isOutOfStock || hasUnavailableRequiredOptions
-                        ? 'bg-gray-300 cursor-not-allowed'
-                        : 'bg-shimizu-blue hover:bg-shimizu-light-blue'
-                    }
-                  `}
                 >
                   <Plus className="h-5 w-5 mr-2" />
                   {isOutOfStock ? 'Unavailable' : 'Customize'}
