@@ -15,7 +15,7 @@ export function MenuPage() {
   const { fetchVisibleMenuItems, fetchMenus, error, currentMenuId } = useMenuStore();
   const { categories, fetchCategoriesForMenu } = useCategoryStore();
   const { restaurant } = useRestaurantStore();
-  const { layoutType } = useMenuLayoutStore();
+  const { layoutType, initializeLayout } = useMenuLayoutStore();
   
   // State for menu items and loading state
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -35,6 +35,14 @@ export function MenuPage() {
   useEffect(() => {
     fetchMenus();
   }, [fetchMenus]);
+
+  // Initialize layout based on restaurant preferences
+  useEffect(() => {
+    if (restaurant?.id) {
+      console.debug('MenuPage: Initializing layout based on restaurant preferences');
+      initializeLayout(restaurant.id);
+    }
+  }, [restaurant?.id, initializeLayout]);
 
   // WebSocket connection is now initialized at the app level in OnlineOrderingApp
   // This improves performance by ensuring real-time updates are available immediately

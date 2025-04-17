@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { config } from '../../../../shared/config';
 import toastUtils from '../../../../shared/utils/toastUtils';
-import { Input, LoadingSpinner, SettingsHeader } from '../../../../shared/components/ui';
+import { Input, LoadingSpinner, SettingsHeader, MobileSelect } from '../../../../shared/components/ui';
 import { Settings } from 'lucide-react';
 import { 
   updateRestaurant as apiUpdateRestaurant,
@@ -161,7 +161,6 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
   }, []);
 
   async function fetchRestaurantData() {
-    
     // Set up a timer to show loading state only if the request takes longer than 500ms
     const loadingTimer = setTimeout(() => {
       setLoading(true);
@@ -200,7 +199,6 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
               const decodedPayload = JSON.parse(atob(payload));
               if (decodedPayload.restaurant_id) {
                 targetRestaurantId = parseInt(decodedPayload.restaurant_id, 10);
-                console.log(`Using restaurant ID from JWT token: ${targetRestaurantId}`);
               }
             }
           }
@@ -212,7 +210,6 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
       // If all else fails, use the config default
       if (!targetRestaurantId || isNaN(targetRestaurantId)) {
         targetRestaurantId = parseInt(config.restaurantId, 10);
-        console.log(`Using default restaurant ID from config: ${targetRestaurantId}`);
       }
       
       console.log(`Fetching restaurant with ID: ${targetRestaurantId}`);
@@ -899,6 +896,78 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
             </div>
           </div>
 
+          {/* Menu Layout Settings Section */}
+          <div className="bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md">
+            <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
+              <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#0078d4]" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                </svg>
+                Menu Layout Settings
+              </h3>
+            </div>
+            
+            <div className="p-5 space-y-4">
+              <div>
+                <div className="flex items-center mb-1">
+                  <label className="text-sm font-medium text-gray-700 flex items-center">
+                    Default Menu Layout
+                    <span className="ml-1 text-gray-500 text-xs rounded-full bg-gray-100 w-4 h-4 inline-flex items-center justify-center" title="The default layout for displaying menu items">ⓘ</span>
+                  </label>
+                </div>
+                <MobileSelect
+                  options={[
+                    { value: 'gallery', label: 'Gallery View (Grid)' },
+                    { value: 'list', label: 'List View' }
+                  ]}
+                  value={restaurant.admin_settings?.menu_layout_preferences?.default_layout || 'gallery'}
+                  onChange={(value) => setRestaurant({
+                    ...restaurant,
+                    admin_settings: {
+                      ...restaurant.admin_settings,
+                      menu_layout_preferences: {
+                        ...restaurant.admin_settings?.menu_layout_preferences,
+                        default_layout: value as 'gallery' | 'list'
+                      }
+                    }
+                  })}
+                  className="mt-1"
+                  placeholder="Select layout type"
+                />
+                <p className="mt-1 text-sm text-gray-500">
+                  Gallery view displays menu items in a grid with larger images, while list view shows items in a compact list format.
+                </p>
+              </div>
+              
+              <div className="mt-4">
+                <div className="flex items-center">
+                  <input
+                    id="allow-layout-switching"
+                    type="checkbox"
+                    checked={restaurant.admin_settings?.menu_layout_preferences?.allow_layout_switching ?? true}
+                    onChange={(e) => setRestaurant({
+                      ...restaurant,
+                      admin_settings: {
+                        ...restaurant.admin_settings,
+                        menu_layout_preferences: {
+                          ...restaurant.admin_settings?.menu_layout_preferences,
+                          allow_layout_switching: e.target.checked
+                        }
+                      }
+                    })}
+                    className="h-4 w-4 text-[#0078d4] focus:ring-[#0078d4] border-gray-300 rounded"
+                  />
+                  <label htmlFor="allow-layout-switching" className="ml-2 block text-sm font-medium text-gray-700">
+                    Allow users to switch between layouts
+                  </label>
+                </div>
+                <p className="mt-1 text-sm text-gray-500 ml-6">
+                  When disabled, users will only see the default layout and cannot switch to another view.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Reservation Settings Section */}
           <div className="bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md">
             <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
@@ -912,18 +981,16 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
             
             <div className="p-5 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Time Zone</label>
-                <select
+                <div className="flex items-center mb-1">
+                  <label className="text-sm font-medium text-gray-700">Time Zone</label>
+                </div>
+                <MobileSelect
+                  options={timezoneOptions}
                   value={restaurant.time_zone}
-                  onChange={(e) => setRestaurant({...restaurant, time_zone: e.target.value})}
-                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#0078d4] focus:border-[#0078d4] sm:text-sm rounded-md"
-                >
-                  {timezoneOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(value) => setRestaurant({...restaurant, time_zone: value})}
+                  className="mt-1"
+                  placeholder="Select time zone"
+                />
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

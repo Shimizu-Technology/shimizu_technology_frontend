@@ -24,6 +24,7 @@ import { useMerchandiseStore } from './store/merchandiseStore';
 import { MenuItem as MenuItemCard } from './components/MenuItem';
 import { useSiteSettingsStore } from './store/siteSettingsStore'; // <-- IMPORTANT
 import { useRestaurantStore } from '../shared/store/restaurantStore';
+import { useMenuLayoutStore } from './store/menuLayoutStore';
 import { validateRestaurantContext } from '../shared/utils/tenantUtils';
 import type { MenuItem, MenuItemFilterParams } from './types/menu';
 
@@ -86,10 +87,19 @@ export default function OnlineOrderingApp() {
   const { fetchSiteSettings } = useSiteSettingsStore(); // <-- destructure the store method
   const { fetchCollections } = useMerchandiseStore();
   const { restaurant } = useRestaurantStore();
+  const { initializeLayout } = useMenuLayoutStore();
   
   // State for featured items and loading state
   const [featuredItems, setFeaturedItems] = useState<MenuItem[]>([]);
   const [featuredItemsLoading, setFeaturedItemsLoading] = useState(false);
+
+  // Initialize menu layout preferences based on restaurant settings
+  useEffect(() => {
+    if (restaurant?.id) {
+      console.debug('OnlineOrderingApp: Initializing menu layout preferences');
+      initializeLayout(restaurant.id);
+    }
+  }, [restaurant?.id, initializeLayout]);
 
   useEffect(() => {
     // Initialize WebSocket connection as soon as the app loads
