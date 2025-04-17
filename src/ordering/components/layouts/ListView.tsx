@@ -271,7 +271,7 @@ const ListViewItem: React.FC<{ item: MenuItem }> = ({ item }) => {
           </div>
           
           {/* Content area */}
-          <div className="flex-1 p-2 sm:p-3 md:p-4 overflow-hidden pr-[70px] sm:pr-[90px]"> 
+          <div className="flex-1 p-2 sm:p-3 md:p-4 overflow-hidden pr-[90px] sm:pr-[110px]"> 
             <div className="flex flex-col h-full justify-between"> 
               <div>
                 {/* Title and price row */}
@@ -284,9 +284,9 @@ const ListViewItem: React.FC<{ item: MenuItem }> = ({ item }) => {
                 {/* Description with strict character truncation */}
                 {item.description && (
                   <div className="mt-1 max-h-[36px] overflow-hidden">
-                    <p className="text-xs sm:text-sm text-gray-500 line-clamp-2">
-                      {item.description.length > 80 
-                        ? `${item.description.substring(0, 80)}...` 
+                    <p className="text-xs sm:text-sm text-gray-500 line-clamp-2 pr-2">
+                      {item.description.length > 60 
+                        ? `${item.description.substring(0, 60)}...` 
                         : item.description
                       }
                     </p>
@@ -352,7 +352,7 @@ const ListViewItem: React.FC<{ item: MenuItem }> = ({ item }) => {
           </div>
           
           {/* Fixed position button - absolutely positioned in the bottom right */}
-          <div className="absolute bottom-3 right-3">
+          <div className="absolute bottom-2 right-2 z-10">
             <button
               onClick={(e) => {
                 e.stopPropagation();
