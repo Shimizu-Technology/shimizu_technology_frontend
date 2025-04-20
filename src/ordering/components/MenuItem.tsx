@@ -199,10 +199,8 @@ export const MenuItem = memo(function MenuItem({ item, index = 0, layout = 'gall
         <div
           className={`bg-white rounded-lg shadow-sm hover:shadow-md overflow-hidden flex flex-col min-h-[380px] animate-fadeIn
             border border-gray-100 hover:border-gray-200 transition-all duration-300
-            ${isOutOfStock || hasUnavailableRequiredOptions ? 'opacity-70' : ''}
-            ${isOutOfStock || hasUnavailableRequiredOptions ? 'cursor-not-allowed' : 'cursor-pointer'}`
+            ${isOutOfStock || hasUnavailableRequiredOptions ? 'opacity-70' : ''}`
           }
-          onClick={isOutOfStock || hasUnavailableRequiredOptions ? undefined : handleOpenCustomization}
         >
           <LazyMenuItemImage 
             image={item.image}
@@ -401,11 +399,14 @@ export const MenuItem = memo(function MenuItem({ item, index = 0, layout = 'gall
                 <button
                   onClick={handleOpenCustomization}
                   disabled={isOutOfStock || hasUnavailableRequiredOptions}
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium text-white
+                  className={`
+                    flex-1 flex items-center justify-center px-4 py-2 rounded-md
                     ${isOutOfStock || hasUnavailableRequiredOptions ? 'bg-gray-400' : 'bg-[#c1902f] hover:bg-[#d4a43f]'}
-                    transition-all duration-200 ease-in-out
-                    ${buttonClicked ? 'animate-pulse' : ''}
+                    text-white font-medium
+                    transition-colors duration-200 ease-in-out shadow-sm hover:shadow
+                    ${isOutOfStock || hasUnavailableRequiredOptions ? 'cursor-not-allowed' : ''}
                   `}
+                  aria-label="Customize item"
                 >
                   <span className="flex items-center">
                     <Plus className="h-4 w-4 mr-1.5" />
@@ -416,11 +417,15 @@ export const MenuItem = memo(function MenuItem({ item, index = 0, layout = 'gall
                 <button
                   onClick={handleQuickAdd}
                   disabled={isOutOfStock || hasUnavailableRequiredOptions}
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium text-white
+                  className={`
+                    flex-1 flex items-center justify-center px-4 py-2 rounded-md
                     ${isOutOfStock || hasUnavailableRequiredOptions ? 'bg-gray-400' : 'bg-[#c1902f] hover:bg-[#d4a43f]'}
-                    transition-all duration-200 ease-in-out
+                    text-white font-medium
+                    transition-colors duration-200 ease-in-out shadow-sm hover:shadow
                     ${buttonClicked ? 'animate-pulse' : ''}
+                    ${isOutOfStock || hasUnavailableRequiredOptions ? 'cursor-not-allowed' : ''}
                   `}
+                  aria-label="Add to cart"
                 >
                   <span className="flex items-center">
                     <Plus className="h-4 w-4 mr-1.5" />
