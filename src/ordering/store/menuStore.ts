@@ -60,7 +60,7 @@ interface MenuState {
   // New optimized methods for backend filtering
   fetchMenuItemsWithFilters: (params: MenuItemFilterParams) => Promise<MenuItem[]>;
   fetchFeaturedItems: (restaurantId?: number) => Promise<MenuItem[]>;
-  fetchVisibleMenuItems: (categoryId?: number, restaurantId?: number, featured?: boolean, seasonal?: boolean) => Promise<MenuItem[]>;
+  fetchVisibleMenuItems: (categoryId?: number, restaurantId?: number, featured?: boolean, seasonal?: boolean, searchQuery?: string) => Promise<MenuItem[]>;
   fetchMenuItemsForAdmin: (filters: MenuItemFilterParams) => Promise<MenuItem[]>;
 }
 
@@ -130,7 +130,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       console.debug(`[MenuStore] Fetched all ${allMenus.length} menus for restaurant ${restId}`);
       return allMenus;
     } catch (error) {
-      const errorMessage = handleApiError(error);
+      handleApiError(error);
       console.error('[MenuStore] Error fetching all menus:', error);
       return [];
     }
@@ -1008,7 +1008,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
     }
   },
   
-  fetchVisibleMenuItems: async (categoryId?: number, restaurantId?: number, featured?: boolean, seasonal?: boolean) => {
+  fetchVisibleMenuItems: async (categoryId?: number, restaurantId?: number, featured?: boolean, seasonal?: boolean, searchQuery?: string) => {
     try {
       // Get the current day of week (0-6, where 0 is Sunday)
       const currentDayOfWeek = new Date().getDay();
@@ -1033,6 +1033,11 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       }
       if (seasonal) {
         params.seasonal = true;
+      }
+      
+      // Add search query if provided
+      if (searchQuery && searchQuery.trim() !== '') {
+        params.search_query = searchQuery.trim();
       }
       
       console.debug('[menuStore] Fetching visible menu items with params:', params);

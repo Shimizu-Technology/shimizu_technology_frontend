@@ -30,6 +30,56 @@ export function MenuPage() {
   // Additional flags for filtering
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
   const [showSeasonalOnly, setShowSeasonalOnly] = useState(false);
+  
+  // For search functionality
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchVisible, setSearchVisible] = useState(false);
+  
+  // Debounce search to avoid excessive API calls
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Listen for keyboard events to show search when user starts typing
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only respond to alphanumeric keys and when not in an input field
+      const isInputActive = document.activeElement?.tagName === 'INPUT' || 
+                           document.activeElement?.tagName === 'TEXTAREA';
+      
+      // If user is typing and not in an input field, show search
+      if (!isInputActive && 
+          !e.ctrlKey && !e.altKey && !e.metaKey && 
+          e.key.length === 1 && /[a-zA-Z0-9]/.test(e.key)) {
+        setSearchVisible(true);
+        // Focus the search input after a short delay to allow the animation to complete
+        setTimeout(() => {
+          const searchInput = document.querySelector('input[type="search"]') as HTMLInputElement;
+          if (searchInput) {
+            searchInput.focus();
+            // Set the search query to the key that was pressed
+            setSearchQuery(e.key);
+            setIsSearching(true);
+            
+            // Clear previous timeout
+            if (searchTimeoutRef.current) {
+              clearTimeout(searchTimeoutRef.current);
+            }
+            
+            // Set new timeout for debounce
+            searchTimeoutRef.current = setTimeout(() => {
+              setIsSearching(false);
+            }, 500);
+          }
+        }, 100);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   // First useEffect to fetch menus and set currentMenuId
   useEffect(() => {
@@ -115,7 +165,8 @@ export function MenuPage() {
             categoryId || undefined,
             restaurant?.id,
             showFeaturedOnly,
-            showSeasonalOnly
+            showSeasonalOnly,
+            searchQuery || undefined
           );
           
           // Mark as prefetched
@@ -155,7 +206,8 @@ export function MenuPage() {
           selectedCategoryId || undefined, 
           restaurant?.id,
           showFeaturedOnly,
-          showSeasonalOnly
+          showSeasonalOnly,
+          searchQuery || undefined
         );
         
         // Mark this category as prefetched
@@ -229,7 +281,7 @@ export function MenuPage() {
     
     // Only trigger refetch when filters or restaurant context changes
     // The polling will handle regular updates
-  }, [fetchVisibleMenuItems, restaurant, selectedCategoryId, showFeaturedOnly, showSeasonalOnly, activeCategories]);
+  }, [fetchVisibleMenuItems, restaurant, selectedCategoryId, showFeaturedOnly, showSeasonalOnly, searchQuery, activeCategories]);
 
   // No need for frontend filtering anymore as we're using backend filtering
 
@@ -264,9 +316,26 @@ export function MenuPage() {
 
       {error && <p className="text-red-600">{error}</p>}
 
-      {/* Horizontally scrollable categories */}
+      {/* Horizontally scrollable categories with integrated search */}
       <div className="mb-3">
-        <div className="flex flex-nowrap space-x-3 overflow-x-auto py-2">
+        <div className="flex flex-nowrap items-center space-x-3 overflow-x-auto py-2">
+          {/* Search button - first position for easy access */}
+          <button
+            onClick={() => setSearchVisible(!searchVisible)}
+            className={`
+              flex-shrink-0 px-3 py-2 rounded-md flex items-center gap-1
+              ${searchVisible
+                ? 'bg-[#0078d4] text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
+            `}
+            aria-label={searchVisible ? 'Hide search' : 'Show search'}
+          >
+            <svg className="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+            </svg>
+            {searchVisible && <span>Search</span>}
+          </button>
+          
           {/* "All Items" button */}
           <button
             className={`
@@ -309,6 +378,63 @@ export function MenuPage() {
         </div>
       )}
 
+      {/* Expanded Search Bar - only visible when search is active */}
+      {searchVisible && (
+        <div className="mb-4 animate-fadeIn transition-all duration-300">
+          <div className="relative w-full">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <svg className="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+              </svg>
+            </div>
+            <input
+              type="search"
+              className="block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-[#0078d4] focus:border-[#0078d4] shadow-sm"
+              placeholder="Search menu items or categories..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setIsSearching(true);
+                
+                // Clear previous timeout
+                if (searchTimeoutRef.current) {
+                  clearTimeout(searchTimeoutRef.current);
+                }
+                
+                // Set new timeout for debounce
+                searchTimeoutRef.current = setTimeout(() => {
+                  setIsSearching(false);
+                }, 500);
+              }}
+              autoFocus
+            />
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+              {searchQuery ? (
+                <button 
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={() => setSearchQuery('')}
+                  aria-label="Clear search"
+                >
+                  <svg className="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 12 12M1 13 13 1"/>
+                  </svg>
+                </button>
+              ) : (
+                <button 
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={() => setSearchVisible(false)}
+                  aria-label="Close search"
+                >
+                  <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Layout Toggle and Filter Controls */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-4">
@@ -335,12 +461,59 @@ export function MenuPage() {
         <LayoutToggle className="ml-auto" />
       </div>
 
+      {/* Search active indicator */}
+      {searchQuery && (
+        <div className="mb-4 animate-fadeIn">
+          <div className="bg-[#0078d4]/10 border border-[#0078d4]/20 rounded-md p-3 flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-700">
+                <span className="font-medium">Showing results for:</span> {searchQuery}
+              </p>
+              
+              {/* Show matching categories if any */}
+              {activeCategories.some(cat => cat.name.toLowerCase().includes(searchQuery.toLowerCase())) && (
+                <div className="mt-1">
+                  <p className="text-xs text-gray-600">Matching categories:</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {activeCategories
+                      .filter(cat => cat.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                      .map(cat => (
+                        <button
+                          key={cat.id}
+                          onClick={() => {
+                            setSelectedCategoryId(cat.id);
+                            setSearchQuery('');
+                            setSearchVisible(false);
+                          }}
+                          className="text-xs bg-[#0078d4]/20 hover:bg-[#0078d4]/30 text-[#0078d4] px-2 py-1 rounded-full"
+                        >
+                          {cat.name}
+                        </button>
+                      ))
+                    }
+                  </div>
+                </div>
+              )}
+            </div>
+            <button 
+              onClick={() => {
+                setSearchQuery('');
+                setSearchVisible(false);
+              }}
+              className="text-sm text-[#0078d4] hover:text-[#0078d4]/80 font-medium"
+            >
+              Clear Search
+            </button>
+          </div>
+        </div>
+      )}
+      
       {/* Menu Items Grid with min-height to prevent layout shift */}
       <div className="min-h-[300px] transition-opacity duration-300 ease-in-out">
-        {loading ? (
+        {loading || isSearching ? (
           // Show loading spinner while menu items are loading
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#c1902f]"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0078d4]"></div>
           </div>
         ) : (
           <div className="animate-fadeIn transition-opacity duration-300">
@@ -358,6 +531,7 @@ export function MenuPage() {
                   selectedCategoryId={selectedCategoryId}
                   showFeaturedOnly={showFeaturedOnly}
                   showSeasonalOnly={showSeasonalOnly}
+                  searchQuery={searchQuery}
                 />
               )
             ) : (
@@ -369,11 +543,13 @@ export function MenuPage() {
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No menu items found</h3>
                 <p className="text-gray-500 max-w-md">
-                  {selectedCategoryId 
-                    ? "There are no items in this category for the current menu." 
-                    : "The current menu doesn't have any items yet."}
+                  {searchQuery 
+                    ? `No items found matching "${searchQuery}".` 
+                    : selectedCategoryId 
+                      ? "There are no items in this category for the current menu." 
+                      : "The current menu doesn't have any items yet."}
                 </p>
-                {(showFeaturedOnly || showSeasonalOnly) && (
+                {(showFeaturedOnly || showSeasonalOnly || searchQuery) && (
                   <p className="text-gray-500 mt-2">
                     Try removing the filters to see more items.
                   </p>

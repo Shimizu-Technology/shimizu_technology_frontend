@@ -17,6 +17,7 @@ interface ListViewProps {
   selectedCategoryId: number | null;
   showFeaturedOnly: boolean;
   showSeasonalOnly: boolean;
+  searchQuery?: string;
 }
 
 /**
@@ -29,7 +30,8 @@ export const ListView: React.FC<ListViewProps> = ({
   loading,
   selectedCategoryId,
   showFeaturedOnly,
-  showSeasonalOnly
+  showSeasonalOnly,
+  searchQuery
 }) => {
   // Reference for the container
   const containerRef = useRef<HTMLDivElement>(null);
@@ -59,11 +61,13 @@ export const ListView: React.FC<ListViewProps> = ({
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">No menu items found</h3>
               <p className="text-gray-500 max-w-md">
-                {selectedCategoryId 
-                  ? "There are no items in this category for the current menu." 
-                  : "The current menu doesn't have any items yet."}
+                {searchQuery 
+                  ? `No items found matching "${searchQuery}".` 
+                  : selectedCategoryId 
+                    ? "There are no items in this category for the current menu." 
+                    : "The current menu doesn't have any items yet."}
               </p>
-              {(showFeaturedOnly || showSeasonalOnly) && (
+              {(showFeaturedOnly || showSeasonalOnly || searchQuery) && (
                 <p className="text-gray-500 mt-2">
                   Try removing the filters to see more items.
                 </p>
