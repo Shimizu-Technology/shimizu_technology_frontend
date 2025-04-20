@@ -179,6 +179,13 @@ export function MenuManager({
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
   const [showSeasonalOnly, setShowSeasonalOnly] = useState(false);
   
+  // For search functionality
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isSearching, setIsSearching] = useState(false);
+  
+  // Debounce search to avoid excessive API calls
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   // Visibility filter - default to showing active (non-hidden) items
   const [visibilityFilter, setVisibilityFilter] = useState<'active' | 'hidden' | 'all'>('active');
 
@@ -249,6 +256,12 @@ export function MenuManager({
           filterParams.seasonal = true;
         }
         
+        // Add search query if provided
+        if (searchQuery && searchQuery.trim() !== '') {
+          filterParams.search_query = searchQuery.trim();
+          setIsSearching(true);
+        }
+        
         // Use optimized backend filtering instead of frontend filtering
         const items = await fetchMenuItemsForAdmin(filterParams);
         setMenuItems(items);
@@ -261,6 +274,7 @@ export function MenuManager({
         console.error('Error fetching menu items:', error);
       } finally {
         setLoading(false);
+        setIsSearching(false);
       }
     };
     
@@ -280,7 +294,8 @@ export function MenuManager({
     selectedCategory,
     visibilityFilter,
     showFeaturedOnly,
-    showSeasonalOnly
+    showSeasonalOnly,
+    searchQuery
   ]);
   
   // Handle selectedMenuItemId from props (for opening edit modal from e.g. notifications)
@@ -1091,6 +1106,91 @@ export function MenuManager({
         </div>
       </div>
 
+      {/* Search Bar */}
+      <div className="mb-4">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <svg className="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+            </svg>
+          </div>
+          <input
+            type="search"
+            className="block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-[#0078d4] focus:border-[#0078d4]"
+            placeholder="Search menu items by name, description, or category..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setIsSearching(true);
+              
+              // Clear previous timeout
+              if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+              }
+              
+              // Set new timeout for debounce
+              searchTimeoutRef.current = setTimeout(() => {
+                // The actual search is triggered by the useEffect that depends on searchQuery
+              }, 500);
+            }}
+          />
+          {searchQuery && (
+            <button 
+              className="absolute inset-y-0 right-0 flex items-center pr-3"
+              onClick={() => setSearchQuery('')}
+              aria-label="Clear search"
+            >
+              <svg className="w-4 h-4 text-gray-500 hover:text-gray-700" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 12 12M1 13 13 1"/>
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+      
+      {/* Search Results Indicator */}
+      {searchQuery && (
+        <div className="mb-4 animate-fadeIn">
+          <div className="bg-[#0078d4]/10 border border-[#0078d4]/20 rounded-md p-3 flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-700">
+                <span className="font-medium">Showing results for:</span> {searchQuery}
+              </p>
+              
+              {/* Show matching categories if any */}
+              {filteredCategories && filteredCategories.some(cat => cat.name.toLowerCase().includes(searchQuery.toLowerCase())) && (
+                <div className="mt-1">
+                  <p className="text-xs text-gray-600">Matching categories:</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {filteredCategories
+                      .filter(cat => cat.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                      .map(cat => (
+                        <button
+                          key={cat.id}
+                          onClick={() => {
+                            setSelectedCategory(cat.id);
+                            setSearchQuery('');
+                          }}
+                          className="text-xs bg-[#0078d4]/20 hover:bg-[#0078d4]/30 text-[#0078d4] px-2 py-1 rounded-full"
+                        >
+                          {cat.name}
+                        </button>
+                      ))
+                    }
+                  </div>
+                </div>
+              )}
+            </div>
+            <button 
+              onClick={() => setSearchQuery('')}
+              className="text-sm text-[#0078d4] hover:text-[#0078d4]/80 font-medium"
+            >
+              Clear Search
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Additional Filters (Featured / Seasonal) */}
       <div className="mb-6 flex flex-wrap items-center gap-4">
         <label className="inline-flex items-center space-x-2">
@@ -1123,8 +1223,8 @@ export function MenuManager({
             Please select a menu from the options above to view and manage its items.
           </p>
         </div>
-      ) : loading ? (
-        // Show loading spinner while menu items are loading
+      ) : loading || isSearching ? (
+        // Show loading spinner while menu items are loading or searching
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#c1902f]"></div>
         </div>
@@ -1307,13 +1407,17 @@ export function MenuManager({
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">No menu items found</h3>
           <p className="text-gray-500 max-w-md">
-            {selectedCategory
-              ? "There are no items in this category for the current menu."
-              : "The current menu doesn't have any items yet."}
+            {searchQuery ? (
+              <>No items match your search for <span className="font-semibold">"{searchQuery}"</span></>
+            ) : selectedCategory ? (
+              "There are no items in this category for the current menu."
+            ) : (
+              "The current menu doesn't have any items yet."
+            )}
           </p>
-          {(showFeaturedOnly || showSeasonalOnly) && (
+          {(showFeaturedOnly || showSeasonalOnly || searchQuery) && (
             <p className="text-gray-500 mt-2">
-              Try removing the filters to see more items.
+              Try {searchQuery ? "a different search term or " : ""}removing the filters to see more items.
             </p>
           )}
           <button
