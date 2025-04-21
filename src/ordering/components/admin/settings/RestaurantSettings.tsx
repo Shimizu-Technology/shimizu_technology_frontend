@@ -110,8 +110,10 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [heroFile, setHeroFile] = useState<File | null>(null);
   const [spinnerFile, setSpinnerFile] = useState<File | null>(null);
+  const [fallbackFile, setFallbackFile] = useState<File | null>(null);
   const [heroPreview, setHeroPreview] = useState<string | null>(null);
   const [spinnerPreview, setSpinnerPreview] = useState<string | null>(null);
+  const [fallbackPreview, setFallbackPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { fetchRestaurant } = useRestaurantStore();
   const hasLoadedRef = useRef<boolean>(false);
@@ -150,8 +152,11 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
       if (spinnerPreview && spinnerPreview.startsWith('blob:')) {
         URL.revokeObjectURL(spinnerPreview);
       }
+      if (fallbackPreview && fallbackPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(fallbackPreview);
+      }
     };
-  }, [heroPreview, spinnerPreview]);
+  }, [heroPreview, spinnerPreview, fallbackPreview]);
 
   useEffect(() => {
     if (!hasLoadedRef.current) {
@@ -298,7 +303,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
   }
 
   // Function to handle image file selection - compress the image and show a preview
-  async function handleImageFileChange(file: File, imageType: 'hero' | 'spinner') {
+  async function handleImageFileChange(file: File, imageType: 'hero' | 'spinner' | 'fallback') {
     if (!file) return;
     
     try {
@@ -312,9 +317,12 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
       if (imageType === 'hero') {
         setHeroFile(compressedFile);
         setHeroPreview(previewUrl);
-      } else {
+      } else if (imageType === 'spinner') {
         setSpinnerFile(compressedFile);
         setSpinnerPreview(previewUrl);
+      } else if (imageType === 'fallback') {
+        setFallbackFile(compressedFile);
+        setFallbackPreview(previewUrl);
       }
     } catch (error) {
       console.error(`Error processing ${imageType} image preview:`, error);
@@ -327,7 +335,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
     if (!restaurant) return;
 
     // If no new files, just update the text fields
-    if (!heroFile && !spinnerFile) {
+    if (!heroFile && !spinnerFile && !fallbackFile) {
       setLoading(true);
       try {
         await apiUpdateRestaurant(restaurant.id, {
@@ -402,10 +410,11 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
       updatePromises.push(textUpdatePromise);
       
       // Upload the images using FormData
-      if (heroFile || spinnerFile) {
+      if (heroFile || spinnerFile || fallbackFile) {
         const formData = new FormData();
         if (heroFile) formData.append('hero_image', heroFile);
         if (spinnerFile) formData.append('spinner_image', spinnerFile);
+        if (fallbackFile) formData.append('fallback_image', fallbackFile);
         
         // Include an empty restaurant parameter to satisfy the backend
         formData.append('restaurant[name]', restaurant.name);
@@ -425,6 +434,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
       // Clear the file inputs
       setHeroFile(null);
       setSpinnerFile(null);
+      setFallbackFile(null);
       
       // Clean up object URLs
       if (heroPreview && heroPreview.startsWith('blob:')) {
@@ -433,9 +443,13 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
       if (spinnerPreview && spinnerPreview.startsWith('blob:')) {
         URL.revokeObjectURL(spinnerPreview);
       }
+      if (fallbackPreview && fallbackPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(fallbackPreview);
+      }
       
       setHeroPreview(null);
       setSpinnerPreview(null);
+      setFallbackPreview(null);
       
       // Fetch the updated restaurant data to ensure all components have the latest data
       await fetchRestaurant();
@@ -598,7 +612,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                <label className="text-sm font-medium text-gray-700 mb-1 flex items-center">
                   Phone Number
                   <span className="ml-1 text-gray-500 text-xs rounded-full bg-gray-100 w-4 h-4 inline-flex items-center justify-center" title="Enter in format: +16719893444">ⓘ</span>
                 </label>
@@ -634,7 +648,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
             
             <div className="p-5 space-y-5">
               <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                   WhatsApp Group ID
                   <span className="ml-1 text-gray-500 text-xs rounded-full bg-gray-100 w-4 h-4 inline-flex items-center justify-center" title="The WhatsApp group ID for order notifications">ⓘ</span>
                 </label>
@@ -660,7 +674,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
               </div>
 
               <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                   Email Header Color
                   <span className="ml-1 text-gray-500 text-xs rounded-full bg-gray-100 w-4 h-4 inline-flex items-center justify-center" title="The color used for email headers">ⓘ</span>
                 </label>
@@ -788,7 +802,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
             </div>
             
             <div className="p-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* HERO IMAGE CARD */}
                 <div className="bg-gray-50 border border-gray-100 rounded-lg p-4 flex flex-col">
                   <h4 className="text-base font-semibold mb-3 text-gray-800">Hero Image</h4>
@@ -881,6 +895,61 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
                         const file = e.target.files?.[0];
                         if (file) {
                           handleImageFileChange(file, 'spinner');
+                        }
+                      }}
+                      className="mt-1 block w-full cursor-pointer text-sm
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-[#0078d4] file:text-white
+                                hover:file:bg-[#50a3d9]"
+                    />
+                  </label>
+                </div>
+
+                {/* FALLBACK IMAGE CARD */}
+                <div className="bg-gray-50 border border-gray-100 rounded-lg p-4 flex flex-col">
+                  <h4 className="text-base font-semibold mb-3 text-gray-800">Menu Fallback Image</h4>
+                  <p className="text-sm text-gray-600 mb-3">
+                    This image will be shown when a menu item doesn't have an image.
+                  </p>
+
+                  {/* Show preview if available, otherwise show the saved image */}
+                  {fallbackPreview ? (
+                    <div className="relative">
+                      <img
+                        src={fallbackPreview}
+                        alt="Fallback Preview"
+                        className="mb-3 w-full h-48 object-contain border rounded-md bg-white"
+                      />
+                      <div className="absolute top-0 right-0 bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-bl-md">
+                        Preview
+                      </div>
+                    </div>
+                  ) : restaurant.admin_settings?.fallback_image_url ? (
+                    <div className="relative">
+                      <img
+                        src={restaurant.admin_settings.fallback_image_url}
+                        alt="Current Fallback"
+                        className="mb-3 w-full h-48 object-contain border rounded-md bg-white"
+                      />
+                    </div>
+                  ) : (
+                    <div className="mb-3 w-full h-48 flex items-center justify-center bg-white border border-dashed border-gray-300 rounded-md">
+                      <p className="text-sm text-gray-500">No fallback image set yet</p>
+                    </div>
+                  )}
+
+                  <label className="block mt-2">
+                    <span className="text-sm font-medium text-gray-700">Choose a new file:</span>
+                    <input
+                      type="file"
+                      name="fallback_image"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleImageFileChange(file, 'fallback');
                         }
                       }}
                       className="mt-1 block w-full cursor-pointer text-sm
@@ -995,7 +1064,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                  <label className="text-sm font-medium text-gray-700 mb-1 flex items-center">
                     Time Slot Interval (minutes)
                     <span className="ml-1 text-gray-500 text-xs rounded-full bg-gray-100 w-4 h-4 inline-flex items-center justify-center" title="The interval in minutes between available reservation time slots">ⓘ</span>
                   </label>
@@ -1011,7 +1080,7 @@ export function RestaurantSettings({ restaurantId }: RestaurantSettingsProps): J
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                  <label className="text-sm font-medium text-gray-700 mb-1 flex items-center">
                     Default Reservation Length (minutes)
                     <span className="ml-1 text-gray-500 text-xs rounded-full bg-gray-100 w-4 h-4 inline-flex items-center justify-center" title="The default duration for reservations in minutes">ⓘ</span>
                   </label>

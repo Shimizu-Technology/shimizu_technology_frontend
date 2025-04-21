@@ -3,6 +3,7 @@
 import { useState, memo, Fragment } from 'react';
 import { Plus, AlertCircle } from 'lucide-react';
 import { useOrderStore } from '../store/orderStore';
+import { useRestaurantStore } from '../../shared/store/restaurantStore';
 import { CustomizationModal } from './CustomizationModal';
 import type { MenuItem as MenuItemType } from '../types/menu';
 import { deriveStockStatus, calculateAvailableQuantity } from '../utils/inventoryUtils';
@@ -16,6 +17,7 @@ interface LazyMenuItemImageProps {
   featured?: boolean;
   isFirstVisible?: boolean; // Flag to identify the first visible item (potential LCP)
   index?: number; // Item index for prioritization
+  restaurantFallbackSrc?: string; // Restaurant-specific fallback image
 }
 
 const LazyMenuItemImage = memo(function LazyMenuItemImage({ 
@@ -23,7 +25,8 @@ const LazyMenuItemImage = memo(function LazyMenuItemImage({
   name, 
   featured, 
   isFirstVisible = false,
-  index = 0 
+  index = 0,
+  restaurantFallbackSrc
 }: LazyMenuItemImageProps) {
   const [ref, isVisible] = useIntersectionObserver({
     rootMargin: '300px', // Increased from 200px to load images earlier
@@ -35,9 +38,7 @@ const LazyMenuItemImage = memo(function LazyMenuItemImage({
   // First 6 items or featured items are considered important
   const isImportantForLCP = isFirstVisible || featured || index < 6;
   
-  // Calculate optimal dimensions
-  const imageWidth = 320; // Reduced from 400
-  const imageHeight = 160; // Reduced from 192
+  // Width and height are now handled by the context in OptimizedImage
 
   return (
     <div 
@@ -49,14 +50,11 @@ const LazyMenuItemImage = memo(function LazyMenuItemImage({
         <OptimizedImage
           src={image}
           alt={name}
-          className="w-full h-full object-cover"
-          width={imageWidth.toString()}
-          height={imageHeight.toString()}
-          priority={isImportantForLCP} // Priority loading for important items
-          fetchPriority={isImportantForLCP ? 'high' : 'auto'} // High priority for important items
-          context={featured ? 'featured' : 'menuItem'}
-          isLCP={isFirstVisible} // Mark first visible item as LCP
-          preload={isFirstVisible || featured} // Preload first visible and featured items
+          context="menuItem"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          priority={isImportantForLCP}
+          isLCP={isFirstVisible}
+          restaurantFallbackSrc={restaurantFallbackSrc}
         />
       ) : (
         <div 
@@ -112,6 +110,7 @@ interface MenuItemProps {
 
 export const MenuItem = memo(function MenuItem({ item, index = 0, layout = 'gallery' }: MenuItemProps) {
   const addToCart = useOrderStore((state) => state.addToCart);
+  const restaurant = useRestaurantStore((state) => state.restaurant);
 
   const [showCustomization, setShowCustomization] = useState(false);
   const [buttonClicked, setButtonClicked] = useState(false);
@@ -208,6 +207,7 @@ export const MenuItem = memo(function MenuItem({ item, index = 0, layout = 'gall
             featured={item.featured}
             isFirstVisible={index === 0}
             index={index}
+            restaurantFallbackSrc={restaurant?.admin_settings?.fallback_image_url}
           />
 
           <div className="p-5 flex flex-col flex-1">
@@ -332,6 +332,7 @@ export const MenuItem = memo(function MenuItem({ item, index = 0, layout = 'gall
               featured={item.featured}
               isFirstVisible={index === 0}
               index={index}
+              restaurantFallbackSrc={restaurant?.admin_settings?.fallback_image_url}
             />
           </div>
           

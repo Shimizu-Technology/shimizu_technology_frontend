@@ -16,6 +16,8 @@ interface OptimizedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElem
   priority?: boolean;
   fetchPriority?: 'high' | 'low' | 'auto';
   fallbackSrc?: string;
+  // Restaurant-specific fallback image URL
+  restaurantFallbackSrc?: string;
   // For LCP optimization
   isLCP?: boolean;
   preload?: boolean;
@@ -28,6 +30,7 @@ interface OptimizedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElem
 const OptimizedImage: React.FC<OptimizedImageProps> = memo(({
   src: sourceUrl,
   fallbackSrc = '/placeholder-food.png',
+  restaurantFallbackSrc,
   alt = '',
   priority = false,
   fetchPriority,
@@ -148,6 +151,9 @@ const OptimizedImage: React.FC<OptimizedImageProps> = memo(({
   };
 
   // Use ResponsiveImage component for optimized, responsive images
+  // Use restaurant fallback if available, otherwise use default fallback
+  const effectiveFallbackSrc = restaurantFallbackSrc || fallbackSrc;
+
   return (
     <ResponsiveImage
       src={sourceUrl}
@@ -155,7 +161,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = memo(({
       sizes={sizes}
       alt={alt}
       imgixOptions={baseImgixOptions}
-      fallbackSrc={fallbackSrc}
+      fallbackSrc={effectiveFallbackSrc}
       priority={priority}
       fetchPriority={fetchPriority}
       preload={preload}

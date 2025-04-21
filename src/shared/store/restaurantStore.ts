@@ -26,6 +26,10 @@ export interface Restaurant {
   default_reservation_length: number;
   admin_settings: Record<string, any> & {
     menu_layout_preferences?: MenuLayoutPreferences;
+    // Image URLs
+    hero_image_url?: string;
+    spinner_image_url?: string;
+    fallback_image_url?: string; // Custom fallback image for menu items without images
   };
   allowed_origins: string[];
   primary_frontend_url?: string;
