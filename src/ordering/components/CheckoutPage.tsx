@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Phone, User } from 'lucide-react';
 import toastUtils from '../../shared/utils/toastUtils';
+import OptimizedImage from '../../shared/components/ui/OptimizedImage';
 
 import { useAuthStore } from '../store/authStore';
 import { usePromoStore } from '../store/promoStore';
@@ -582,10 +583,12 @@ export function CheckoutPage() {
               <div className="space-y-4">
                 {cartItems.map((item) => (
                   <div key={item.id} className="flex items-center space-x-3">
-                    <img
-                      src={item.image || '/placeholder-food.jpg'}
+                    <OptimizedImage
+                      src={item.image}
                       alt={item.name}
                       className="w-16 h-16 object-cover rounded-md"
+                      context="cart"
+                      fallbackSrc="/placeholder-food.png"
                     />
                     <div className="flex-1">
                       <p className="font-medium">{item.name}</p>
