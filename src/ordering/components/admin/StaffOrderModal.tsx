@@ -133,8 +133,8 @@ function MenuItemsPanel({
   const filteredMenuItems = menuItems.filter(item => {
     const matchesSearch =
       !searchTerm ||
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase());
+      (item.name && item.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCat =
       selectedCategory === 'all' ||
       (item.category_ids && item.category_ids.includes(Number(selectedCategory)));
