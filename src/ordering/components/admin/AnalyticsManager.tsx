@@ -1,5 +1,6 @@
   // src/ordering/components/admin/AnalyticsManager.tsx
 import React, { useState, useEffect, useMemo } from 'react';
+import { useMediaQuery } from 'react-responsive';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, PieChart, Pie, Cell
@@ -81,6 +82,9 @@ interface AnalyticsManagerProps {
 }
 
 export function AnalyticsManager({ restaurantId }: AnalyticsManagerProps) {
+  // Mobile/tablet responsive detection
+  const isMobile = useMediaQuery({ maxWidth: 640 });
+  const isTablet = useMediaQuery({ minWidth: 641, maxWidth: 1024 });
   // ----- 1) Date Range States + Preset -----
   // Default to today's date for both start and end
   // Create a date object that's explicitly in Guam timezone
@@ -723,11 +727,11 @@ export function AnalyticsManager({ restaurantId }: AnalyticsManagerProps) {
 
   // ----- 7) Render -----
   return (
-    <div className="p-4">
+    <div className="p-2 sm:p-4">
       {/* Header section */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold">Analytics Dashboard</h2>
-        <p className="text-gray-600 text-sm">View and analyze customer data and sales trends</p>
+      <div className="mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold">Analytics Dashboard</h2>
+        <p className="text-gray-600 text-xs sm:text-sm">View and analyze customer data and sales trends</p>
       </div>
 
       {/* 
@@ -735,83 +739,72 @@ export function AnalyticsManager({ restaurantId }: AnalyticsManagerProps) {
         (A) Date Range + Preset Buttons + Load 
         ============================================
       */}
-      <div className="bg-white rounded-lg shadow p-4 animate-fadeIn">
-        <h3 className="text-lg font-semibold mb-3">Analytics Date Range</h3>
+      <div className="bg-white rounded-lg shadow p-3 sm:p-4 animate-fadeIn">
+        <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">Analytics Date Range</h3>
 
         {/* Quick Time Presets */}
-        <div className="mb-4">
+        <div className="mb-3 sm:mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Quick Time Presets
           </label>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {/* Recent */}
             <div className="flex flex-col">
               <span className="text-xs text-gray-500 mb-1">Recent</span>
-              <div className="flex gap-1">
+              <div className="flex flex-wrap gap-1">
                 <button
                   onClick={() => applyTimePreset('30min')}
-                  className={timePreset === '30min'
-                    ? 'px-2 py-1 bg-blue-500 text-white text-xs rounded'
-                    : 'px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200'}
+                  className={`px-2 py-1 text-xs rounded ${timePreset === '30min' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                 >
                   30 Min
                 </button>
                 <button
                   onClick={() => applyTimePreset('1h')}
-                  className={timePreset === '1h'
-                    ? 'px-2 py-1 bg-blue-500 text-white text-xs rounded'
-                    : 'px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200'}
+                  className={`px-2 py-1 text-xs rounded ${timePreset === '1h' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                 >
                   1 Hour
                 </button>
                 <button
                   onClick={() => applyTimePreset('3h')}
-                  className={timePreset === '3h'
-                    ? 'px-2 py-1 bg-blue-500 text-white text-xs rounded'
-                    : 'px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200'}
+                  className={`px-2 py-1 text-xs rounded ${timePreset === '3h' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                 >
                   3 Hours
                 </button>
               </div>
             </div>
             
-            <div className="flex flex-col">
+            {/* Today/Yesterday */}
+            <div className="flex flex-col mt-2 sm:mt-0">
               <span className="text-xs text-gray-500 mb-1">Today/Yesterday</span>
-              <div className="flex gap-1">
+              <div className="flex flex-wrap gap-1">
                 <button
                   onClick={() => applyTimePreset('6h')}
-                  className={timePreset === '6h'
-                    ? 'px-2 py-1 bg-blue-500 text-white text-xs rounded'
-                    : 'px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200'}
+                  className={`px-2 py-1 text-xs rounded ${timePreset === '6h' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                 >
                   6 Hours
                 </button>
                 <button
                   onClick={() => applyTimePreset('12h')}
-                  className={timePreset === '12h'
-                    ? 'px-2 py-1 bg-blue-500 text-white text-xs rounded'
-                    : 'px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200'}
+                  className={`px-2 py-1 text-xs rounded ${timePreset === '12h' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                 >
                   12 Hours
                 </button>
                 <button
                   onClick={() => applyTimePreset('24h')}
-                  className={timePreset === '24h'
-                    ? 'px-2 py-1 bg-blue-500 text-white text-xs rounded'
-                    : 'px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200'}
+                  className={`px-2 py-1 text-xs rounded ${timePreset === '24h' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                 >
                   24 Hours
                 </button>
               </div>
             </div>
             
-            <div className="flex flex-col">
+            {/* Longer Period */}
+            <div className="flex flex-col mt-2 sm:mt-0">
               <span className="text-xs text-gray-500 mb-1">Longer Period</span>
-              <div className="flex gap-1">
+              <div className="flex flex-wrap gap-1">
                 <button
                   onClick={() => applyTimePreset('7d')}
-                  className={timePreset === '7d'
-                    ? 'px-2 py-1 bg-blue-500 text-white text-xs rounded'
-                    : 'px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200'}
+                  className={`px-2 py-1 text-xs rounded ${timePreset === '7d' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                 >
                   7 Days
                 </button>
@@ -835,36 +828,36 @@ export function AnalyticsManager({ restaurantId }: AnalyticsManagerProps) {
         
         {/* Business Hours Presets - only show when time filter is enabled */}
         {useTimeFilter && (
-          <div className="mb-4 ml-7">
+          <div className="mb-3 sm:mb-4 ml-0 sm:ml-7">
             <div className="text-xs text-gray-500 mb-1">Common Business Hours</div>
             <div className="flex flex-wrap gap-1">
               <button
                 onClick={() => applyBusinessHourPreset('morning')}
-                className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200"
+                className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200 mb-1"
               >
                 Morning (8am-12pm)
               </button>
               <button
                 onClick={() => applyBusinessHourPreset('lunch')}
-                className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200"
+                className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200 mb-1"
               >
                 Lunch (12pm-2pm)
               </button>
               <button
                 onClick={() => applyBusinessHourPreset('afternoon')}
-                className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200"
+                className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200 mb-1"
               >
                 Afternoon (2pm-5pm)
               </button>
               <button
                 onClick={() => applyBusinessHourPreset('evening')}
-                className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200"
+                className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200 mb-1"
               >
                 Evening (5pm-9pm)
               </button>
               <button
                 onClick={() => applyBusinessHourPreset('full_day')}
-                className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200"
+                className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200 mb-1"
               >
                 Full Day (8am-12am)
               </button>
@@ -948,7 +941,7 @@ export function AnalyticsManager({ restaurantId }: AnalyticsManagerProps) {
         </div>
 
         {/* Preset Range Buttons */}
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex flex-wrap gap-2 mb-3 sm:mb-4">
           {( ['1m','3m','6m','1y','all'] as const ).map((preset) => {
             const isSelected = selectedPreset === preset;
             return (
@@ -1021,9 +1014,9 @@ export function AnalyticsManager({ restaurantId }: AnalyticsManagerProps) {
         {/* Guest Orders */}
         {guestRows.length > 0 && (
           <div className="mb-6">
-            <h4 className="font-semibold text-lg mb-2">Guest Orders</h4>
-            <div className="overflow-x-auto">
-              <table className="table-auto w-full text-sm border border-gray-200">
+            <h4 className="font-semibold text-base sm:text-lg mb-2">Guest Orders</h4>
+            <div className="overflow-x-auto -mx-3 px-3">
+              <table className="table-auto w-full text-xs sm:text-sm border border-gray-200 whitespace-nowrap min-w-[500px]">
                 <thead className="bg-gray-100 border-b border-gray-200">
                   <tr>
                     <th
@@ -1098,9 +1091,9 @@ export function AnalyticsManager({ restaurantId }: AnalyticsManagerProps) {
         {/* Registered Users */}
         {registeredRows.length > 0 && (
           <div>
-            <h4 className="font-semibold text-lg mb-2">Registered Users</h4>
-            <div className="overflow-x-auto">
-              <table className="table-auto w-full text-sm border border-gray-200">
+            <h4 className="font-semibold text-base sm:text-lg mb-2">Registered Users</h4>
+            <div className="overflow-x-auto -mx-3 px-3">
+              <table className="table-auto w-full text-xs sm:text-sm border border-gray-200 whitespace-nowrap min-w-[500px]">
                 <thead className="bg-gray-100 border-b border-gray-200">
                   <tr>
                     <th

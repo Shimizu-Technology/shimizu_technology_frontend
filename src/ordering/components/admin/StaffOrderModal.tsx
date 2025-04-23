@@ -1,5 +1,5 @@
 // src/ordering/componenets/admin/StaffOrderModal.tsx
-import { useState, useEffect, useMemo, useRef, memo } from 'react';
+import { useState, useEffect, useMemo, useRef, memo, useCallback } from 'react';
 import toastUtils from '../../../shared/utils/toastUtils';
 import { useMenuStore } from '../../store/menuStore';
 import { useOrderStore } from '../../store/orderStore';
@@ -89,6 +89,26 @@ function useIsMobile() {
     return () => window.removeEventListener('resize', checkSize);
   }, []);
   return isMobile;
+}
+
+/** Find the correct viewport height for mobile browsers */
+function useVh() {
+  const [vh, setVh] = useState(0);
+  
+  useEffect(() => {
+    const updateVh = () => {
+      // This helps handle mobile browser address bar behavior
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+      setVh(vh);
+    };
+    
+    updateVh();
+    window.addEventListener('resize', updateVh);
+    return () => window.removeEventListener('resize', updateVh);
+  }, []);
+  
+  return vh;
 }
 
 /** --------------------------------------------------------------------
@@ -458,11 +478,13 @@ function OrderPanel({
 }: OrderPanelProps) {
   const getItemKey = useOrderStore(state => state._getItemKey);
   const [staffOptionsExpanded, setStaffOptionsExpanded] = useState(true);
+  // Use isMobile to conditionally render content
+  const isMobile = useIsMobile();
 
   return (
     <div className="flex flex-col h-full">
       {/* Scrollable cart section */}
-      <div className="overflow-y-auto flex-1 p-4 pb-[150px]">
+      <div className="overflow-y-auto flex-1 p-4 pb-[150px] max-h-[calc(100%-150px)]">
         <h3 className="text-lg font-semibold mb-4">Current Order</h3>
         
         {/* Staff Order Checkbox and Toggle */}
@@ -704,7 +726,7 @@ function OrderPanel({
         )}
       </div>
 
-      {/* Bottom bar for totals and 'Create Order' */}
+      {/* Bottom bar for totals and 'Create Order' - only show on desktop */}
       <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-md">
         {isStaffOrder && (
           <div className="mb-3 bg-gray-50 p-2 rounded-md border border-gray-200">
@@ -720,12 +742,15 @@ function OrderPanel({
             </div>
           </div>
         )}
-        <div className="flex justify-between items-center mb-4">
-          <span className="font-semibold text-gray-700 text-lg">Total:</span>
-          <span className="font-bold text-xl text-[#0078d4]">
-            ${orderTotal.toFixed(2)}
-          </span>
-        </div>
+        {/* Only show the Total area on desktop to avoid duplication */}
+        {!isMobile && (
+          <div className="flex justify-between items-center mb-4">
+            <span className="font-semibold text-gray-700 text-lg">Total:</span>
+            <span className="font-bold text-xl text-[#0078d4]">
+              ${orderTotal.toFixed(2)}
+            </span>
+          </div>
+        )}
 
         <div className="grid gap-2 sm:grid-cols-2">
           <button
@@ -753,18 +778,7 @@ function OrderPanel({
                   <path
                     className="opacity-75"
                     fill="currentColor"
-                    d="M4 12a8 8 0
-                      018-8V0C5.373 0 0 5.373 0 12h4zm2
-                      5.291A7.962
-                      7.962
-                      0
-                      014
-                      12H0c0
-                      3.042
-                      1.135
-                      5.824
-                      3
-                      7.938l3-2.647z"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
                 Processing...
@@ -793,10 +807,6 @@ interface CustomerInfoPanelProps {
   setContactEmail: (val: string) => void;
   specialInstructions: string;
   setSpecialInstructions: (val: string) => void;
-  
-  handleSubmitOrder: () => void;
-  cartItems: any[];
-  orderLoading: boolean;
   onBack: () => void;
 }
 
@@ -805,78 +815,68 @@ function CustomerInfoPanel({
   contactPhone, setContactPhone,
   contactEmail, setContactEmail,
   specialInstructions, setSpecialInstructions,
-  handleSubmitOrder,
-  cartItems,
-  orderLoading,
   onBack,
 }: CustomerInfoPanelProps) {
 
   return (
     <div className="flex flex-col h-full">
       {/* Scrollable content area */}
-      <div className="overflow-y-auto flex-1">
-        <div className="px-4 py-4 space-y-4 pb-16">
-          <h3 className="text-lg font-semibold text-gray-800 sticky top-0 bg-white z-10 py-2">Customer Information</h3>
+      <div className="overflow-y-auto flex-1 max-h-[calc(100vh-120px)] md:max-h-[calc(100%-70px)]">
+        <div className="px-4 py-4 space-y-4 pb-20">
+          <h3 className="text-lg font-semibold text-gray-800 sticky top-0 bg-white z-10 py-2 -mt-2">Customer Information</h3>
           
-          {/* Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-            <input
-              type="text"
-              value={contactName}
-              onChange={e => setContactName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none
-                         focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4] text-sm shadow-sm"
-              placeholder="Customer name"
-            />
-          </div>
-          
-          {/* Phone */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-            <input
-              type="tel"
-              value={contactPhone}
-              onChange={e => setContactPhone(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none
-                         focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4] text-sm shadow-sm"
-              placeholder="+1671"
-            />
-          </div>
-          
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              value={contactEmail}
-              onChange={e => setContactEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none
-                         focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4] text-sm shadow-sm"
-              placeholder="Email address"
-            />
-          </div>
-          
-          {/* Special Instructions */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Special Instructions
-            </label>
-            <textarea
-              value={specialInstructions}
-              onChange={e => setSpecialInstructions(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none
-                         focus:ring-2 focus:ring-[#0078d4] focus:border-[#0078d4] text-sm shadow-sm"
-              placeholder="Special instructions or notes"
-              rows={4}
-            />
-          </div>
-
+          <form className="space-y-4 w-full px-4">
+            <div>
+              <label htmlFor="contactName" className="block text-sm font-medium text-gray-700">Name <span className="text-gray-400">(Optional)</span></label>
+              <input
+                type="text"
+                id="contactName"
+                value={contactName}
+                onChange={(e) => setContactName(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#0078d4] focus:border-[#0078d4]"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="contactPhone" className="block text-sm font-medium text-gray-700">Phone <span className="text-gray-400">(Optional)</span></label>
+              <input
+                type="tel"
+                id="contactPhone"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                placeholder="+16711234567"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#0078d4] focus:border-[#0078d4]"
+              />
+              <p className="text-xs text-gray-500 mt-1">Format: +1671 followed by 7 digits</p>
+            </div>
+            
+            <div>
+              <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700">Email <span className="text-gray-400">(Optional)</span></label>
+              <input
+                type="email"
+                id="contactEmail"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#0078d4] focus:border-[#0078d4]"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="specialInstructions" className="block text-sm font-medium text-gray-700">Special Instructions <span className="text-gray-400">(Optional)</span></label>
+              <textarea
+                id="specialInstructions"
+                value={specialInstructions}
+                onChange={(e) => setSpecialInstructions(e.target.value)}
+                rows={3}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#0078d4] focus:border-[#0078d4]"
+              />
+            </div>
+          </form>
         </div>
       </div>
 
       {/* Bottom button: "Back to Order" */}
-      <div className="px-4 absolute bottom-4 left-0 right-0">
+      <div className="px-4 sticky bottom-0 left-0 right-0 bg-white pt-2 pb-4 shadow-md border-t border-gray-100 z-10">
         <button
           onClick={onBack}
           className="w-full py-2.5 text-sm font-medium bg-gray-50 border border-gray-300
@@ -1115,13 +1115,11 @@ function PaymentPanel({
   return (
     <div className="flex flex-col h-full">
       {/* Scrollable content area with more padding for payment elements */}
-      <div className="overflow-y-auto p-4 pb-28 flex-1">
-        <h3 className="text-lg font-semibold mb-4 text-gray-800 sticky top-0 bg-white z-10 py-2">Payment</h3>
-
+      <div className="overflow-y-auto p-6 pb-28 flex-1">
         {/* Payment Method Selection */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
-          <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
+          <label className="block text-sm font-medium text-gray-700 mb-3">Payment Method</label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <button
               type="button"
               className={`px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
@@ -1491,9 +1489,8 @@ function PaymentPanel({
         <div className="grid gap-2 sm:grid-cols-2">
           <button
             onClick={onBack}
-            className="py-3 text-gray-700 bg-gray-100 rounded-md font-medium
-                       hover:bg-gray-200 focus:outline-none focus:ring-2
-                       focus:ring-gray-300 shadow-sm transition-colors"
+            className="py-3 text-gray-700 bg-gray-100 rounded-md font-medium hover:bg-gray-200
+              focus:outline-none focus:ring-2 focus:ring-gray-300 shadow-sm transition-colors"
             disabled={isProcessing}
           >
             Back
@@ -1513,7 +1510,7 @@ function PaymentPanel({
             >
               {isProcessing ? (
                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none">
                     <circle className="opacity-25" cx="12" cy="12" r="10"
                       stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor"
@@ -1580,45 +1577,32 @@ function PaymentPanel({
 /** --------------------------------------------------------------------
  * STAFF ORDER MODAL (MAIN)
  * -------------------------------------------------------------------*/
+/** Calculate the order total with any applicable discounts */
+function calculateOrderTotal(items: any[], isStaff: boolean, onDuty: boolean, staffId: number | null): number {
+  // Calculate raw total from all cart items
+  const rawTotal = items.reduce((total: number, item: any) => {
+    const itemPrice = typeof item.price === 'number' ? item.price : 0;
+    const itemQuantity = typeof item.quantity === 'number' ? item.quantity : 1;
+    return total + (itemPrice * itemQuantity);
+  }, 0);
+  
+  // Apply staff discount if applicable
+  if (isStaff && staffId) {
+    return onDuty ? rawTotal * 0.5 : rawTotal * 0.7; // 50% for on-duty, 30% for off-duty
+  }
+  
+  // No discount for regular orders
+  return rawTotal;
+}
+
 export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProps): JSX.Element {
   // Used in conditional rendering logic
   const isMobile = useIsMobile();
-
-  // Basic Customer info - used in customer info panel
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [contactName, setContactName] = useState('');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [contactPhone, setContactPhone] = useState('+1671');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [contactEmail, setContactEmail] = useState('');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [specialInstructions, setSpecialInstructions] = useState('');
-  
-  // Staff order info - used in staff order options
-  const [isStaffOrder, setIsStaffOrder] = useState(false);
-  const [staffMemberId, setStaffMemberId] = useState<number | null>(null);
-  const [staffOnDuty, setStaffOnDuty] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [useHouseAccount, setUseHouseAccount] = useState(false);
-  // Used for tracking order creation metadata
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [createdByStaffId, setCreatedByStaffId] = useState<number | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [createdByUserId, setCreatedByUserId] = useState<number | null>(null);
-  
-
-  // Used for price calculations
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [preDiscountTotal, setPreDiscountTotal] = useState(0);
-
+  // Handle mobile viewport height issues
+  useVh();
 
   // Data & cart from store
   const { menuItems, fetchMenuItems, loading: menuLoading, currentMenuId } = useMenuStore();
-  
-  // Debug: Log currentMenuId when it changes
-  useEffect(() => {
-    // Current menu ID updated
-  }, [currentMenuId]);
   const {
     cartItems,
     addToCart,
@@ -1628,7 +1612,37 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
     addOrder,
     loading: orderLoading
   } = useOrderStore();
-
+  
+  // Basic Customer info - used in customer info panel
+  const [contactName, setContactName] = useState('');
+  const [contactPhone, setContactPhone] = useState('+1671');
+  const [contactEmail, setContactEmail] = useState('');
+  const [specialInstructions, setSpecialInstructions] = useState('');
+  
+  // Staff order info - used in staff order options
+  const [isStaffOrder, setIsStaffOrder] = useState(false);
+  const [staffMemberId, setStaffMemberId] = useState<number | null>(null);
+  const [staffOnDuty, setStaffOnDuty] = useState(false);
+  const [useHouseAccount, setUseHouseAccount] = useState(false);
+  
+  // Used for tracking order creation metadata
+  const [createdByStaffId, setCreatedByStaffId] = useState<number | null>(null);
+  const [createdByUserId, setCreatedByUserId] = useState<number | null>(null);
+  
+  // Used for price calculations
+  const [preDiscountTotal] = useState(0);
+  
+  // Used for payment processing
+  const [paymentTransactionId, setPaymentTransactionId] = useState<string>('');
+  
+  // Calculate order total based on cart items and applicable discounts
+  const orderTotal = useMemo(() => {
+    return calculateOrderTotal(cartItems, isStaffOrder, staffOnDuty, staffMemberId);
+  }, [cartItems, isStaffOrder, staffOnDuty, staffMemberId]);
+  
+  // Payment processing state
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  
   // Categories
   const [categories, setCategories] = useState<Map<number, string>>(new Map());
   const [selectedCategory, setSelectedCategory] = useState<number | 'all'>('all');
@@ -1636,6 +1650,30 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
 
   // For item customization
   const [customizingItem, setCustomizingItem] = useState<MenuItem | null>(null);
+  
+  // Mobile tabs
+  const [activeTab, setActiveTab] = useState<'menu' | 'order' | 'customer' | 'payment'>('menu');
+
+  // Desktop "Add Customer Info" toggle
+  const [showCustomerInfoDesktop, setShowCustomerInfoDesktop] = useState(false);
+  
+  // Payment overlay
+  const [showPaymentPanel, setShowPaymentPanel] = useState(false);
+  
+  // Store all categories from API
+  const [allCategories, setAllCategories] = useState<any[]>([]);
+  
+  // Reference to track loaded data
+  const dataLoadingState = useRef({
+    menuItemsLoaded: false,
+    categoriesLoaded: false,
+    prefetchedCategories: new Set<number>()
+  });
+
+  // Debug: Log currentMenuId when it changes
+  useEffect(() => {
+    // Current menu ID updated
+  }, [currentMenuId]);
   
   // Fetch current user's staff member record to auto-set the createdByStaffId and createdByUserId
   useEffect(() => {
@@ -1690,50 +1728,14 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
     fetchCurrentUserStaffRecord();
   }, []);
 
-  // Mobile tabs
-  const [activeTab, setActiveTab] = useState<'menu' | 'order' | 'customer' | 'payment'>('menu');
-
-  // Desktop "Add Customer Info" toggle
-  const [showCustomerInfoDesktop, setShowCustomerInfoDesktop] = useState(false);
-  
-  // Payment overlay
-  const [showPaymentPanel, setShowPaymentPanel] = useState(false);
-  const [paymentProcessing, setPaymentProcessing] = useState(false);
-  // Used for tracking payment transactions
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [paymentTransactionId, setPaymentTransactionId] = useState<string | null>(null);
-
-  // Calculate raw total (before any discounts)
-  const rawTotal = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  
-  // Update pre-discount total for staff orders
+  // Ensure changes to cart items update the orderTotal calculation
   useEffect(() => {
-    setPreDiscountTotal(rawTotal);
-  }, [rawTotal, setPreDiscountTotal]);
-  
-  // Calculate discounted total for staff orders
-  const orderTotal = useMemo(() => {
-    if (isStaffOrder && staffMemberId) {
-      // Apply staff discount based on duty status
-      if (staffOnDuty) {
-        // 50% discount for on-duty staff
-        return rawTotal * 0.5;
-      } else {
-        // 30% discount for off-duty staff
-        return rawTotal * 0.7;
-      }
+    if (cartItems.length > 0) {
+      // The orderTotal is already calculated via useMemo, so this is just a hook for side effects
+      // We could update other state here if needed based on cart changes
     }
-    // No discount for regular orders
-    return rawTotal;
-  }, [rawTotal, isStaffOrder, staffMemberId, staffOnDuty]);
-
-  // Reference to track loaded data
-  const dataLoadingState = useRef({
-    menuItemsLoaded: false,
-    categoriesLoaded: false,
-    prefetchedCategories: new Set<number>()
-  });
-
+  }, [cartItems, isStaffOrder, staffOnDuty, staffMemberId]);
+  
   // On mount, fetch menu items with optimized loading
   useEffect(() => {
     const { restaurant } = useRestaurantStore.getState();
@@ -1775,9 +1777,6 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
     };
   }, [fetchMenuItems, clearCart]);
 
-  // Store all categories from API
-  const [allCategories, setAllCategories] = useState<any[]>([]);
-  
   // Load all categories once menuItems is present with tenant validation
   useEffect(() => {
     async function fetchCats() {
@@ -1876,10 +1875,23 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
   }, [filteredCategories]);
 
   // Restaurant store
-  const restaurantStore = useRestaurantStore();
-  // Helper for cart keys
-  const getItemKey = useOrderStore(state => state._getItemKey);
-
+  
+  // Helper function to generate consistent key for cart items
+  const getItemKey = useCallback((item: any) => {
+    return item.id || item.key || JSON.stringify(item);
+  }, []);
+  
+  // Create category map from allCategories for passing to child components
+  const categoriesMap = useMemo(() => {
+    const map = new Map<number, string>();
+    allCategories.forEach((category: any) => {
+      if (category.id) {
+        map.set(category.id, category.name || '');
+      }
+    });
+    return map;
+  }, [allCategories]);
+  
   function findCartItem(id: string) {
     // direct match or fallback to composite key
     let item = cartItems.find(c => c.id === id);
@@ -1972,7 +1984,7 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
   }
 
   /** Payment success for non-staff path */
-  const handlePaymentSuccess = (details: {
+  function handlePaymentSuccess(details: {
     status: string;
     transaction_id: string;
     payment_id?: string;
@@ -1981,7 +1993,8 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
     payment_method?: string;
     payment_intent_id?: string;
     payment_details?: any;
-  }) => {
+  }) {
+    // Store transaction ID for order submission
     setPaymentProcessing(false);
     setPaymentTransactionId(details.transaction_id);
     
@@ -2033,13 +2046,14 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
     setPaymentProcessing(false);
   };
 
-  async function submitOrderWithPayment(transactionId: string, paymentDetails?: any, paymentMethod: string = 'credit_card') {
-    if (!cartItems.length) {
-      toastUtils.error('Please add items to the order');
-      return;
-    }
-    const finalPhone = contactPhone.trim() === '+1671' ? '' : contactPhone.trim();
-    if (finalPhone && !isValidPhone(finalPhone)) {
+  async function submitOrderWithPayment(transactionId?: string, paymentDetails?: any, paymentMethod?: string) {
+    // Use transaction ID from state if not provided
+    const finalTransactionId = transactionId || paymentTransactionId;
+    // Order loading state is managed by the store
+
+    // Phone validation - only validate if phone is provided
+    const phoneRegex = /^\+\d{3,4}\d{7}$/;
+    if (contactPhone && contactPhone.trim() !== '+1671' && !phoneRegex.test(contactPhone)) {
       toastUtils.error('Phone must be + (3 or 4 digit area code) + 7 digits');
       return;
     }
@@ -2084,15 +2098,16 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
         staffOrderParams: staffOrderParams
       };
       
+      // Use contactPhone directly since we already validated it
       const newOrder = await addOrder(
         cartItems,
         orderTotal,
-        specialInstructions,
-        contactName,
-        finalPhone,
-        contactEmail,
-        transactionId,
-        paymentMethod,
+        specialInstructions || '',
+        contactName || '',
+        contactPhone || '',
+        contactEmail || '',
+        finalTransactionId || '',
+        paymentMethod || '',
         '', // vipCode parameter
         true, // Add staff_modal parameter to indicate this is a staff-created order
         enhancedPaymentDetails // Combined payment details and staff order params
@@ -2100,17 +2115,18 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
       
       // Create an OrderPayment record for manual payment methods
       // Note: We exclude stripe_reader since it's already creating OrderPayment records
-      if (['cash', 'other', 'clover', 'revel', 'house_account'].includes(paymentMethod)) {
+      const method = paymentMethod || '';
+      if (['cash', 'other', 'clover', 'revel', 'house_account'].includes(method)) {
         try {
-          if (paymentMethod === 'cash') {
+          if (method === 'cash') {
             // Use the cash-specific endpoint for cash payments
             await apiClient.post(`/orders/${newOrder.id}/payments/cash`, {
               order_total: orderTotal,
               cash_received: paymentDetails?.cash_received || orderTotal,
               payment_method: 'cash',
-              transaction_id: transactionId
+              transaction_id: paymentTransactionId || ''
             });
-          } else if (paymentMethod === 'house_account') {
+          } else if (method === 'house_account') {
             // For house account payments, no additional API call is needed
             // The backend already processes the house account payment when creating the order
             // House account payment processed
@@ -2118,9 +2134,9 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
             // For other manual payment methods, use the additional endpoint
             await apiClient.post(`/orders/${newOrder.id}/payments/additional`, {
               amount: orderTotal,
-              payment_method: paymentMethod,
-              payment_details: paymentDetails,
-              transaction_id: transactionId,
+              payment_method: paymentMethod || 'other',
+              payment_details: paymentDetails || {},
+              transaction_id: paymentTransactionId || '',
               items: [] // No additional items, just creating a payment record
             });
           }
@@ -2151,6 +2167,8 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
       toastUtils.error('Please add items to the order');
       return;
     }
+    
+    // Make phone validation optional - only validate if phone is provided
     const finalPhone = contactPhone.trim() === '+1671' ? '' : contactPhone.trim();
     if (finalPhone && !isValidPhone(finalPhone)) {
       toastUtils.error('Phone must be + (3 or 4 digit area code) + 7 digits');
@@ -2189,105 +2207,79 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
     }
   }
 
-  // MOBILE TABS
+  // MOBILE Layout
   function renderMobileLayout(): JSX.Element {
+    // Calculate cart quantity for badge
+    const cartItemCount = cartItems.reduce((total: number, item: any) => total + (item.quantity || 1), 0);
+    
+    // Handle tab switching
+    const handleTabChange = (tab: 'menu' | 'order' | 'customer' | 'payment') => {
+      setActiveTab(tab);
+    };
+    
     return (
-      <div className="flex flex-col overflow-hidden h-full">
-        {/* Tab bar */}
-        <div className="border-b border-gray-200 flex items-center justify-around bg-white shadow-sm">
+      <div className="flex flex-col h-full w-full">
+        {/* Mobile Header with Close Button */}
+        <div className="sticky top-0 z-10 bg-white shadow-sm px-4 py-3 flex justify-between items-center border-b border-gray-200">
+          <h2 className="text-lg font-medium text-gray-800">Create Order</h2>
           <button
-            onClick={() => setActiveTab('menu')}
-            className={`flex-1 py-3 text-sm font-medium text-center ${
-              activeTab === 'menu'
-                ? 'text-[#0078d4] border-b-2 border-[#0078d4]'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 focus:outline-none rounded-full hover:bg-gray-100 p-1.5 transition-colors"
+            aria-label="Close"
           >
-            Menu Items
-          </button>
-          <button
-            onClick={() => setActiveTab('order')}
-            className={`flex-1 py-3 text-sm font-medium text-center relative ${
-              activeTab === 'order'
-                ? 'text-[#0078d4] border-b-2 border-[#0078d4]'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            Current Order
-            {cartItems.length > 0 && (
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 bg-[#0078d4] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {cartItems.length}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab('customer')}
-            className={`flex-1 py-3 text-sm font-medium text-center ${
-              activeTab === 'customer'
-                ? 'text-[#0078d4] border-b-2 border-[#0078d4]'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            Customer Info
-          </button>
-          <button
-            onClick={() => setActiveTab('payment')}
-            className={`flex-1 py-3 text-sm font-medium text-center ${
-              activeTab === 'payment'
-                ? 'text-[#0078d4] border-b-2 border-[#0078d4]'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            Payment
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
-
-        {/* Tab content */}
-        {activeTab === 'menu' && (
-          <MenuItemsPanel
-            menuItems={menuItems}
-            menuLoading={menuLoading}
-            categories={categories}
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            findCartItem={findCartItem}
-            handleAddItem={handleAddItem}
-            setCustomizingItem={setCustomizingItem}
-            setCartQuantity={setCartQuantity}
-            removeFromCart={removeFromCart}
-            getItemKey={getItemKey}
-          />
-        )}
-        {activeTab === 'order' && (
-          <OrderPanel
-            cartItems={cartItems}
-            findCartItem={findCartItem}
-            setCartQuantity={setCartQuantity}
-            removeFromCart={removeFromCart}
-            handleSubmitOrder={handleSubmitOrder}
-            orderTotal={orderTotal}
-            orderLoading={orderLoading}
-            onClose={onClose}
-            menuItems={menuItems}
-            setCustomizingItem={setCustomizingItem}
-            isStaffOrder={isStaffOrder}
-            setIsStaffOrder={setIsStaffOrder}
-            staffMemberId={staffMemberId}
-            setStaffMemberId={setStaffMemberId}
-            staffOnDuty={staffOnDuty}
-            setStaffOnDuty={setStaffOnDuty}
-            useHouseAccount={useHouseAccount}
-            setUseHouseAccount={setUseHouseAccount}
-            createdByStaffId={createdByStaffId}
-            setCreatedByStaffId={setCreatedByStaffId}
-            preDiscountTotal={preDiscountTotal}
-          />
-        )}
-        {activeTab === 'customer' && (
-          <div className="h-full flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-hidden">
+        {/* Main Content Area with padding at bottom to ensure content isn't covered by fixed nav */}
+        <div className="flex-1 overflow-y-auto pb-24 h-full" aria-label="Main content">
+          {activeTab === 'menu' && (
+            <MenuItemsPanel
+              menuItems={menuItems}
+              menuLoading={menuLoading}
+              categories={categories}
+              selectedCategory={selectedCategory}
+              setSelectedCategory={setSelectedCategory}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              findCartItem={findCartItem}
+              handleAddItem={handleAddItem}
+              setCustomizingItem={setCustomizingItem}
+              setCartQuantity={setCartQuantity}
+              removeFromCart={removeFromCart}
+              getItemKey={getItemKey}
+            />
+          )}
+          
+          {activeTab === 'order' && (
+            <OrderPanel
+              cartItems={cartItems}
+              findCartItem={findCartItem}
+              setCartQuantity={setCartQuantity}
+              removeFromCart={removeFromCart}
+              handleSubmitOrder={handleSubmitOrder}
+              orderTotal={orderTotal}
+              orderLoading={orderLoading}
+              onClose={onClose}
+              menuItems={menuItems}
+              setCustomizingItem={setCustomizingItem}
+              isStaffOrder={isStaffOrder}
+              setIsStaffOrder={setIsStaffOrder}
+              staffMemberId={staffMemberId}
+              setStaffMemberId={setStaffMemberId}
+              staffOnDuty={staffOnDuty}
+              setStaffOnDuty={setStaffOnDuty}
+              useHouseAccount={useHouseAccount}
+              setUseHouseAccount={setUseHouseAccount}
+              createdByStaffId={createdByStaffId}
+              setCreatedByStaffId={setCreatedByStaffId}
+              preDiscountTotal={preDiscountTotal}
+            />
+          )}
+          
+          {activeTab === 'customer' && (
+            <div className="h-full overflow-hidden">
               <CustomerInfoPanel
                 contactName={contactName}
                 setContactName={setContactName}
@@ -2297,27 +2289,115 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
                 setContactEmail={setContactEmail}
                 specialInstructions={specialInstructions}
                 setSpecialInstructions={setSpecialInstructions}
-                handleSubmitOrder={handleSubmitOrder}
-                cartItems={cartItems}
-                orderLoading={orderLoading}
-                onBack={() => setActiveTab('order')}
+                onBack={() => handleTabChange('order')}
               />
             </div>
-          </div>
-        )}
-        {activeTab === 'payment' && (
-          <div className="h-full flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-hidden max-h-[calc(100vh-120px)]">
-              <PaymentPanel
-                orderTotal={orderTotal}
-                onPaymentSuccess={handlePaymentSuccess}
-                onPaymentError={handlePaymentError}
-                onBack={() => setActiveTab('customer')}
-                isProcessing={paymentProcessing}
-              />
+          )}
+          
+          {activeTab === 'payment' && (
+            <PaymentPanel
+              orderTotal={orderTotal}
+              onPaymentSuccess={handlePaymentSuccess}
+              onPaymentError={handlePaymentError}
+              onBack={() => handleTabChange('customer')}
+              isProcessing={paymentProcessing}
+            />
+          )}
+        </div>
+
+        {/* Sticky Footer Tab Navigation */}
+        <div className="fixed bottom-0 left-0 right-0 z-10 bg-white border-t border-gray-200 shadow-lg" aria-label="Mobile navigation">
+          {/* Conditional Action Button - only shown in order tab with items */}
+          {/* Always show the total area but only enable button when there are items */}
+          <div className="p-3 flex justify-between items-center border-b border-gray-200">
+            <div>
+              <div className="text-sm text-gray-600">Total:</div>
+              <div className="text-lg font-bold text-[#0078d4]">${orderTotal.toFixed(2)}</div>
             </div>
+            {activeTab === 'order' && cartItems.length > 0 && (
+              <button
+                onClick={() => handleTabChange('customer')}
+                className="bg-[#0078d4] hover:bg-[#005a9e] text-white py-2 px-5 rounded-md font-medium transition-colors"
+              >
+                Continue
+              </button>
+            )}
           </div>
-        )}
+
+          {/* Tab Navigation - Four tab design with custom SVG icons to prevent text leakage */}
+          <nav className="flex justify-between items-center py-1 px-2" aria-label="Primary mobile navigation">
+            <button
+              onClick={() => handleTabChange('menu')}
+              className={`flex flex-col items-center justify-center py-2 px-1 w-1/4 relative ${activeTab === 'menu' ? 'text-[#0078d4] font-medium' : 'text-gray-600'}`}
+              aria-current={activeTab === 'menu' ? 'page' : undefined}
+            >
+              <div className="h-6 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 3h18v18H3z"></path>
+                  <path d="M9 8h10"></path>
+                  <path d="M9 12h10"></path>
+                  <path d="M9 16h10"></path>
+                  <path d="M5 8v.01"></path>
+                  <path d="M5 12v.01"></path>
+                  <path d="M5 16v.01"></path>
+                </svg>
+              </div>
+              <span className="text-xs mt-1 whitespace-nowrap text-center">Menu</span>
+              {activeTab === 'menu' && <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-[#0078d4]"></span>}
+            </button>
+            
+            <button
+              onClick={() => handleTabChange('order')}
+              className={`flex flex-col items-center justify-center py-2 px-1 w-1/4 relative ${activeTab === 'order' ? 'text-[#0078d4] font-medium' : 'text-gray-600'}`}
+              aria-current={activeTab === 'order' ? 'page' : undefined}
+            >
+              <div className="h-6 flex items-center justify-center relative">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="9" cy="21" r="1"></circle>
+                  <circle cx="20" cy="21" r="1"></circle>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-2 -right-3 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-[#0078d4] rounded-full">
+                    {cartItemCount}
+                  </span>
+                )}
+              </div>
+              <span className="text-xs mt-1 whitespace-nowrap text-center">Order</span>
+              {activeTab === 'order' && <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-[#0078d4]"></span>}
+            </button>
+            
+            <button
+              onClick={() => handleTabChange('customer')}
+              className={`flex flex-col items-center justify-center py-2 px-1 w-1/4 relative ${activeTab === 'customer' ? 'text-[#0078d4] font-medium' : 'text-gray-600'}`}
+              aria-current={activeTab === 'customer' ? 'page' : undefined}
+            >
+              <div className="h-6 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+              <span className="text-xs mt-1 whitespace-nowrap text-center">Customer</span>
+              {activeTab === 'customer' && <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-[#0078d4]"></span>}
+            </button>
+            
+            <button
+              onClick={() => handleTabChange('payment')}
+              className={`flex flex-col items-center justify-center py-2 px-1 w-1/4 relative ${activeTab === 'payment' ? 'text-[#0078d4] font-medium' : 'text-gray-600'}`}
+              aria-current={activeTab === 'payment' ? 'page' : undefined}
+            >
+              <div className="h-6 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                  <line x1="1" y1="10" x2="23" y2="10"></line>
+                </svg>
+              </div>
+              <span className="text-xs mt-1 whitespace-nowrap text-center">Payment</span>
+              {activeTab === 'payment' && <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-[#0078d4]"></span>}
+            </button>
+          </nav>
+        </div>
       </div>
     );
   }
@@ -2328,12 +2408,30 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
       // Payment overlay with higher z-index
       return (
         <div className="flex-1 flex overflow-hidden h-full relative">
-          {/* Dimmed background */}
-          <div className="absolute inset-0 bg-black bg-opacity-30 z-10"></div>
-          {/* Payment Panel on top (z-20) */}
-          <div className="absolute inset-0 flex items-start sm:items-center justify-center z-20 p-4 pt-8 sm:pt-4 md:p-6 lg:p-8 overflow-y-auto">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-md sm:max-w-lg md:max-w-2xl my-auto sm:my-4 md:my-6 max-h-[90vh]">
-              <div className="flex flex-col h-full">
+          {/* Dimmed background with higher z-index to cover the entire modal */}
+          <div className="fixed inset-0 bg-black bg-opacity-70 z-[60]"></div>
+          
+          {/* Payment Panel on top with even higher z-index */}
+          <div className="fixed inset-0 flex items-center justify-center z-[70] p-4 overflow-y-auto">
+            <div 
+              className="bg-white rounded-lg shadow-2xl w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl 
+                        my-auto mx-auto max-h-[calc(100vh-40px)] overflow-hidden flex flex-col"
+            >
+              {/* Payment panel header */}
+              <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-white sticky top-0 z-10">
+                <h2 className="text-xl font-semibold text-gray-800">Payment</h2>
+                <button
+                  onClick={() => setShowPaymentPanel(false)}
+                  className="text-gray-500 hover:text-gray-700 focus:outline-none rounded-full hover:bg-gray-100 p-1.5 transition-colors"
+                  aria-label="Close payment panel"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="flex flex-col">
                 <PaymentPanel
                   orderTotal={orderTotal}
                   onPaymentSuccess={handlePaymentSuccess}
@@ -2348,7 +2446,7 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
           {/* Main layout behind overlay */}
           <div className="flex-1 flex overflow-hidden h-full">
             {/* Left column: Menu Items */}
-            <div className="w-2/3 flex flex-col border-r border-gray-200">
+            <div className="w-2/3 flex flex-col border-r border-gray-200 overflow-hidden">
               <MenuItemsPanel
                 menuItems={menuItems}
                 menuLoading={menuLoading}
@@ -2367,7 +2465,7 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
             </div>
 
             {/* Right column: Order + optional Customer Info */}
-            <div className="w-1/3 flex flex-col relative">
+            <div className="w-1/3 flex flex-col relative overflow-hidden">
               <OrderPanel
                 cartItems={cartItems}
                 findCartItem={findCartItem}
@@ -2401,7 +2499,7 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
                     Add Customer Info
                   </button>
                 ) : (
-                  <div className="mt-4 border border-gray-200 rounded-md p-3 shadow-sm bg-gray-50">
+                  <div className="mt-4 border border-gray-200 rounded-md shadow-sm bg-gray-50 max-h-[300px] md:max-h-[350px] overflow-hidden">
                     <CustomerInfoPanel
                       contactName={contactName}
                       setContactName={setContactName}
@@ -2411,9 +2509,6 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
                       setContactEmail={setContactEmail}
                       specialInstructions={specialInstructions}
                       setSpecialInstructions={setSpecialInstructions}
-                      handleSubmitOrder={handleSubmitOrder}
-                      cartItems={cartItems}
-                      orderLoading={orderLoading}
                       onBack={() => setShowCustomerInfoDesktop(false)}
                     />
                   </div>
@@ -2429,7 +2524,7 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
     return (
       <div className="flex-1 flex overflow-hidden h-full">
         {/* Left: Menu Items */}
-        <div className="w-2/3 flex flex-col border-r border-gray-200">
+        <div className="w-2/3 flex flex-col border-r border-gray-200 overflow-hidden">
           <MenuItemsPanel
             menuItems={menuItems}
             menuLoading={menuLoading}
@@ -2448,7 +2543,7 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
         </div>
 
         {/* Right: Order + optional Customer Info */}
-        <div className="w-1/3 flex flex-col relative">
+        <div className="w-1/3 flex flex-col relative overflow-hidden">
           <OrderPanel
             cartItems={cartItems}
             findCartItem={findCartItem}
@@ -2563,33 +2658,33 @@ export function StaffOrderModal({ onClose, onOrderCreated }: StaffOrderModalProp
   }
 
   /** RENDER */
+  
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4">
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-0 sm:p-4">
       <div
-        className="bg-white rounded-lg shadow-xl
-                   w-[95vw] max-w-[1100px]
-                   h-[90vh] max-h-[800px]
-                   flex flex-col
-                   overflow-hidden"
+        className={`bg-white ${!isMobile ? 'rounded-lg' : ''} shadow-xl w-full ${isMobile ? 'h-[100vh]' : 'h-[90vh] md:h-[80vh]'} ${!isMobile ? 'md:w-[80vw] lg:w-[1024px]' : ''} md:mx-auto overflow-hidden flex flex-col`}
       >
-        {/* Header with "Close" button */}
-        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center shadow-sm">
-          <h2 className="text-xl font-semibold text-gray-800">
-            Create Order
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 focus:outline-none
-                       rounded-full hover:bg-gray-100 p-1 transition-colors"
-            aria-label="Close"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+        {/* Header shown only in desktop mode or on mobile when not in the main render */}
+        {!isMobile && (
+          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center shadow-sm">
+            <h2 className="text-xl font-semibold text-gray-800">
+              Create Order
+            </h2>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 focus:outline-none
+                        rounded-full hover:bg-gray-100 p-1 transition-colors"
+              aria-label="Close"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
 
+        {/* Use conditional rendering for layout */}
         {isMobile ? renderMobileLayout() : renderDesktopLayout()}
       </div>
 

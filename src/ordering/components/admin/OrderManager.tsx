@@ -1308,15 +1308,15 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
     <div className="p-4">
       {error && <p className="text-red-600 mb-4">{error}</p>}
 
-      {/* Header section */}
-      <div className="mb-6 flex justify-between items-center">
+      {/* Header section - mobile optimized */}
+      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold">Order Management</h2>
           <p className="text-gray-600 text-sm">Manage and track customer orders</p>
         </div>
         <button
           onClick={() => setShowStaffOrderModal(true)}
-          className="px-4 py-2 bg-[#0078d4] text-white rounded-md font-medium hover:bg-[#005a9e] focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:ring-opacity-50 flex items-center space-x-2"
+          className="w-full sm:w-auto px-4 py-3 sm:py-2 bg-[#0078d4] text-white rounded-md font-medium hover:bg-[#005a9e] focus:outline-none focus:ring-2 focus:ring-[#0078d4] focus:ring-opacity-50 flex items-center justify-center space-x-2 shadow-sm"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none"
                viewBox="0 0 24 24" stroke="currentColor">
@@ -1328,78 +1328,13 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
         </button>
       </div>
 
-      {/* Top Filters (Date, Search, Sort) */}
+      {/* Mobile-optimized Filters */}
       <div className="mb-6 space-y-4">
-        {/* Main Filter Row */}
-        <div className="flex flex-col space-y-4">
-          {/* First Row - Staff Filter and Online Orders Toggle */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Staff Filter - Only visible to admin and super_admin */}
-            {(isSuperAdmin() || isAdmin()) && (
-              <div className="w-full">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Staff Filter</label>
-                <MobileSelect
-                  options={[
-                    { value: '', label: `All Staff ${staffMembers.length ? `(${staffMembers.length})` : '(Loading...)'}` },
-                    ...staffMembers.map(staff => ({
-                      value: staff.id, // The id already includes the 'user_' prefix from the backend
-                      label: staff.name
-                    }))
-                  ]}
-                  value={staffFilter || ''}
-                  onChange={(value) => {
-                    setStaffFilter(value === '' ? null : value);
-                    // Only clear online orders filter if a staff member is selected
-                    if (value !== '') {
-                      setOnlineOrdersOnly(false);
-                    }
-                    setCurrentPage(1); // Reset to first page when changing filter
-                  }}
-                  className="w-full h-12 shadow-sm border-gray-300 rounded-md"
-                  placeholder="Select staff member"
-                />
-              </div>
-            )}
-            
-            {/* Online Orders Only Button */}
-            {(isSuperAdmin() || isAdmin()) && (
-              <div className="w-full">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Online Orders</label>
-                <button
-                  onClick={handleToggleOnlineOrders}
-                  className={`w-full py-2 px-4 border rounded-md text-sm font-medium transition-colors duration-200 h-12 shadow-sm ${onlineOrdersOnly 
-                    ? 'bg-[#0078d4] text-white border-[#0078d4]' 
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'}`}
-                  aria-pressed={onlineOrdersOnly}
-                >
-                  {onlineOrdersOnly ? '✓ Showing Online Orders Only' : 'Show Online Orders Only'}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-        
-        {/* Second Row - Date Filter, Search, Location Filter (if available), and Sort */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Date Filter */}
-          <div className="w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
-            <DateFilter
-              selectedOption={dateFilter}
-              onOptionChange={setDateFilter}
-              startDate={customStartDate}
-              endDate={customEndDate}
-              onDateRangeChange={(start, end) => {
-                setCustomStartDate(start);
-                setCustomEndDate(end);
-              }}
-              className="w-full h-12 shadow-sm border-gray-300 rounded-md"
-            />
-          </div>
-
-          {/* Search */}
-          <div className="w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Search Orders</label>
+        {/* Filter sections with collapsible mobile view */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          {/* Search - Always visible at top for quick access */}
+          <div className="p-4 border-b border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Search Orders</label>
             <SearchInput
               value={searchQuery}
               onChange={setSearchQuery}
@@ -1407,29 +1342,93 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
               className="w-full h-12 shadow-sm border-gray-300 rounded-md"
             />
           </div>
+          
+          {/* Main filters section */}
+          <div className="p-4 space-y-4">
+            {/* First Row - Staff Filter and Online Orders Toggle */}
+            {(isSuperAdmin() || isAdmin()) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Staff Filter - Only visible to admin and super_admin */}
+                <div className="w-full">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Staff Filter</label>
+                  <MobileSelect
+                    options={[
+                      { value: '', label: `All Staff ${staffMembers.length ? `(${staffMembers.length})` : '(Loading...)'}` },
+                      ...staffMembers.map(staff => ({
+                        value: staff.id, // The id already includes the 'user_' prefix from the backend
+                        label: staff.name
+                      }))
+                    ]}
+                    value={staffFilter || ''}
+                    onChange={(value) => {
+                      setStaffFilter(value === '' ? null : value);
+                      // Only clear online orders filter if a staff member is selected
+                      if (value !== '') {
+                        setOnlineOrdersOnly(false);
+                      }
+                      setCurrentPage(1); // Reset to first page when changing filter
+                    }}
+                    className="w-full h-12 shadow-sm border-gray-300 rounded-md"
+                    placeholder="Select staff member"
+                  />
+                </div>
+                
+                {/* Online Orders Only Button */}
+                <div className="w-full">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Online Orders</label>
+                  <button
+                    onClick={handleToggleOnlineOrders}
+                    className={`w-full py-3 px-4 border rounded-md text-sm font-medium transition-colors duration-200 h-12 shadow-sm ${onlineOrdersOnly 
+                      ? 'bg-[#0078d4] text-white border-[#0078d4]' 
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'}`}
+                    aria-pressed={onlineOrdersOnly}
+                  >
+                    {onlineOrdersOnly ? '✓ Showing Online Orders Only' : 'Show Online Orders Only'}
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {/* Second Row - Date Filter, Location Filter, and Sort */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Date Filter */}
+              <div className="w-full">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                <DateFilter
+                  selectedOption={dateFilter}
+                  onOptionChange={setDateFilter}
+                  startDate={customStartDate}
+                  endDate={customEndDate}
+                  onDateRangeChange={(start, end) => {
+                    setCustomStartDate(start);
+                    setCustomEndDate(end);
+                  }}
+                  className="w-full h-12 shadow-sm border-gray-300 rounded-md"
+                />
+              </div>
 
-          {/* Location Filter - Only rendered when there are multiple locations */}
-          <LocationFilter
-            selectedLocationId={locationFilter}
-            onLocationChange={setLocationFilter}
-            className="w-full"
-          />
+              {/* Location Filter - Only rendered when there are multiple locations */}
+              <LocationFilter
+                selectedLocationId={locationFilter}
+                onLocationChange={setLocationFilter}
+                className="w-full"
+              />
 
-          {/* Sort Dropdown */}
-          <div className="w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Sort Orders</label>
-            <MobileSelect
-              options={[
-                { value: 'newest', label: 'Newest First' },
-                { value: 'oldest', label: 'Oldest First' }
-              ]}
-              value={sortNewestFirst ? 'newest' : 'oldest'}
-              onChange={(value) => setSortNewestFirst(value === 'newest')}
-              className="w-full h-12 shadow-sm border-gray-300 rounded-md"
-            />
+              {/* Sort Dropdown */}
+              <div className="w-full">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Sort Orders</label>
+                <MobileSelect
+                  options={[
+                    { value: 'newest', label: 'Newest First' },
+                    { value: 'oldest', label: 'Oldest First' }
+                  ]}
+                  value={sortNewestFirst ? 'newest' : 'oldest'}
+                  onChange={(value) => setSortNewestFirst(value === 'newest')}
+                  className="w-full h-12 shadow-sm border-gray-300 rounded-md"
+                />
+              </div>
+            </div>
           </div>
-
-          {/* We're removing the order count from here and moving it above the status filter buttons */}
         </div>
 
         {/* Staff message explaining what orders they can see */}
@@ -1453,16 +1452,16 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
         </div>
       </div>
       
-      {/* Status filter buttons */}
-        <div className="relative mt-2">
-          <div className="flex flex-nowrap space-x-2 overflow-x-auto py-1 px-1 scrollbar-hide -mx-1 pb-2 -mb-1 snap-x touch-pan-x">
+      {/* Status filter buttons - Improved for mobile with better touch targets */}
+        <div className="relative mt-4">
+          <div className="flex flex-nowrap space-x-2 overflow-x-auto py-2 px-1 scrollbar-hide -mx-1 pb-3 -mb-1 snap-x touch-pan-x">
             <button
               onClick={() => {
                 setSelectedStatus('all');
                 if (setSelectedOrderId) setSelectedOrderId(null);
               }}
               className={`
-                whitespace-nowrap px-6 py-3 rounded-md text-sm font-medium min-w-[100px] flex-shrink-0 snap-start transition-colors duration-200 shadow-sm border
+                whitespace-nowrap px-5 py-3 rounded-md text-sm font-medium min-w-[90px] flex-shrink-0 snap-start transition-colors duration-200 shadow-sm border
                 ${selectedStatus === 'all'
                   ? 'bg-[#0078d4] text-white border-[#0078d4]'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
@@ -1479,7 +1478,7 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
                   if (setSelectedOrderId) setSelectedOrderId(null);
                 }}
                 className={`
-                  whitespace-nowrap px-6 py-3 rounded-md text-sm font-medium min-w-[100px] flex-shrink-0 snap-start transition-colors duration-200 shadow-sm border
+                  whitespace-nowrap px-5 py-3 rounded-md text-sm font-medium min-w-[90px] flex-shrink-0 snap-start transition-colors duration-200 shadow-sm border
                   ${selectedStatus === status
                     ? 'bg-[#0078d4] text-white border-[#0078d4]'
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
@@ -1647,8 +1646,8 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
                   Previous
                 </button>
 
-                {/* Page buttons (desktop) */}
-                <div className="hidden sm:flex space-x-1">
+                {/* Page buttons (desktop and tablet) */}
+                <div className="hidden md:flex space-x-1">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                     <button
                       key={page}
@@ -1701,11 +1700,9 @@ export function OrderManager({ selectedOrderId, setSelectedOrderId, restaurantId
                   ))}
                 </div>
 
-                {/* Mobile page indicator */}
-                <div className="sm:hidden flex items-center px-3">
-                  <span className="text-sm font-medium">
-                    Page {currentPage} of {totalPages}
-                  </span>
+                {/* Mobile page indicator - improved visibility */}
+                <div className="md:hidden text-sm font-medium bg-gray-100 px-4 py-2 rounded-md">
+                  Page {currentPage} of {totalPages}
                 </div>
 
                 <button

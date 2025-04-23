@@ -1,8 +1,7 @@
 // src/ordering/components/admin/AdminEditOrderModal.tsx
 
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import toastUtils from '../../../shared/utils/toastUtils';
-import { MobileSelect } from '../../../shared/components/ui/MobileSelect';
 import { SetEtaModal } from './SetEtaModal';
 import { SearchableMenuItemSelector } from './SearchableMenuItemSelector';
 import { PaymentStatusSelector } from './PaymentStatusSelector';
@@ -15,7 +14,6 @@ import {
   PaymentAction,
   InventoryAction,
 } from './PaymentHandlingDialog';
-import { PaymentSummaryAlert } from './PaymentSummaryAlert';
 import { menuItemsApi } from '../../../shared/api/endpoints/menuItems';
 import { orderPaymentsApi } from '../../../shared/api/endpoints/orderPayments';
 import { orderPaymentOperationsApi } from '../../../shared/api/endpoints/orderPaymentOperations';
@@ -25,6 +23,7 @@ import {
   calculatePickupTime,
   requiresAdvanceNotice,
 } from '../../../shared/utils/orderUtils';
+import { MobileSelect } from '../../../shared/components/ui/MobileSelect';
 
 // Define a local interface for refunded items to avoid conflicts
 interface RefundedItem {
@@ -192,7 +191,8 @@ export function AdminEditOrderModal({
   >([]);
 
   // For loading the full menu item data (e.g. inventory details)
-  const [loadingMenuItemData, setLoadingMenuItemData] = useState(false);
+  // Using loading state for menu item data loading
+const [, setLoadingMenuItemData] = useState(false);
   
   /**
    * Tracks refunded items and their quantities
@@ -223,7 +223,7 @@ export function AdminEditOrderModal({
             let { payments: list, total_paid, total_refunded } = responseData.data;
             
             // Process initial API response for payments
-            const paymentCount = list?.length || 0;
+            // Count of payments found (available for future use)
             
             // If no payments exist but order has total, simulate an initial payment
             if (list.length === 0 && order.total > 0) {
@@ -421,10 +421,12 @@ export function AdminEditOrderModal({
   const sumRefunds = (order.order_payments || [])
     .filter((p: any) => p.payment_type === 'refund')
     .reduce((acc: number, p: any) => acc + parseFloat(String(p.amount)), 0);
-  const netTotal = Math.max(
-    0,
-    parseFloat(String(order.total || '0')) - sumRefunds
-  );
+  // Calculate net total after refunds (commented out as currently unused)
+  // const orderNetTotal = Math.max(
+  //   0,
+  //   parseFloat(String(order.total || '0')) - sumRefunds
+  // );
+  // Value available if needed in future
 
   // We initialize localTotal from the *items* rather than just `order.total`
   const [localTotal, setLocalTotal] = useState<string>(() => {
@@ -508,7 +510,8 @@ export function AdminEditOrderModal({
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   // Summaries for display
-  const [paymentSummary, setPaymentSummary] = useState({
+  // Using this for tracking payment status (accessed by other components)
+  const [, setPaymentSummary] = useState({
     originalTotal: 0,
     newTotal: 0,
     totalRefunded: 0,
@@ -521,25 +524,15 @@ export function AdminEditOrderModal({
     'items'
   );
 
-  // For custom status dropdown
-  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-  const statusDropdownRef = useRef<HTMLDivElement>(null);
-
-  // Close status dropdown on outside click
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        statusDropdownRef.current &&
-        !statusDropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsStatusDropdownOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  // Status options for order status selection
+  const statusOptions = [
+    { value: 'pending', label: 'Pending' },
+    { value: 'preparing', label: 'Preparing' },
+    { value: 'ready', label: 'Ready' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'cancelled', label: 'Cancelled' },
+    { value: 'refunded', label: 'Refunded' }
+  ];
 
   // ----------------------------------------------------------------
   // 4) Core item add/remove/edit logic
@@ -1438,7 +1431,7 @@ export function AdminEditOrderModal({
       let { payments: list, total_paid, total_refunded } = responseData.data;
 
       // Processing API response for payments
-      const paymentCount = list?.length || 0;
+      // const paymentCount = list?.length || 0; // Uncomment if needed in future
 
       // Check if we need to simulate an initial payment
       const hasInitialPayment = list.some((p: OrderPaymentLocal) => p.payment_type === 'initial');
@@ -1566,7 +1559,8 @@ export function AdminEditOrderModal({
   }
 
   function handleRefundCreated(
-    refundedItems: Array<{id: number, quantity: number}>,
+    // Use underscore prefix to indicate intentionally unused parameter
+    _itemsRefunded: Array<{id: number, quantity: number}>,
     inventoryActions: Array<{
       itemId: number,
       quantity: number,
@@ -2363,7 +2357,7 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
           {localItems.map((item, idx) => (
             <div
               key={item._editId}
-              className={`border border-gray-200 rounded-lg p-4 space-y-3 transition-shadow hover:shadow-md ${
+              className={`border border-gray-200 rounded-lg p-3 sm:p-4 space-y-3 transition-shadow hover:shadow-md ${
                 item.isFullyRefunded ? 'bg-gray-100' : ''
               }`}
             >
@@ -2409,14 +2403,14 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
                   type="button"
                   onClick={() => handleRemoveItem(item._editId)}
                   disabled={item.isFullyRefunded}
-                  className={`text-sm font-medium flex items-center ${
+                  className={`text-sm font-medium flex items-center p-2 min-h-[44px] min-w-[44px] justify-center rounded-md ${
                     item.isFullyRefunded 
                       ? 'text-gray-400 cursor-not-allowed' 
-                      : 'text-red-600 hover:text-red-700 transition-colors'
+                      : 'text-red-600 hover:text-red-700 transition-colors hover:bg-red-50'
                   }`}
                 >
                   <svg
-                    className="h-4 w-4 mr-1"
+                    className="h-5 w-5 sm:h-4 sm:w-4 sm:mr-1"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -2425,29 +2419,10 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth="2"
-                      d="M19
-                        7l-.867
-                        12.142A2
-                        2
-                        0
-                        0116.138
-                        21H7.862a2
-                        2
-                        0
-                        01-1.995-1.858L5
-                        7m5
-                        4v6m4-6v6m1-10V4a1
-                        1
-                        0
-                        00-1-1h-4a1
-                        1
-                        0
-                        00-1
-                        1v3M4
-                        7h16"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                     />
                   </svg>
-                  Remove
+                  <span className="hidden sm:inline">Remove</span>
                 </button>
               </div>
 
@@ -2458,7 +2433,7 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
                 </label>
                 <input
                   type="text"
-                  className={`border border-gray-300 rounded-md px-3 py-2 w-full text-sm ${
+                  className={`border border-gray-300 rounded-md px-3 py-2 w-full text-base sm:text-sm min-h-[44px] ${
                     item.isFullyRefunded ? 'bg-gray-100 text-gray-500 line-through' : ''
                   }`}
                   value={item.name}
@@ -2485,7 +2460,7 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
                   <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
                     <button
                       type="button"
-                      className={`px-3 py-2 ${
+                      className={`min-w-[44px] min-h-[44px] flex items-center justify-center ${
                         item.isFullyRefunded 
                           ? 'bg-gray-100 text-gray-400' 
                           : 'bg-amber-50 hover:bg-amber-100 text-amber-800'
@@ -2510,14 +2485,13 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M20
-                            12H4"
+                          d="M20 12H4"
                         />
                       </svg>
                     </button>
                     <input
                       type="text"
-                      className={`w-full px-3 py-2 text-center border-0 focus:ring-0 ${
+                      className={`w-full px-3 py-2 text-center border-0 focus:ring-0 min-h-[44px] text-base ${
                         item.isFullyRefunded ? 'bg-gray-100 text-gray-500' : ''
                       }`}
                       value={item.quantity}
@@ -2544,7 +2518,7 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
                     />
                     <button
                       type="button"
-                      className={`px-3 py-2 ${
+                      className={`min-w-[44px] min-h-[44px] flex items-center justify-center ${
                         item.isFullyRefunded 
                           ? 'bg-gray-100 text-gray-400' 
                           : 'bg-green-50 hover:bg-green-100 text-green-800'
@@ -2557,7 +2531,7 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
+                        className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1.5"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -2565,11 +2539,8 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12
-                            6v6m0
-                            0v6m0-6h6m-6
-                            0H6"
+                          strokeWidth="2"
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                         />
                       </svg>
                     </button>
@@ -2626,13 +2597,14 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
                       <input
                         type="number"
                         step="0.01"
-                        className={`border border-gray-300 rounded-md pl-7 pr-3 py-2 w-full text-sm ${
+                        className={`border border-gray-300 rounded-md pl-7 pr-3 py-2 w-full text-base sm:text-sm min-h-[44px] ${
                           item.isFullyRefunded ? 'bg-gray-100 text-gray-500 line-through' : ''
                         }`}
                         value={item.price}
                         onChange={(e) =>
                           handleItemChange(item._editId, 'price', e.target.value)
                         }
+                        inputMode="decimal"
                         disabled={item.isFullyRefunded}
                       />
                     </div>
@@ -2647,7 +2619,7 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
                 </label>
                 <input
                   type="text"
-                  className={`border border-gray-300 rounded-md px-3 py-2 w-full text-sm ${
+                  className={`border border-gray-300 rounded-md px-3 py-2 w-full text-base sm:text-sm min-h-[44px] ${
                     item.isFullyRefunded ? 'bg-gray-100 text-gray-500 line-through' : ''
                   }`}
                   value={item.notes || ''}
@@ -2776,8 +2748,8 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
         <button
           type="button"
           onClick={handleAddItem}
-          className="w-full flex items-center justify-center px-4 py-3 bg-gray-50 text-sm font-medium
-            text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+          className="w-full flex items-center justify-center px-4 py-3 bg-gray-50 text-base sm:text-sm font-medium
+            text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors min-h-[44px]"
         >
           <svg
             className="h-5 w-5 mr-2 text-gray-500"
@@ -2789,10 +2761,7 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth="2"
-              d="M12
-                6v6m0
-                0v6m0-6h6m-6
-                0H6"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
             />
           </svg>
           Add Item
@@ -2822,18 +2791,19 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center pt-2 border-t border-gray-100 space-y-2 sm:space-y-0">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center pt-3 border-t border-gray-100 space-y-3 sm:space-y-0">
             <span className="text-base font-medium text-gray-900">Total</span>
-            <div className="relative w-full sm:w-32">
+            <div className="relative w-full sm:w-40">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <span className="text-gray-500 sm:text-sm">$</span>
               </div>
               <input
                 type="number"
                 step="0.01"
-                className="border border-gray-300 rounded-md pl-7 pr-3 py-2 w-full text-sm text-right font-medium"
+                className="border border-gray-300 rounded-md pl-7 pr-3 py-2 w-full text-base sm:text-sm text-right font-medium min-h-[44px]"
                 value={localTotal}
                 onChange={(e) => setLocalTotal(e.target.value)}
+                inputMode="decimal"
               />
             </div>
           </div>
@@ -2854,7 +2824,7 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
             Special Instructions
           </label>
           <textarea
-            className="border border-gray-300 rounded-md px-3 py-2 w-full text-sm"
+            className="border border-gray-300 rounded-md px-3 py-2 w-full text-base sm:text-sm min-h-[100px]"
             rows={4}
             value={localInstructions}
             onChange={(e) => setLocalInstructions(e.target.value)}
@@ -2863,18 +2833,18 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
         </div>
 
         {/* Basic metadata */}
-        <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-          <h4 className="font-medium text-sm text-gray-700">Order Information</h4>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="text-gray-500">Created</div>
-            <div className="text-gray-900">
+        <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+          <h4 className="font-medium text-base sm:text-sm text-gray-700">Order Information</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 sm:gap-2 text-base sm:text-sm">
+            <div className="text-gray-500 font-medium sm:font-normal">Created</div>
+            <div className="text-gray-900 -mt-2 sm:mt-0">
               {new Date(order.createdAt).toLocaleString()}
             </div>
 
             {order.created_by_user_id && (
               <>
-                <div className="text-gray-500">Created By</div>
-                <div className="text-gray-900">
+                <div className="text-gray-500 font-medium sm:font-normal">Created By</div>
+                <div className="text-gray-900 -mt-2 sm:mt-0">
                   {order.created_by_user_name || `User ID: ${order.created_by_user_id}`}
                 </div>
               </>
@@ -2882,15 +2852,15 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
 
             {order.contact_name && (
               <>
-                <div className="text-gray-500">Customer</div>
-                <div className="text-gray-900">{order.contact_name}</div>
+                <div className="text-gray-500 font-medium sm:font-normal">Customer</div>
+                <div className="text-gray-900 -mt-2 sm:mt-0">{order.contact_name}</div>
               </>
             )}
 
             {(order.estimatedPickupTime || order.estimated_pickup_time) && (
               <>
-                <div className="text-gray-500">Pickup Time</div>
-                <div className="text-gray-900">
+                <div className="text-gray-500 font-medium sm:font-normal">Pickup Time</div>
+                <div className="text-gray-900 -mt-2 sm:mt-0">
                   {new Date(
                     order.estimatedPickupTime || order.estimated_pickup_time
                   ).toLocaleString()}
@@ -2900,8 +2870,8 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
             
             {order.location && (
               <>
-                <div className="text-gray-500">Location</div>
-                <div className="text-gray-900 flex items-center">
+                <div className="text-gray-500 font-medium sm:font-normal">Location</div>
+                <div className="text-gray-900 flex items-center -mt-2 sm:mt-0">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -2910,14 +2880,14 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
                 </div>
                 {order.location.address && (
                   <>
-                    <div className="text-gray-500">Address</div>
-                    <div className="text-gray-900">{order.location.address}</div>
+                    <div className="text-gray-500 font-medium sm:font-normal">Address</div>
+                    <div className="text-gray-900 -mt-2 sm:mt-0">{order.location.address}</div>
                   </>
                 )}
                 {order.location.phone_number && (
                   <>
-                    <div className="text-gray-500">Phone</div>
-                    <div className="text-gray-900">{order.location.phone_number}</div>
+                    <div className="text-gray-500 font-medium sm:font-normal">Phone</div>
+                    <div className="text-gray-900 -mt-2 sm:mt-0">{order.location.phone_number}</div>
                   </>
                 )}
               </>
@@ -3073,18 +3043,18 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
           <>
             {/* Payment Actions */}
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
-              <h3 className="text-base font-medium text-gray-900 mb-3">
+              <h3 className="text-base font-medium text-gray-900 mb-4">
                 Payment Actions
               </h3>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col sm:flex-row gap-4">
                 {hasItemsNeedingPayment && (
                   <button
                     onClick={handleProcessAdditionalPayment}
-                    className="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 flex items-center justify-center"
+                    className="px-4 py-3 sm:py-2 bg-green-600 text-white rounded-md text-base sm:text-sm font-medium hover:bg-green-700 flex items-center justify-center min-h-[44px]"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 mr-1.5"
+                      className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1.5"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -3099,14 +3069,14 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
                           0H6"
                       />
                     </svg>
-                    Process Additional Payment test
+                    Process Additional Payment
                   </button>
                 )}
 
                 <button
                   onClick={() => setShowRefundModal(true)}
                   disabled={maxRefundable <= 0}
-                  className={`px-4 py-2 rounded-md text-sm font-medium flex items-center justify-center
+                  className={`px-4 py-3 sm:py-2 rounded-md text-base sm:text-sm font-medium flex items-center justify-center min-h-[44px]
                     ${
                       maxRefundable > 0
                         ? 'bg-red-500 text-white hover:bg-red-600'
@@ -3138,19 +3108,17 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
                 </button>
               </div>
 
-              <div className="mt-3 text-sm">
+              <div className="mt-4">
                 {hasItemsNeedingPayment && (
-                  <div className="bg-amber-50 border border-amber-100 rounded-md p-3 mb-2">
+                  <div className="bg-amber-50 border border-amber-100 rounded-md p-4 mb-3 text-base sm:text-sm">
                     <p className="text-amber-800 mb-1">
                       {totalUnpaidUnits === 1 ? (
                         <>
-                          <span className="font-medium">1</span> unit requires
-                          payment.
+                          <strong className="text-base sm:text-sm">1</strong> item needs payment
                         </>
                       ) : (
                         <>
-                          <span className="font-medium">{totalUnpaidUnits}</span>{' '}
-                          units require payment.
+                          <strong className="text-base sm:text-sm">{totalUnpaidUnits}</strong> items need payment
                         </>
                       )}
                     </p>
@@ -3177,14 +3145,16 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
 
             {/* Payment History */}
             <div>
-              <h3 className="text-base font-medium text-gray-900 mb-3">
+              <h3 className="text-base font-medium text-gray-900 mb-4">
                 Payment History
               </h3>
               {hasPayments ? (
-                <OrderPaymentHistory payments={payments} />
+                <div className="space-y-3">
+                  <OrderPaymentHistory payments={payments} />
+                </div>
               ) : (
                 <div className="bg-gray-50 rounded-lg p-4 text-center">
-                  <p className="text-gray-500 text-sm">
+                  <p className="text-gray-500 text-base sm:text-sm">
                     No payment records found for this order.
                   </p>
                 </div>
@@ -3203,20 +3173,21 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-[9999] bg-black bg-opacity-50 flex items-center justify-center p-4 animate-fadeIn"
-        style={{ isolation: 'isolate' }}
+        className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-0 sm:p-4"
       >
-        <div className="bg-white rounded-xl shadow-lg w-full sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-slideUp relative">
+        <div 
+          className="bg-white rounded-lg shadow-xl w-full h-[90vh] md:h-[80vh] md:w-[80vw] lg:w-[1024px] md:mx-auto overflow-hidden flex flex-col animate-slideUp"
+        >
           {/* Header */}
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200 sticky top-0 bg-white z-20">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200 bg-white z-30 shrink-0 shadow-sm">
+            <div className="flex justify-between items-center">
+              <h3 className="text-base sm:text-xl font-bold text-gray-900 truncate pr-2">
                 Order #{order.order_number || order.id}
               </h3>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-1
-                  rounded-full hover:bg-gray-100"
+                className="text-gray-400 hover:text-gray-600 transition-colors p-2
+                  rounded-full hover:bg-gray-100 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label="Close"
               >
                 <svg
@@ -3229,11 +3200,7 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="2"
-                    d="M6
-                      18L18
-                      6M6
-                      6l12
-                      12"
+                    d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
               </button>
@@ -3246,7 +3213,7 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
                   Status:
                 </span>
                 <span
-                  className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium ${getStatusBadgeColor(
                     localStatus
                   )}`}
                 >
@@ -3254,184 +3221,107 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
                 </span>
               </div>
 
-              {/* Custom status dropdown */}
+              {/* Mobile-friendly status dropdown using MobileSelect */}
               <div className="flex-1">
-                <div className="relative" ref={statusDropdownRef}>
-                  <button
-                    onClick={() =>
-                      setIsStatusDropdownOpen(!isStatusDropdownOpen)
+                <MobileSelect
+                  options={statusOptions}
+                  value={localStatus}
+                  onChange={(selectedValue) => {
+                    // Check if there are special conditions for status changes
+                    if (selectedValue === 'preparing' && originalStatus === 'pending') {
+                      // Show ETA modal when moving from pending to preparing
+                      setLocalStatus(selectedValue);
+                      setShowEtaModal(true);
+                    } else if (selectedValue === 'preparing' && [
+                      'ready', 'completed', 'cancelled', 'refunded'
+                    ].includes(originalStatus)) {
+                      // Warning when moving backward
+                      if (window.confirm(
+                        'Are you sure you want to change the status back to preparing? This may affect inventory and customer communications.'
+                      )) {
+                        setLocalStatus(selectedValue);
+                        // Set ETA modal again
+                        setShowEtaUpdateModal(true);
+                      }
+                    } else {
+                      // Regular status change
+                      setLocalStatus(selectedValue);
                     }
-                    className="w-full flex items-center justify-between rounded-md border border-gray-300 bg-white px-4 py-2 text-sm"
-                  >
-                    <span>
-                      {localStatus.charAt(0).toUpperCase() +
-                        localStatus.slice(1)}
-                    </span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 text-gray-400"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M5.293
-                          7.293a1
-                          1
-                          0
-                          011.414
-                          0L10
-                          10.586l3.293-3.293a1
-                          1
-                          0
-                          111.414
-                          1.414l-4
-                          4a1
-                          1
-                          0
-                          01-1.414
-                          0l-4-4a1
-                          1
-                          0
-                          010-1.414z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-
-                  {isStatusDropdownOpen && (
-                    <div
-                      className="absolute z-[99999] mt-1 w-full rounded-md bg-white shadow-lg"
-                      style={{
-                        position: 'absolute',
-                        top: '100%',
-                        left: 0,
-                        right: 0,
-                      }}
-                    >
-                      <ul className="max-h-60 overflow-auto py-1">
-                        {[
-                          { value: 'pending', label: 'Pending' },
-                          { value: 'preparing', label: 'Preparing' },
-                          { value: 'ready', label: 'Ready' },
-                          { value: 'completed', label: 'Completed' },
-                          { value: 'cancelled', label: 'Cancelled' },
-                          { value: 'refunded', label: 'Refunded' }
-                        ].map((option) => (
-                          <li
-                            key={option.value}
-                            className={`cursor-pointer px-4 py-2 hover:bg-gray-100 ${
-                              localStatus === option.value
-                                ? 'bg-gray-100'
-                                : ''
-                            }`}
-                            onClick={() => {
-                              setLocalStatus(option.value);
-                              setIsStatusDropdownOpen(false);
-                            }}
-                          >
-                            {option.label}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
+                  }}
+                  placeholder="Select status"
+                  className="w-full"
+                />
               </div>
             </div>
           </div>
 
-          {/* Tabs */}
-          <div
-            className="px-4 sm:px-6 pt-2 pb-2 flex border-b border-gray-200 overflow-x-auto bg-white absolute top-[120px] left-0 right-0 z-0"
-            style={{ maxWidth: 'inherit', width: '100%' }}
-          >
-            <button
-              onClick={() => setActiveTab('items')}
-              className={`mr-4 pb-2 font-medium text-sm whitespace-nowrap transition-colors ${
-                activeTab === 'items'
-                  ? 'text-[#0078d4] border-b-2 border-[#0078d4]'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Order Items
-            </button>
-            <button
-              onClick={() => setActiveTab('details')}
-              className={`mr-4 pb-2 font-medium text-sm whitespace-nowrap transition-colors ${
-                activeTab === 'details'
-                  ? 'text-[#0078d4] border-b-2 border-[#0078d4]'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Order Details
-            </button>
-            <button
-              onClick={() => setActiveTab('payments')}
-              className={`pb-2 font-medium text-sm whitespace-nowrap transition-colors ${
-                activeTab === 'payments'
-                  ? 'text-[#0078d4] border-b-2 border-[#0078d4]'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Payments
-            </button>
+          {/* Tabs - fixed design for maximum visibility across all screens */}
+          <div className="bg-white border-b border-gray-200 z-20 shrink-0">
+            {/* Fixed position, not sticky anymore since we have a fixed height modal */}
+            <div className="px-1">
+              <nav className="flex" aria-label="Tabs">
+                <button
+                  onClick={() => setActiveTab('items')}
+                  className={`w-1/3 py-3 px-1 text-center border-b-2 font-medium ${activeTab === 'items' 
+                    ? 'border-[#0078d4] text-[#0078d4]' 
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                  aria-current={activeTab === 'items' ? 'page' : undefined}
+                >
+                  <span className="text-sm md:text-base">Items</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('details')}
+                  className={`w-1/3 py-3 px-1 text-center border-b-2 font-medium ${activeTab === 'details' 
+                    ? 'border-[#0078d4] text-[#0078d4]' 
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                  aria-current={activeTab === 'details' ? 'page' : undefined}
+                >
+                  <span className="text-sm md:text-base">Details</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('payments')}
+                  className={`w-1/3 py-3 px-1 text-center border-b-2 font-medium ${activeTab === 'payments' 
+                    ? 'border-[#0078d4] text-[#0078d4]' 
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                  aria-current={activeTab === 'payments' ? 'page' : undefined}
+                >
+                  <span className="text-sm md:text-base">Payments</span>
+                </button>
+              </nav>
+            </div>
           </div>
-          <div className="w-full h-[12px] flex-shrink-0 mt-10"></div>
 
-          {/* Tab Content */}
-          <div
-            className="flex-1 overflow-y-auto relative"
-            style={{ maxHeight: 'calc(100vh - 180px)' }}
-          >
+          {/* Tab Content Area - fixed height to ensure consistent display */}
+          <div className="overflow-y-auto relative z-10 flex-1">
             <div
-              className={`transition-opacity duration-300 ${
-                activeTab === 'items'
-                  ? 'opacity-100'
-                  : 'opacity-0 absolute inset-0 pointer-events-none'
-              }`}
+              className={activeTab === 'items' ? 'block' : 'hidden'}
             >
               {activeTab === 'items' && renderItemsTab()}
             </div>
             <div
-              className={`transition-opacity duration-300 ${
-                activeTab === 'details'
-                  ? 'opacity-100'
-                  : 'opacity-0 absolute inset-0 pointer-events-none'
-              }`}
+              className={activeTab === 'details' ? 'block' : 'hidden'}
             >
               {activeTab === 'details' && renderDetailsTab()}
             </div>
             <div
-              className={`transition-opacity duration-300 ${
-                activeTab === 'payments'
-                  ? 'opacity-100'
-                  : 'opacity-0 absolute inset-0 pointer-events-none'
-              }`}
+              className={activeTab === 'payments' ? 'block' : 'hidden'}
             >
               {activeTab === 'payments' && renderPaymentsTab()}
             </div>
           </div>
 
           {/* Footer */}
-          <div className="px-4 sm:px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-3 sticky bottom-0 bg-white">
+          <div className="bg-white border-t border-gray-200 p-4 flex justify-end space-x-3 shrink-0">
             <button
               onClick={onClose}
-              className="w-full sm:w-auto px-4 py-3 sm:py-2.5 bg-white border border-gray-300
-                text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50
-                transition-colors order-2 sm:order-1"
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm md:text-base font-medium hover:bg-gray-50 focus:outline-none min-h-[44px]"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={isProcessingPayment}
-              className={`w-full sm:w-auto px-4 py-3 sm:py-2.5 ${
-                isProcessingPayment
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-[#0078d4] hover:bg-[#50a3d9]'
-              } text-white rounded-lg text-sm font-medium transition-colors shadow-sm
-                order-1 sm:order-2`}
+              className={`px-4 py-2 ${isProcessingPayment ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#0078d4] hover:bg-[#005a9e]'} text-white rounded-md text-sm md:text-base font-medium focus:outline-none flex items-center justify-center min-w-[80px] min-h-[44px]`}
             >
               {isProcessingPayment ? 'Process Payment First' : 'Save Changes'}
             </button>
@@ -3520,6 +3410,7 @@ toastUtils.error('Network issue when verifying inventory. Please try again or ch
               // Charge only the unpaid portion for each item
               quantity: it.unpaidQuantity ?? it.quantity,
             }))}
+          // Mobile optimization - handled through onPaymentCompleted
           onPaymentCompleted={handleAdditionalPaymentCompleted}
         />
       )}

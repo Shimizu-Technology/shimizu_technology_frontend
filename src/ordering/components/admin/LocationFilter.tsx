@@ -5,6 +5,7 @@ import { MapPin } from 'lucide-react';
 import { locationsApi } from '../../../shared/api/endpoints/locations';
 import { Location } from '../../../shared/types/Location';
 import toastUtils from '../../../shared/utils/toastUtils';
+import { MobileSelect } from '../../../shared/components/ui/MobileSelect';
 
 interface LocationFilterProps {
   selectedLocationId: number | null;
@@ -52,40 +53,36 @@ export function LocationFilter({ selectedLocationId, onLocationChange, className
     ? locations.find(loc => loc.id === selectedLocationId)
     : null;
 
+  // Convert locations to options format for MobileSelect
+  const locationOptions = [
+    { value: '', label: 'All Locations' },
+    ...locations.map(location => ({
+      value: location.id.toString(),
+      label: `${location.name}${location.is_default ? ' (Default)' : ''}`
+    }))
+  ];
+
   return (
     <div className={`relative ${className}`}>
       <label htmlFor="location-filter" className="text-sm font-medium text-gray-700 mb-1 flex items-center">
         <MapPin className="h-4 w-4 mr-1" />
         Filter by Location
         {selectedLocationId && (
-          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 bg-opacity-20 text-green-800">
             Active Filter
           </span>
         )}
       </label>
       <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <MapPin className={`h-5 w-5 ${selectedLocationId ? 'text-green-500' : 'text-gray-400'}`} />
-        </div>
-        <select
-          id="location-filter"
-          value={selectedLocationId || ''}
-          onChange={(e) => onLocationChange(e.target.value ? Number(e.target.value) : null)}
-          className={`block w-full pl-10 pr-10 py-2 text-base border focus:outline-none focus:ring-2 sm:text-sm rounded-md transition-colors ${selectedLocationId 
-            ? 'border-green-300 focus:ring-green-500 focus:border-green-500 bg-green-50' 
-            : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'}`}
-          disabled={isLoading}
-        >
-          <option value="">All Locations</option>
-          {locations.map((location) => (
-            <option key={location.id} value={location.id}>
-              {location.name}
-              {location.is_default ? ' (Default)' : ''}
-            </option>
-          ))}
-        </select>
+        <MobileSelect
+          options={locationOptions}
+          value={selectedLocationId ? selectedLocationId.toString() : ''}
+          onChange={(value) => onLocationChange(value ? Number(value) : null)}
+          placeholder="Select a location"
+          className="w-full h-12 shadow-sm border-gray-300 rounded-md"
+        />
         {isLoading && (
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+          <div className="absolute right-10 top-1/2 transform -translate-y-1/2 pointer-events-none">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500"></div>
           </div>
         )}
