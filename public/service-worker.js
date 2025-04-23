@@ -215,30 +215,74 @@ self.addEventListener('notificationclick', event => {
       return;
     }
     
-    if (event.action === 'acknowledge' && event.notification.data && event.notification.data.orderId) {
+    if (event.action === 'acknowledge' && event.notification.data) {
+      // Use orderNumber if available, fall back to orderId for backward compatibility
+      const orderIdentifier = event.notification.data.orderNumber || event.notification.data.orderId;
       // TODO: Implement order acknowledgment via API call
-      console.log('[Service Worker] Acknowledging order:', event.notification.data.orderId);
+      console.log('[Service Worker] Acknowledging order:', orderIdentifier);
       return;
     }
   }
   
-  // Default behavior - open or focus the app
-  event.waitUntil(
-    clients.matchAll({ type: 'window' })
-      .then(clientList => {
-        // If a window is already open, focus it
-        for (const client of clientList) {
-          if (client.url.includes('/admin') && 'focus' in client) {
-            return client.focus();
+  // Default behavior - open or focus the app and go to the admin dashboard
+  const orderUrl = event.notification.data && event.notification.data.url ? 
+    event.notification.data.url : '/admin';
+  
+  // If we have a defaultTab in the notification data, store it in localStorage
+  // This will be used by the AdminDashboard component to set the active tab
+  if (event.notification.data && event.notification.data.defaultTab) {
+    // We need to use clients.openWindow or client.navigate to access the page
+    // But first, let's store the tab preference in localStorage
+    const defaultTab = event.notification.data.defaultTab;
+    
+    event.waitUntil(
+      clients.matchAll({ type: 'window' })
+        .then(clientList => {
+          // If a window is already open, focus it and navigate
+          for (const client of clientList) {
+            if ('focus' in client) {
+              client.focus();
+              
+              // Execute script to set the localStorage value for adminTab
+              client.postMessage({
+                type: 'SET_ADMIN_TAB',
+                tab: defaultTab
+              });
+              
+              // Navigate to the admin dashboard
+              return client.navigate(orderUrl);
+            }
           }
-        }
-        
-        // Otherwise open a new window
-        if (clients.openWindow) {
-          return clients.openWindow('/admin/orders');
-        }
-      })
-  );
+          
+          // Otherwise open a new window to the admin dashboard
+          // The AdminDashboard component will read the localStorage value
+          if (clients.openWindow) {
+            // We can't set localStorage here directly, so we'll rely on the
+            // AdminDashboard component's default behavior for new windows
+            return clients.openWindow(orderUrl);
+          }
+        })
+    );
+  } else {
+    // No defaultTab, just navigate to the URL
+    event.waitUntil(
+      clients.matchAll({ type: 'window' })
+        .then(clientList => {
+          // If a window is already open, focus it and navigate
+          for (const client of clientList) {
+            if ('focus' in client) {
+              client.focus();
+              return client.navigate(orderUrl);
+            }
+          }
+          
+          // Otherwise open a new window
+          if (clients.openWindow) {
+            return clients.openWindow(orderUrl);
+          }
+        })
+    );
+  }
 });
 
 // Notification close event - handle notification dismissals

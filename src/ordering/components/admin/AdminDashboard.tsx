@@ -138,6 +138,29 @@ export function AdminDashboard() {
   /* eslint-enable @typescript-eslint/no-unused-vars */
   // WebSocket configuration for debugging
   // USE_WEBSOCKETS: true, WEBSOCKET_DEBUG: true
+  
+  // Add event listener for service worker messages
+  useEffect(() => {
+    // Listen for messages from the service worker
+    const handleMessage = (event: MessageEvent) => {
+      // Check if the message is from our service worker
+      if (event.data && event.data.type === 'SET_ADMIN_TAB') {
+        console.log('[AdminDashboard] Received SET_ADMIN_TAB message:', event.data.tab);
+        // Set the active tab based on the message
+        if (event.data.tab && tabs.some(tab => tab.id === event.data.tab)) {
+          handleTabClick(event.data.tab as Tab);
+        }
+      }
+    };
+    
+    // Add the event listener
+    navigator.serviceWorker.addEventListener('message', handleMessage);
+    
+    // Clean up the event listener when the component unmounts
+    return () => {
+      navigator.serviceWorker.removeEventListener('message', handleMessage);
+    };
+  }, []);
 
   // Set WebSocketManager admin context when component mounts/unmounts
   useEffect(() => {
