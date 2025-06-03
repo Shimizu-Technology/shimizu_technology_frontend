@@ -120,8 +120,8 @@ This frontend is configured to work with the multi-tenant backend system. Key po
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-username/hafaloha-frontend.git
-cd hafaloha-frontend
+git clone https://github.com/Shimizu-Technology/shimizu_technology_frontend.git
+cd shimizu_technology_frontend
 ```
 
 2. Install dependencies:
@@ -132,7 +132,7 @@ yarn
 ```
 
 3. Set up environment variables:
-- Create a `.env.local` file in the project root with:
+- Create a `.env` file in the project root with:
 ```
 VITE_API_URL=http://localhost:3000
 VITE_DEFAULT_LANGUAGE=en
