@@ -402,7 +402,7 @@ export const MenuItem = memo(function MenuItem({ item, index = 0, layout = 'gall
                   disabled={isOutOfStock || hasUnavailableRequiredOptions}
                   className={`
                     flex-1 flex items-center justify-center px-4 py-2 rounded-md
-                    ${isOutOfStock || hasUnavailableRequiredOptions ? 'bg-gray-400' : 'bg-[#c1902f] hover:bg-[#d4a43f]'}
+                    ${isOutOfStock || hasUnavailableRequiredOptions ? 'bg-gray-400' : 'bg-shimizu-blue hover:bg-shimizu-light-blue'}
                     text-white font-medium
                     transition-colors duration-200 ease-in-out shadow-sm hover:shadow
                     ${isOutOfStock || hasUnavailableRequiredOptions ? 'cursor-not-allowed' : ''}
@@ -420,7 +420,7 @@ export const MenuItem = memo(function MenuItem({ item, index = 0, layout = 'gall
                   disabled={isOutOfStock || hasUnavailableRequiredOptions}
                   className={`
                     flex-1 flex items-center justify-center px-4 py-2 rounded-md
-                    ${isOutOfStock || hasUnavailableRequiredOptions ? 'bg-gray-400' : 'bg-[#c1902f] hover:bg-[#d4a43f]'}
+                    ${isOutOfStock || hasUnavailableRequiredOptions ? 'bg-gray-400' : 'bg-shimizu-blue hover:bg-shimizu-light-blue'}
                     text-white font-medium
                     transition-colors duration-200 ease-in-out shadow-sm hover:shadow
                     ${buttonClicked ? 'animate-pulse' : ''}

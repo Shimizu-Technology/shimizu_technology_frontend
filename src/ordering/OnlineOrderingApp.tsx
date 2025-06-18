@@ -288,7 +288,7 @@ export default function OnlineOrderingApp() {
                         <h2 className="text-2xl sm:text-3xl font-display text-gray-900 relative z-10">
                           Popular Items
                         </h2>
-                        <div className="absolute bottom-0 left-0 h-3 w-48 bg-[#c1902f] opacity-20 rounded-full"></div>
+                        <div className="absolute bottom-0 left-0 h-3 w-48 bg-shimizu-blue opacity-20 rounded-full"></div>
                       </div>
                       <Link 
                         to="/menu" 
